@@ -46,3 +46,5 @@
   POST/GET /api/listings (injectable store). 6 tests + live smoke. Gate green (90 tests).
 - 2026-07-06 — Phase 7: `scout/enrich.py` Bodenrichtwert seam (Protocol + StaticBodenrichtwert,
   honest unavailable, no fabrication). 4 tests. Gate green (94 tests).
+- 2026-07-06 — Phase 7 COMPLETE: region-signal seam (RegionSignal + RegionSignalProvider +
+  StaticRegionSignal; enrich() does both sources). 4 tests. Gate green (97 tests).

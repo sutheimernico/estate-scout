@@ -16,8 +16,15 @@ from .model import Listing
 
 
 @dataclass(frozen=True)
+class RegionSignal:
+    population_trend_pct: float | None = None  # yearly % change (positive = growing region)
+    vacancy_rate_pct: float | None = None  # marktaktiver Leerstand in %
+
+
+@dataclass(frozen=True)
 class Enrichment:
     bodenrichtwert_eur_per_sqm: float | None = None
+    region: RegionSignal | None = None
     unavailable: tuple[str, ...] = ()  # source names that had no data for this listing
 
 
@@ -25,6 +32,13 @@ class Enrichment:
 class BodenrichtwertProvider(Protocol):
     def lookup(self, listing: Listing) -> float | None:
         """Local Bodenrichtwert in EUR/m², or None if unavailable (never a guess)."""
+        ...
+
+
+@runtime_checkable
+class RegionSignalProvider(Protocol):
+    def lookup(self, listing: Listing) -> RegionSignal | None:
+        """Regional demographic/vacancy signal, or None if unavailable (never a guess)."""
         ...
 
 
@@ -42,7 +56,22 @@ class StaticBodenrichtwert:
         return self._by_plz.get(listing.plz)
 
 
-def enrich(listing: Listing, *, bodenrichtwert: BodenrichtwertProvider | None = None) -> Enrichment:
+class StaticRegionSignal:
+    """Regional signal from a user-maintained ``{plz: RegionSignal}`` table (Zensus/Destatis)."""
+
+    def __init__(self, by_plz: dict[str, RegionSignal] | None = None):
+        self._by_plz = dict(by_plz or {})
+
+    def lookup(self, listing: Listing) -> RegionSignal | None:
+        return self._by_plz.get(listing.plz)
+
+
+def enrich(
+    listing: Listing,
+    *,
+    bodenrichtwert: BodenrichtwertProvider | None = None,
+    region: RegionSignalProvider | None = None,
+) -> Enrichment:
     """Attach available public reference data to a listing; record what was unavailable."""
     unavailable: list[str] = []
 
@@ -50,4 +79,10 @@ def enrich(listing: Listing, *, bodenrichtwert: BodenrichtwertProvider | None = 
     if brw is None:
         unavailable.append("bodenrichtwert")
 
-    return Enrichment(bodenrichtwert_eur_per_sqm=brw, unavailable=tuple(unavailable))
+    signal = region.lookup(listing) if region is not None else None
+    if signal is None:
+        unavailable.append("region_signal")
+
+    return Enrichment(
+        bodenrichtwert_eur_per_sqm=brw, region=signal, unavailable=tuple(unavailable)
+    )

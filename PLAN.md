@@ -184,8 +184,10 @@ honest: a missing market figure lowers confidence, it is never invented.
       (`Enrichment`, `BodenrichtwertProvider` Protocol, `StaticBodenrichtwert` = test fake AND honest
       manual production path from a user-maintained {plz: €/m²} table; empty → unavailable, never
       fabricated). 4 tests.
-- [ ] Regional signal seam: population trend + vacancy (Zensus/GENESIS + Destatis) Protocol + fakes;
-      attach to a listing's location, degrade honestly. Tests use the fake.
+- [x] Regional signal seam: population trend + vacancy (Zensus/GENESIS + Destatis) Protocol + fakes;
+      attach to a listing's location, degrade honestly. Tests use the fake. DONE 2026-07-06:
+      `RegionSignal` (population_trend_pct, vacancy_rate_pct) + `RegionSignalProvider` Protocol +
+      `StaticRegionSignal`; `enrich()` populates both sources and records `unavailable`. 4 tests.
 
 ## Phase 8 — Transparent scoring engine
 

@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+*.egg-info/
+
+# Node (React chat tab, added in the UI phase)
+node_modules/
+frontend/dist/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Local state / caches (regenerable) — never committed
+*.db
+*.sqlite
+*.sqlite3
+.cache/
+data/rag_index/
+
+# Claude local settings
+.claude/settings.local.json
+
+# OS
+.DS_Store

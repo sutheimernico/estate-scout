@@ -1,0 +1,39 @@
+[project]
+name = "estate-scout"
+version = "0.1.0"
+description = "Local, free real-estate knowledge assistant + finance calculators — honest harness, deterministic numbers, no advice."
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12",   # CLI entry points under scripts/
+    "httpx>=0.27",   # Ollama REST client (/api/chat tool-calling, /api/embeddings)
+    "pyyaml>=6",     # versioned config: Grunderwerbsteuer rates + finance rules-of-thumb
+    "numpy>=1.26",   # RAG cosine similarity over the local embedding cache
+    "fastapi>=0.115", # POST /api/ask + /api/finance/{calc}
+    "uvicorn>=0.30", # serve the API + the built React chat tab
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/estatescout"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]

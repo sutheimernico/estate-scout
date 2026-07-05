@@ -40,3 +40,5 @@
   honest funnel over user-brought objects + public enrichment). Planned Stage 2 Phases 6-9.
 - 2026-07-06 — Phase 6: `scout/model.py` Listing (frozen, normalizes Bundesland, price_per_sqm,
   no contact data) + `config.normalize_bundesland`. 4 tests. Gate green (82 tests).
+- 2026-07-06 — Phase 6: `scout/store.py` ListingStore (SQLite, injectable path, JSON features,
+  add/get/list/delete). 4 tests (in-memory + temp file). Gate green (86 tests).

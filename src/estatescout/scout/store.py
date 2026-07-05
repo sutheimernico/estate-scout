@@ -1,0 +1,101 @@
+"""SQLite persistence for listings — object attributes only (no seller contact data).
+
+The store keeps a single connection (so ``:memory:`` works for tests) and is the seam the CLI/API
+depend on; pass a file path for real use or ``:memory:`` / a temp path in tests.
+"""
+
+import json
+import sqlite3
+from dataclasses import replace
+from pathlib import Path
+
+from .model import Listing
+
+_COLUMNS = (
+    "price",
+    "living_area_sqm",
+    "bundesland",
+    "plz",
+    "ort",
+    "rooms",
+    "year_built",
+    "object_type",
+    "features",
+    "source_url",
+)
+
+_CREATE = """
+CREATE TABLE IF NOT EXISTS listings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    price REAL NOT NULL,
+    living_area_sqm REAL NOT NULL,
+    bundesland TEXT NOT NULL,
+    plz TEXT,
+    ort TEXT,
+    rooms REAL,
+    year_built INTEGER,
+    object_type TEXT,
+    features TEXT,
+    source_url TEXT
+)
+"""
+
+
+def _row_to_listing(row: sqlite3.Row) -> Listing:
+    return Listing(
+        price=row["price"],
+        living_area_sqm=row["living_area_sqm"],
+        bundesland=row["bundesland"],
+        plz=row["plz"] or "",
+        ort=row["ort"] or "",
+        rooms=row["rooms"],
+        year_built=row["year_built"],
+        object_type=row["object_type"] or "wohnung",
+        features=tuple(json.loads(row["features"] or "[]")),
+        source_url=row["source_url"] or "",
+        id=row["id"],
+    )
+
+
+class ListingStore:
+    def __init__(self, path: str | Path = ":memory:"):
+        self._conn = sqlite3.connect(str(path))
+        self._conn.row_factory = sqlite3.Row
+        self._conn.execute(_CREATE)
+        self._conn.commit()
+
+    def add(self, listing: Listing) -> Listing:
+        placeholders = ", ".join("?" for _ in _COLUMNS)
+        values = (
+            listing.price,
+            listing.living_area_sqm,
+            listing.bundesland,
+            listing.plz,
+            listing.ort,
+            listing.rooms,
+            listing.year_built,
+            listing.object_type,
+            json.dumps(list(listing.features)),
+            listing.source_url,
+        )
+        cur = self._conn.execute(
+            f"INSERT INTO listings ({', '.join(_COLUMNS)}) VALUES ({placeholders})", values
+        )
+        self._conn.commit()
+        return replace(listing, id=cur.lastrowid)
+
+    def get(self, listing_id: int) -> Listing | None:
+        row = self._conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+        return _row_to_listing(row) if row else None
+
+    def list(self) -> list[Listing]:
+        rows = self._conn.execute("SELECT * FROM listings ORDER BY id").fetchall()
+        return [_row_to_listing(r) for r in rows]
+
+    def delete(self, listing_id: int) -> bool:
+        cur = self._conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
+        self._conn.commit()
+        return cur.rowcount > 0
+
+    def close(self) -> None:
+        self._conn.close()

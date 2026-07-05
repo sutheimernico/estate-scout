@@ -167,8 +167,10 @@ honest: a missing market figure lowers confidence, it is never invented.
       price/area, known Bundesland). TDD. DONE 2026-07-06: `scout/model.py` (frozen dataclass,
       normalizes Bundesland via new `config.normalize_bundesland`, `price_per_sqm`). 4 tests incl.
       DSGVO no-contact-fields guardrail.
-- [ ] SQLite listings store (objects only): add/list/get/delete, behind a small repository seam.
-      TDD with a temp DB.
+- [x] SQLite listings store (objects only): add/list/get/delete, behind a small repository seam.
+      TDD with a temp DB. DONE 2026-07-06: `scout/store.py` (`ListingStore`, injectable path,
+      features as JSON, single connection so `:memory:` works). 4 tests (round-trip, list/delete,
+      missing→None, file persistence).
 - [ ] Manual intake: CLI `add-listing` + API `POST /api/listings` / `GET /api/listings`. Tests
       (TestClient + CliRunner).
 

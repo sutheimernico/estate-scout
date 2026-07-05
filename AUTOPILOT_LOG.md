@@ -32,3 +32,5 @@
   injectable assistant dep, disclaimer, 503 on Ollama-down). 9 tests. Gate green (78 tests).
 - 2026-07-05 — Phase 4 COMPLETE: live Ollama verify — qwen2.5:7b called the annuity tool,
   monthly_payment=1400 from finance/ (not the model). CLI+API done. Gate green (78 tests).
+- 2026-07-06 — Phase 5: React chat tab (`frontend/` Vite+React+TS, dark scout theme, App +
+  AmortizationTable). npm build green; FastAPI serves frontend/dist. Python gate green (78).

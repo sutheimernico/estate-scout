@@ -5,9 +5,11 @@ tool-calling assistant. The assistant is provided via a dependency so tests can 
 (no Ollama). Every response carries the disclaimer.
 """
 
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Body, Depends, FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .assistant.assistant import DISCLAIMER, Assistant
@@ -68,3 +70,10 @@ def ask(req: AskRequest, assistant: Annotated[Assistant, Depends(get_assistant)]
         sources=resp.sources,
         disclaimer=resp.disclaimer,
     )
+
+
+# Serve the built React chat tab from frontend/dist, if it has been built. Mounted last so the
+# /api/* routes above always take precedence. Absent build → API-only (honest degradation).
+_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+if _DIST.is_dir():
+    app.mount("/", StaticFiles(directory=_DIST, html=True), name="frontend")

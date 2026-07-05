@@ -139,8 +139,11 @@ answer correct. 78 tests, ruff clean.
 
 ## Phase 5 — React chat tab (dark scout identity)
 
-- [ ] Vite + React chat UI: message stream, calc answers render the amortization table beside the
-      text, disclaimer footer. Built assets served by FastAPI.
+- [x] Vite + React chat UI: message stream, calc answers render the amortization table beside the
+      text, disclaimer footer. Built assets served by FastAPI. DONE 2026-07-06: `frontend/` (Vite +
+      React + TS, dark amber "scout" theme, App chat + AmortizationTable + api client). `npm run
+      build` green (tsc + vite). FastAPI mounts `frontend/dist` at `/` (existence-gated, /api takes
+      precedence) — verified serving index.html + /api/health.
 - [ ] `npm run build` health + a thin component/render check. Portfolio coupling: add estate-scout
       to `~/private/portfolio` once presentable.
 Acceptance: `npm run build` passes; API serves the built tab; a manual chat round-trip works.

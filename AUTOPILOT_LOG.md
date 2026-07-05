@@ -44,3 +44,5 @@
   add/get/list/delete). 4 tests (in-memory + temp file). Gate green (86 tests).
 - 2026-07-06 — Phase 6 COMPLETE: manual intake — scout CLI (add/list, scripts/scout.py) + API
   POST/GET /api/listings (injectable store). 6 tests + live smoke. Gate green (90 tests).
+- 2026-07-06 — Phase 7: `scout/enrich.py` Bodenrichtwert seam (Protocol + StaticBodenrichtwert,
+  honest unavailable, no fabrication). 4 tests. Gate green (94 tests).

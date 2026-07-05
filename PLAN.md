@@ -178,9 +178,12 @@ honest: a missing market figure lowers confidence, it is never invented.
 
 ## Phase 7 — Public-data enrichment (provider seams + fakes)
 
-- [ ] Bodenrichtwert seam: `BodenrichtwertProvider` Protocol + `FakeBodenrichtwert`; real adapter is
+- [x] Bodenrichtwert seam: `BodenrichtwertProvider` Protocol + `FakeBodenrichtwert`; real adapter is
       best-effort (BORIS has no documented REST API → degrade to "unavailable", never guess). Attach
-      the local Bodenrichtwert to a listing. Tests use the fake.
+      the local Bodenrichtwert to a listing. Tests use the fake. DONE 2026-07-06: `scout/enrich.py`
+      (`Enrichment`, `BodenrichtwertProvider` Protocol, `StaticBodenrichtwert` = test fake AND honest
+      manual production path from a user-maintained {plz: €/m²} table; empty → unavailable, never
+      fabricated). 4 tests.
 - [ ] Regional signal seam: population trend + vacancy (Zensus/GENESIS + Destatis) Protocol + fakes;
       attach to a listing's location, degrade honestly. Tests use the fake.
 

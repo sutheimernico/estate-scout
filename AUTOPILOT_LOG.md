@@ -42,3 +42,5 @@
   no contact data) + `config.normalize_bundesland`. 4 tests. Gate green (82 tests).
 - 2026-07-06 — Phase 6: `scout/store.py` ListingStore (SQLite, injectable path, JSON features,
   add/get/list/delete). 4 tests (in-memory + temp file). Gate green (86 tests).
+- 2026-07-06 — Phase 6 COMPLETE: manual intake — scout CLI (add/list, scripts/scout.py) + API
+  POST/GET /api/listings (injectable store). 6 tests + live smoke. Gate green (90 tests).

@@ -5,6 +5,7 @@ tool-calling assistant. The assistant is provided via a dependency so tests can 
 (no Ollama). Every response carries the disclaimer.
 """
 
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Annotated
 
@@ -17,6 +18,8 @@ from .assistant.chat import OllamaChat, OllamaUnavailable
 from .assistant.tools import dispatch
 from .rag.embedder import OllamaEmbedder
 from .rag.index import RagIndex, load_corpus
+from .scout.model import Listing
+from .scout.store import DEFAULT_DB, ListingStore
 
 app = FastAPI(title="estate-scout", description="Local real-estate knowledge & finance assistant.")
 
@@ -35,6 +38,41 @@ class AskResponse(BaseModel):
     tool_calls: list[dict] = []
     sources: list[str] = []
     disclaimer: str = DISCLAIMER
+
+
+class ListingIn(BaseModel):
+    price: float
+    living_area_sqm: float
+    bundesland: str
+    plz: str = ""
+    ort: str = ""
+    rooms: float | None = None
+    year_built: int | None = None
+    object_type: str = "wohnung"
+    features: list[str] = []
+    source_url: str = ""
+
+
+class ListingOut(ListingIn):
+    id: int
+    price_per_sqm: float
+
+
+def _to_out(listing: Listing) -> ListingOut:
+    return ListingOut(
+        id=listing.id or 0,
+        price=listing.price,
+        living_area_sqm=listing.living_area_sqm,
+        bundesland=listing.bundesland,
+        plz=listing.plz,
+        ort=listing.ort,
+        rooms=listing.rooms,
+        year_built=listing.year_built,
+        object_type=listing.object_type,
+        features=list(listing.features),
+        source_url=listing.source_url,
+        price_per_sqm=round(listing.price_per_sqm, 2),
+    )
 
 
 def get_assistant() -> Assistant:
@@ -70,6 +108,42 @@ def ask(req: AskRequest, assistant: Annotated[Assistant, Depends(get_assistant)]
         sources=resp.sources,
         disclaimer=resp.disclaimer,
     )
+
+
+def get_store() -> Iterator[ListingStore]:
+    """Provide a listing store per request (overridden in tests). Closes after the response."""
+    store = ListingStore(DEFAULT_DB)
+    try:
+        yield store
+    finally:
+        store.close()
+
+
+@app.post("/api/listings", response_model=ListingOut, status_code=201)
+def create_listing(
+    data: ListingIn, store: Annotated[ListingStore, Depends(get_store)]
+) -> ListingOut:
+    try:
+        listing = Listing(
+            price=data.price,
+            living_area_sqm=data.living_area_sqm,
+            bundesland=data.bundesland,
+            plz=data.plz,
+            ort=data.ort,
+            rooms=data.rooms,
+            year_built=data.year_built,
+            object_type=data.object_type,
+            features=tuple(data.features),
+            source_url=data.source_url,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    return _to_out(store.add(listing))
+
+
+@app.get("/api/listings", response_model=list[ListingOut])
+def list_listings(store: Annotated[ListingStore, Depends(get_store)]) -> list[ListingOut]:
+    return [_to_out(x) for x in store.list()]
 
 
 # Serve the built React chat tab from frontend/dist, if it has been built. Mounted last so the

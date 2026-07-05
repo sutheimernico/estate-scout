@@ -5,7 +5,7 @@ import json
 from typer.testing import CliRunner
 
 from estatescout.assistant.assistant import DISCLAIMER, AssistantResponse
-from estatescout.cli import finance_app, render_response
+from estatescout.cli import finance_app, render_response, scout_app
 
 runner = CliRunner()
 
@@ -45,6 +45,33 @@ def test_cli_yield():
 def test_cli_unknown_bundesland_errors():
     result = runner.invoke(finance_app, ["costs", "--price", "300000", "--bundesland", "Atlantis"])
     assert result.exit_code != 0
+
+
+def test_scout_add_and_list(tmp_path):
+    db = str(tmp_path / "t.db")
+    r = runner.invoke(
+        scout_app,
+        ["add", "--price", "300000", "--area", "100", "--bundesland", "Niedersachsen",
+         "--ort", "Osnabrück", "--db", db],
+    )
+    assert r.exit_code == 0, r.stdout
+    added = json.loads(r.stdout)
+    assert added["bundesland"] == "NI"
+    assert added["price_per_sqm"] == 3_000.0
+    r2 = runner.invoke(scout_app, ["list", "--db", db])
+    assert r2.exit_code == 0
+    items = json.loads(r2.stdout)
+    assert len(items) == 1
+    assert items[0]["ort"] == "Osnabrück"
+
+
+def test_scout_add_invalid_bundesland_errors(tmp_path):
+    r = runner.invoke(
+        scout_app,
+        ["add", "--price", "300000", "--area", "100", "--bundesland", "Atlantis",
+         "--db", str(tmp_path / "t.db")],
+    )
+    assert r.exit_code != 0
 
 
 def test_render_response_includes_answer_numbers_sources_disclaimer():

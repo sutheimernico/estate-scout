@@ -3,9 +3,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from estatescout.api import app, get_assistant
+from estatescout.api import app, get_assistant, get_store
 from estatescout.assistant.assistant import Assistant
 from estatescout.assistant.chat import FakeChat, OllamaUnavailable
+from estatescout.scout.store import ListingStore
 
 client = TestClient(app)
 
@@ -73,3 +74,45 @@ def test_ask_endpoint_returns_503_when_ollama_down():
 def test_all_finance_calcs_are_routable(calc):
     # missing args → 400 (not 404): the route exists for every calculator
     assert client.post(f"/api/finance/{calc}", json={}).status_code == 400
+
+
+def _override_store_to(db_path):
+    # Open a fresh connection per request (same thread as the endpoint), persisting to a temp
+    # file — mirrors production and avoids SQLite's thread-affinity on a shared connection.
+    def _factory():
+        store = ListingStore(db_path)
+        try:
+            yield store
+        finally:
+            store.close()
+
+    return _factory
+
+
+def test_listings_create_and_list(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    try:
+        r = client.post(
+            "/api/listings",
+            json={"price": 300_000, "living_area_sqm": 100, "bundesland": "NI", "ort": "Lingen"},
+        )
+        assert r.status_code == 201, r.text
+        body = r.json()
+        assert body["id"] >= 1
+        assert body["price_per_sqm"] == 3_000.0
+        listed = client.get("/api/listings").json()
+        assert any(x["ort"] == "Lingen" for x in listed)
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_listings_invalid_input_is_400(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    try:
+        r = client.post(
+            "/api/listings",
+            json={"price": -1, "living_area_sqm": 100, "bundesland": "NI"},
+        )
+        assert r.status_code == 400
+    finally:
+        app.dependency_overrides.clear()

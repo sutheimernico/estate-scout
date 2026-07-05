@@ -10,13 +10,15 @@ import json
 import typer
 
 from .assistant.tools import dispatch
+from .scout.model import Listing
+from .scout.store import DEFAULT_DB, ListingStore
 
 finance_app = typer.Typer(
     help="Deterministic real-estate finance calculators.", no_args_is_help=True
 )
 
 
-def _echo(result: dict) -> None:
+def _echo(result: dict | list) -> None:
     typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
 
 
@@ -133,3 +135,72 @@ def ask(question: str) -> None:
         )
         raise typer.Exit(code=1) from None
     typer.echo(render_response(resp))
+
+
+scout_app = typer.Typer(help="Manage saved property objects (manual intake — no scraping).",
+                        no_args_is_help=True)
+
+
+@scout_app.command("add")
+def add_listing(
+    price: float = typer.Option(..., help="purchase price in EUR"),
+    area: float = typer.Option(..., help="living area in m²"),
+    bundesland: str = typer.Option(..., help="e.g. 'Niedersachsen' or 'NRW'"),
+    ort: str = typer.Option("", help="city/town"),
+    rooms: float | None = typer.Option(None, help="number of rooms"),
+    year: int | None = typer.Option(None, help="year built"),
+    object_type: str = typer.Option("wohnung", help="wohnung | haus | grundstueck"),
+    source: str = typer.Option("", help="source URL"),
+    db: str = typer.Option(str(DEFAULT_DB), help="SQLite path"),
+) -> None:
+    """Add a property object you found. Object attributes only — never seller contact data."""
+    store = ListingStore(db)
+    try:
+        saved = store.add(
+            Listing(
+                price=price,
+                living_area_sqm=area,
+                bundesland=bundesland,
+                ort=ort,
+                rooms=rooms,
+                year_built=year,
+                object_type=object_type,
+                source_url=source,
+            )
+        )
+    except ValueError as e:
+        typer.echo(f"Ungültige Eingabe: {e}")
+        raise typer.Exit(code=1) from None
+    finally:
+        store.close()
+    _echo(
+        {
+            "id": saved.id,
+            "price": saved.price,
+            "bundesland": saved.bundesland,
+            "ort": saved.ort,
+            "price_per_sqm": round(saved.price_per_sqm, 2),
+        }
+    )
+
+
+@scout_app.command("list")
+def list_listings(db: str = typer.Option(str(DEFAULT_DB), help="SQLite path")) -> None:
+    """List saved property objects."""
+    store = ListingStore(db)
+    try:
+        items = store.list()
+    finally:
+        store.close()
+    _echo(
+        [
+            {
+                "id": it.id,
+                "price": it.price,
+                "bundesland": it.bundesland,
+                "ort": it.ort,
+                "price_per_sqm": round(it.price_per_sqm, 2),
+            }
+            for it in items
+        ]
+    )

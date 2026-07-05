@@ -171,8 +171,10 @@ honest: a missing market figure lowers confidence, it is never invented.
       TDD with a temp DB. DONE 2026-07-06: `scout/store.py` (`ListingStore`, injectable path,
       features as JSON, single connection so `:memory:` works). 4 tests (round-trip, list/delete,
       missing→None, file persistence).
-- [ ] Manual intake: CLI `add-listing` + API `POST /api/listings` / `GET /api/listings`. Tests
-      (TestClient + CliRunner).
+- [x] Manual intake: CLI `add-listing` + API `POST /api/listings` / `GET /api/listings`. Tests
+      (TestClient + CliRunner). DONE 2026-07-06: `scout_app` (add/list, `--db`) + `scripts/scout.py`;
+      API `POST/GET /api/listings` via injectable `get_store` dependency (per-request connection).
+      6 tests (CLI add/list + invalid, API create/list + invalid-400). Verified live: add→list works.
 
 ## Phase 7 — Public-data enrichment (provider seams + fakes)
 

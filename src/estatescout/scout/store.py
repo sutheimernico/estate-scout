@@ -11,6 +11,9 @@ from pathlib import Path
 
 from .model import Listing
 
+# Default local DB (gitignored via *.db). CLI/API use this; tests pass :memory: or a temp path.
+DEFAULT_DB = Path(__file__).resolve().parents[3] / "data" / "listings.db"
+
 _COLUMNS = (
     "price",
     "living_area_sqm",

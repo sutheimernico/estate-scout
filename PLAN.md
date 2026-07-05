@@ -49,9 +49,10 @@ Acceptance: `uv run pytest -q` green (even with a trivial smoke test) + `uv run 
 
 Goal: pure, typed, fully unit-tested calculators. No LLM. Cross-check against hand-computed values.
 
-- [ ] `annuity`: monthly payment `A = P·(r/12)·(1+r/12)^n / ((1+r/12)^n − 1)`, amortization schedule
-      (per-year remaining debt, interest/principal split), total interest, payoff duration from an
-      initial-repayment %. Tests: known textbook cases, r=0 edge, first-payment interest = P·r/12.
+- [x] `annuity`: monthly payment = P·(rate + initial_repayment)/12 (German convention), amortization
+      schedule (per-year remaining debt, interest/principal split), total interest, payoff duration
+      from an initial-repayment %. DONE 2026-07-05: `finance/annuity.py` (`amortize` + `annuity`), 8
+      tests incl. exact first-two-months split, r=0 pure-repayment, non-amortizing + invalid inputs.
 - [ ] `annuity` extension: optional annual `sondertilgung` (extra repayment) shortens the schedule.
       Tests: schedule with vs. without; invariant total-principal = P.
 - [ ] `purchase_costs`: Grunderwerbsteuer (rate per Bundesland from `config/`) + notary+Grundbuch %

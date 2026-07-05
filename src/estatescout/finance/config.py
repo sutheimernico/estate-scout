@@ -25,11 +25,11 @@ def load_config(path: str | None = None) -> dict:
     return data
 
 
-def grunderwerbsteuer_rate(bundesland: str, *, config: dict | None = None) -> float:
-    """Grunderwerbsteuer rate (fraction) for a Bundesland by code or full name.
+def normalize_bundesland(bundesland: str, *, config: dict | None = None) -> str:
+    """Resolve a Bundesland code or common name to its canonical two-letter code.
 
-    Accepts codes (``NI``, ``NW``) and common names (``Niedersachsen``, ``NRW``),
-    case-insensitively. Raises ``ValueError`` for an unknown Bundesland.
+    Accepts codes (``NI``, ``NW``) and names (``Niedersachsen``, ``NRW``), case-insensitively.
+    Raises ``ValueError`` for an unknown Bundesland.
     """
     cfg = config or load_config()
     block = cfg["grunderwerbsteuer"]
@@ -41,4 +41,11 @@ def grunderwerbsteuer_rate(bundesland: str, *, config: dict | None = None) -> fl
     if key not in rates:
         known = ", ".join(sorted(rates))
         raise ValueError(f"unknown Bundesland '{bundesland}' (known codes: {known})")
-    return float(rates[key])
+    return key
+
+
+def grunderwerbsteuer_rate(bundesland: str, *, config: dict | None = None) -> float:
+    """Grunderwerbsteuer rate (fraction) for a Bundesland by code or full name."""
+    cfg = config or load_config()
+    code = normalize_bundesland(bundesland, config=cfg)
+    return float(cfg["grunderwerbsteuer"]["rates"][code])

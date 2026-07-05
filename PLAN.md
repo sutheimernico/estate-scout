@@ -162,9 +162,11 @@ honest: a missing market figure lowers confidence, it is never invented.
 
 ## Phase 6 — Object model + manual intake
 
-- [ ] `Listing` model (price, living_area_sqm, rooms, year_built, plz, ort, bundesland, object_type,
+- [x] `Listing` model (price, living_area_sqm, rooms, year_built, plz, ort, bundesland, object_type,
       features, source_url; **NO seller contact data** per ADR-0001/DSGVO) + validation (positive
-      price/area, known Bundesland). TDD.
+      price/area, known Bundesland). TDD. DONE 2026-07-06: `scout/model.py` (frozen dataclass,
+      normalizes Bundesland via new `config.normalize_bundesland`, `price_per_sqm`). 4 tests incl.
+      DSGVO no-contact-fields guardrail.
 - [ ] SQLite listings store (objects only): add/list/get/delete, behind a small repository seam.
       TDD with a temp DB.
 - [ ] Manual intake: CLI `add-listing` + API `POST /api/listings` / `GET /api/listings`. Tests

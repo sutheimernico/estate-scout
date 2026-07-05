@@ -81,10 +81,11 @@ config loader, 29 tests, ruff clean. The trust anchor is complete.
 
 Goal: curated corpus + local naive-vector retrieval with citations.
 
-- [ ] Write the curated Markdown corpus from the domain research (valuation, location signals +
+- [x] Write the curated Markdown corpus from the domain research (valuation, location signals +
       data sources, financing math, risks, legal), each doc citing its public source + date.
-      SEED: `docs/research/2026-07-05-domain-research.md` (the full brief with sources) — split it
-      into focused corpus docs under `knowledge/`, keep source URLs + dates.
+      SEED: `docs/research/2026-07-05-domain-research.md`. DONE 2026-07-05: 7 focused docs under
+      `knowledge/` (00 Überblick, 01 Bewertung, 02 Lage+Datenquellen, 03 Finanzierung, 04
+      Kaufnebenkosten, 05 Risiken+Recht, 06 Datenzugriff-Listings), sources + dates inline.
 - [ ] Embedder seam: `Embedder` Protocol; `OllamaEmbedder` (httpx `/api/embeddings`) + `FakeEmbedder`
       for network-free tests. Chunker (heading-aware, bounded chunk size).
 - [ ] Index: embed the corpus once → cached NumPy matrix under `data/rag_index/` (gitignored,

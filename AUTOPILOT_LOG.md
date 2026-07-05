@@ -14,3 +14,5 @@
   quota per Bundesland). 5 tests. Gate green (25 tests).
 - 2026-07-05 — Phase 1 COMPLETE: `yield_metrics` (gross/net yield + Kaufpreisfaktor), 4 tests.
   Finance core done: 5 calculators + config, 29 tests, ruff clean. Trust anchor complete.
+- 2026-07-05 — Phase 2: curated knowledge corpus (7 docs under knowledge/, sources+dates inline)
+  from the domain research. No code change, gate green (29 tests).

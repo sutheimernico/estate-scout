@@ -57,9 +57,10 @@ Goal: pure, typed, fully unit-tested calculators. No LLM. Cross-check against ha
       DONE 2026-07-05: `annual_sondertilgung` (EUR/year, applied after each full year, capped at
       remaining), separate `sondertilgung` field on Month/YearRow. 4 tests (zero==base, shortens
       term + cuts interest, exact principal repaid incl. sonder). Note: distinct from § 489 BGB.
-- [ ] `purchase_costs`: Grunderwerbsteuer (rate per Bundesland from `config/`) + notary+Grundbuch %
-      + Makler % → total costs, ancillary-cost quota, equity-needed. Tests: NI vs. NRW rate differ;
-      missing Bundesland errors loudly.
+- [x] `purchase_costs`: Grunderwerbsteuer (rate per Bundesland from `config/`) + notary+Grundbuch %
+      + Makler % → total costs, ancillary-cost quota, equity-needed. DONE 2026-07-05:
+      `finance/purchase_costs.py` (optional Makler share for Bestellerprinzip, `min_equity` =
+      ancillary). 4 tests (NI vs NRW, full breakdown, Makler excluded, invalid inputs).
 - [ ] `affordability`: max purchase price from net income, equity, interest, initial repayment,
       payment-to-income cap. Tests: monotonicity (more income → higher max), rate cap respected.
 - [ ] `yield_metrics`: gross yield = annual rent / price; net yield after ancillary + running costs;

@@ -122,8 +122,11 @@ Acceptance: tool-routing tests green against the fake model; gate green. — MET
 
 ## Phase 4 — Interfaces (CLI + FastAPI)
 
-- [ ] CLI (`scripts/`, typer): `ask "…"` + direct `annuity`/`costs`/`afford`/`yield` commands
-      (structured output). Tests: direct commands deterministic; `ask` wired to the assistant.
+- [x] CLI (`scripts/`, typer): `ask "…"` + direct `annuity`/`costs`/`afford`/`yield` commands
+      (structured output). DONE 2026-07-05: `estatescout/cli.py` (finance_app reuses tool dispatch;
+      `ask` wires OllamaChat+RAG, degrades on OllamaUnavailable; `render_response`). Thin
+      `scripts/finance.py` + `scripts/ask.py`. 6 tests (4 calc commands via CliRunner, unknown-BL
+      error, render_response). Verified live: `scripts/finance.py annuity` prints correct schedule.
 - [ ] FastAPI: `POST /api/ask`, `POST /api/finance/{calc}` (Pydantic models), disclaimer in
       responses, SQLite chat history (optional). Tests: TestClient over each endpoint, validation
       errors, Ollama-down path.

@@ -26,3 +26,5 @@
   `assistant/assistant.py` (tool-calling loop, RAG context, error feedback). 7 tests. Gate green (58).
 - 2026-07-05 — Phase 3 COMPLETE: SYSTEM_PROMPT (honesty rules) + DISCLAIMER on every response.
   3 honesty tests. Assistant done. Gate green (61 tests).
+- 2026-07-05 — Phase 4: CLI (`estatescout/cli.py` finance_app + ask + render_response,
+  scripts/ shims). 6 tests + live smoke run of finance CLI. Gate green (67 tests).

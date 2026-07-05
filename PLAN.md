@@ -106,9 +106,13 @@ Goal: route questions to RAG or a finance tool; numbers only from tools.
       tool name → function, with argument validation. DONE 2026-07-05: `assistant/tools.py` (4
       OpenAI-style tool specs; adapters take percent, convert to fractions; `dispatch` validates
       required args; results rounded, numbers straight from finance/). 8 tests.
-- [ ] LLM seam: `ChatModel` Protocol; `OllamaChat` (httpx `/api/chat` with `tools`) + `FakeChat`
+- [x] LLM seam: `ChatModel` Protocol; `OllamaChat` (httpx `/api/chat` with `tools`) + `FakeChat`
       scripted for tests. Assistant loop: user msg → model (may request tool) → run tool → feed
       result back → final grounded answer. RAG retrieval injected as context for knowledge questions.
+      DONE 2026-07-05: `assistant/chat.py` (Protocol, OllamaChat w/ OllamaUnavailable, FakeChat) +
+      `assistant/assistant.py` (loop, RAG context injection, tool-error fed back). 7 tests
+      (script order, MockTransport post, ConnectError→Unavailable, calc round-trip, RAG context,
+      error feedback, degradation propagates).
 - [ ] System prompt encoding the honesty rules (numbers only from tools, cite sources, disclaimer).
       Tests (fake model): calc intent → correct tool + args, surfaced number == tool result;
       knowledge intent → RAG context used; Ollama-down → clear degradation.

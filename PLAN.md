@@ -127,9 +127,11 @@ Acceptance: tool-routing tests green against the fake model; gate green. — MET
       `ask` wires OllamaChat+RAG, degrades on OllamaUnavailable; `render_response`). Thin
       `scripts/finance.py` + `scripts/ask.py`. 6 tests (4 calc commands via CliRunner, unknown-BL
       error, render_response). Verified live: `scripts/finance.py annuity` prints correct schedule.
-- [ ] FastAPI: `POST /api/ask`, `POST /api/finance/{calc}` (Pydantic models), disclaimer in
-      responses, SQLite chat history (optional). Tests: TestClient over each endpoint, validation
-      errors, Ollama-down path.
+- [x] FastAPI: `POST /api/ask`, `POST /api/finance/{calc}` (Pydantic models), disclaimer in
+      responses, SQLite chat history (optional). DONE 2026-07-05: `estatescout/api.py` (finance +
+      ask via injectable `get_assistant` dependency, disclaimer on every response, `/api/health`).
+      SQLite chat history DEFERRED (YAGNI — no second use case yet). 9 tests (health, finance calcs,
+      unknown/missing→400, ask via injected fake, Ollama-down→503, all calcs routable).
 Acceptance: CLI + API exercised in tests; a real local `ask` run verified against Ollama; gate green.
 
 ## Phase 5 — React chat tab (dark scout identity)

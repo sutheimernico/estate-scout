@@ -28,3 +28,5 @@
   3 honesty tests. Assistant done. Gate green (61 tests).
 - 2026-07-05 — Phase 4: CLI (`estatescout/cli.py` finance_app + ask + render_response,
   scripts/ shims). 6 tests + live smoke run of finance CLI. Gate green (67 tests).
+- 2026-07-05 — Phase 4: FastAPI (`estatescout/api.py`: /api/finance/{calc} + /api/ask via
+  injectable assistant dep, disclaimer, 503 on Ollama-down). 9 tests. Gate green (78 tests).

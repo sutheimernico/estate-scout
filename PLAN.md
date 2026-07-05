@@ -113,10 +113,12 @@ Goal: route questions to RAG or a finance tool; numbers only from tools.
       `assistant/assistant.py` (loop, RAG context injection, tool-error fed back). 7 tests
       (script order, MockTransport post, ConnectError→Unavailable, calc round-trip, RAG context,
       error feedback, degradation propagates).
-- [ ] System prompt encoding the honesty rules (numbers only from tools, cite sources, disclaimer).
+- [x] System prompt encoding the honesty rules (numbers only from tools, cite sources, disclaimer).
       Tests (fake model): calc intent → correct tool + args, surfaced number == tool result;
-      knowledge intent → RAG context used; Ollama-down → clear degradation.
-Acceptance: tool-routing tests green against the fake model; gate green.
+      knowledge intent → RAG context used; Ollama-down → clear degradation. DONE 2026-07-05:
+      `SYSTEM_PROMPT` (4 rules) + `DISCLAIMER` wired onto every `AssistantResponse`. 3 tests.
+Acceptance: tool-routing tests green against the fake model; gate green. — MET 2026-07-05
+(61 tests, ruff clean). Real Ollama run deferred to Phase 4 (needs a tool-calling model pulled).
 
 ## Phase 4 — Interfaces (CLI + FastAPI)
 

@@ -24,3 +24,5 @@
   adapters, arg validation, numbers from finance/). 8 tests. Gate green (51 tests).
 - 2026-07-05 — Phase 3: `assistant/chat.py` (ChatModel Protocol, OllamaChat, FakeChat) +
   `assistant/assistant.py` (tool-calling loop, RAG context, error feedback). 7 tests. Gate green (58).
+- 2026-07-05 — Phase 3 COMPLETE: SYSTEM_PROMPT (honesty rules) + DISCLAIMER on every response.
+  3 honesty tests. Assistant done. Gate green (61 tests).

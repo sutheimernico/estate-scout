@@ -40,6 +40,7 @@ class AssistantResponse:
     answer: str
     tool_calls: list[dict] = field(default_factory=list)  # {name, args, result}
     sources: list[str] = field(default_factory=list)  # retrieved corpus doc names
+    disclaimer: str = DISCLAIMER  # every response carries the honesty disclaimer
 
 
 class Assistant:

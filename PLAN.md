@@ -102,8 +102,10 @@ Acceptance: golden Q&A retrieval passes with the fake embedder; gate green. — 
 
 Goal: route questions to RAG or a finance tool; numbers only from tools.
 
-- [ ] Tool schemas for the `finance/` functions (JSON schema per calculator) + a dispatcher mapping
-      tool name → function, with argument validation.
+- [x] Tool schemas for the `finance/` functions (JSON schema per calculator) + a dispatcher mapping
+      tool name → function, with argument validation. DONE 2026-07-05: `assistant/tools.py` (4
+      OpenAI-style tool specs; adapters take percent, convert to fractions; `dispatch` validates
+      required args; results rounded, numbers straight from finance/). 8 tests.
 - [ ] LLM seam: `ChatModel` Protocol; `OllamaChat` (httpx `/api/chat` with `tools`) + `FakeChat`
       scripted for tests. Assistant loop: user msg → model (may request tool) → run tool → feed
       result back → final grounded answer. RAG retrieval injected as context for knowledge questions.

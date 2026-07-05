@@ -20,3 +20,5 @@
   FakeEmbedder deterministic, OllamaEmbedder httpx-injectable). 8 tests. Gate green (37 tests).
 - 2026-07-05 — Phase 2 COMPLETE: `rag/index.py` (load_corpus + RagIndex build/retrieve/save/load,
   cosine). 6 tests incl. 2 golden queries + cache round-trip. Gate green (43 tests). RAG done.
+- 2026-07-05 — Phase 3: `assistant/tools.py` (4 tool schemas + dispatcher, percent→fraction
+  adapters, arg validation, numbers from finance/). 8 tests. Gate green (51 tests).

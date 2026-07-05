@@ -12,3 +12,5 @@
   min_equity). 4 tests (NI vs NRW, breakdown, Makler off, invalid). Gate green (20 tests).
 - 2026-07-05 — Phase 1: `affordability` (max price from net-income budget, backs out ancillary
   quota per Bundesland). 5 tests. Gate green (25 tests).
+- 2026-07-05 — Phase 1 COMPLETE: `yield_metrics` (gross/net yield + Kaufpreisfaktor), 4 tests.
+  Finance core done: 5 calculators + config, 29 tests, ruff clean. Trust anchor complete.

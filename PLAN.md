@@ -65,14 +65,17 @@ Goal: pure, typed, fully unit-tested calculators. No LLM. Cross-check against ha
       payment-to-income cap. DONE 2026-07-05: `finance/affordability.py` (budget→loan→price, backs
       out the ancillary quota per Bundesland; obligations + running costs subtracted). 5 tests
       (income cap, worked example max_loan=300k, monotonicity, obligations reduce, invalid inputs).
-- [ ] `yield_metrics`: gross yield = annual rent / price; net yield after ancillary + running costs;
-      Kaufpreisfaktor = price / annual rent. Tests: reciprocal relation, worked example.
+- [x] `yield_metrics`: gross yield = annual rent / price; net yield after ancillary + running costs;
+      Kaufpreisfaktor = price / annual rent. DONE 2026-07-05: `finance/yield_metrics.py`. 4 tests
+      (gross+KPF worked example, reciprocal relation, net accounts for costs, invalid inputs).
 - [x] `config/` loader: versioned YAML (Grunderwerbsteuer per Bundesland, notary/Makler %,
       rule-of-thumb thresholds), each value tagged source+date. Populated from the domain research;
       loudly errors on unknown keys. DONE 2026-07-05: `config/rates.yaml` (all 16 GrESt rates +
       full-name/NRW aliases, notary/GB, Makler, affordability, reference Sollzins — each source+date)
       + `finance/config.py` (`load_config`, `grunderwerbsteuer_rate` by code/name). 5 tests.
-Acceptance: every calculator unit-tested against hand-computed references; gate green.
+Acceptance: every calculator unit-tested against hand-computed references; gate green. — MET
+2026-07-05: 5 calculators (annuity+sondertilgung, purchase_costs, affordability, yield_metrics) +
+config loader, 29 tests, ruff clean. The trust anchor is complete.
 
 ## Phase 2 — RAG knowledge base (`knowledge/` + `rag/`)
 

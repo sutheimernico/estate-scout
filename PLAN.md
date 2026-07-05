@@ -86,8 +86,11 @@ Goal: curated corpus + local naive-vector retrieval with citations.
       SEED: `docs/research/2026-07-05-domain-research.md`. DONE 2026-07-05: 7 focused docs under
       `knowledge/` (00 Überblick, 01 Bewertung, 02 Lage+Datenquellen, 03 Finanzierung, 04
       Kaufnebenkosten, 05 Risiken+Recht, 06 Datenzugriff-Listings), sources + dates inline.
-- [ ] Embedder seam: `Embedder` Protocol; `OllamaEmbedder` (httpx `/api/embeddings`) + `FakeEmbedder`
-      for network-free tests. Chunker (heading-aware, bounded chunk size).
+- [x] Embedder seam: `Embedder` Protocol; `OllamaEmbedder` (httpx `/api/embeddings`) + `FakeEmbedder`
+      for network-free tests. Chunker (heading-aware, bounded chunk size). DONE 2026-07-05:
+      `rag/chunker.py` (heading-aware, paragraph split at max_chars) + `rag/embedder.py`
+      (`Embedder` Protocol, deterministic hashing `FakeEmbedder`, `OllamaEmbedder` w/ injectable
+      httpx client). 8 tests (chunk headings/split, fake determinism/overlap, Ollama MockTransport).
 - [ ] Index: embed the corpus once → cached NumPy matrix under `data/rag_index/` (gitignored,
       regenerable); `retrieve(query, k)` → top-k chunks + source. Tests: fake embedder, golden Q&A
       hits expected source doc, cache round-trip.

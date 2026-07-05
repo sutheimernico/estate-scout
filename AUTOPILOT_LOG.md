@@ -16,3 +16,5 @@
   Finance core done: 5 calculators + config, 29 tests, ruff clean. Trust anchor complete.
 - 2026-07-05 — Phase 2: curated knowledge corpus (7 docs under knowledge/, sources+dates inline)
   from the domain research. No code change, gate green (29 tests).
+- 2026-07-05 — Phase 2: `rag/chunker.py` (heading-aware) + `rag/embedder.py` (Embedder Protocol,
+  FakeEmbedder deterministic, OllamaEmbedder httpx-injectable). 8 tests. Gate green (37 tests).

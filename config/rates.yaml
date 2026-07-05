@@ -1,0 +1,87 @@
+# estate-scout — financial reference config.
+#
+# Every block carries `as_of` + `source` because these values age. Rates are fractions
+# (0.05 = 5 %). Update via a dated commit. The calculators error loudly on unknown keys
+# rather than assuming a default — a missing fact must never be silently invented.
+#
+# All figures below are as of 2026-07-05, from the domain research brief. For production
+# use, re-verify tax rates against the respective Landesfinanzministerium and interest
+# levels against a live source.
+
+grunderwerbsteuer:
+  as_of: "2026-07-05"
+  source: "domain research 2026-07-05; cross-checked via finanz-tools.de; verify with Landesfinanzministerium"
+  # Grunderwerbsteuer per Bundesland (fraction of purchase price).
+  rates:
+    BW: 0.050   # Baden-Württemberg (2011)
+    BY: 0.035   # Bayern (1997)
+    BE: 0.060   # Berlin (2014)
+    BB: 0.065   # Brandenburg (2015)
+    HB: 0.055   # Bremen (2025-07-01, raised from 5.0)
+    HH: 0.055   # Hamburg (2023)
+    HE: 0.060   # Hessen (2014)
+    MV: 0.060   # Mecklenburg-Vorpommern (2019)
+    NI: 0.050   # Niedersachsen (2014-01-01) — focus region
+    NW: 0.065   # Nordrhein-Westfalen (2015-01-01) — focus region
+    RP: 0.050   # Rheinland-Pfalz (2012)
+    SL: 0.065   # Saarland (2015)
+    SN: 0.055   # Sachsen (2023)
+    ST: 0.050   # Sachsen-Anhalt (2012)
+    SH: 0.065   # Schleswig-Holstein (2014)
+    TH: 0.050   # Thüringen (2024, lowered from 6.5)
+  # Full-name / common-name aliases → canonical two-letter code (case-insensitive lookup).
+  aliases:
+    BADEN-WUERTTEMBERG: BW
+    BADEN-WÜRTTEMBERG: BW
+    BAYERN: BY
+    BERLIN: BE
+    BRANDENBURG: BB
+    BREMEN: HB
+    HAMBURG: HH
+    HESSEN: HE
+    MECKLENBURG-VORPOMMERN: MV
+    NIEDERSACHSEN: NI
+    NORDRHEIN-WESTFALEN: NW
+    NRW: NW
+    RHEINLAND-PFALZ: RP
+    SAARLAND: SL
+    SACHSEN: SN
+    SACHSEN-ANHALT: ST
+    SCHLESWIG-HOLSTEIN: SH
+    THUERINGEN: TH
+    THÜRINGEN: TH
+
+notary_and_land_registry:
+  as_of: "2026-07-05"
+  source: "GNotKG; fees raised 2025-06-01; finanztip.de/baufinanzierung/notarkosten-haus"
+  # Fractions of purchase price. Notary + Grundbuch together ~1.5–2.0 %.
+  notary_rate: 0.015
+  land_registry_rate: 0.005
+
+makler:
+  as_of: "2026-07-05"
+  source: "Bestellerprinzip since 2020-12-23; drklein.de/maklerprovision"
+  # Buyer's typical share incl. VAT under the split rule (~3.57 %). Often 0 if seller-paid
+  # or no agent; the calculator lets the caller override or omit it.
+  typical_buyer_rate: 0.0357
+
+affordability:
+  as_of: "2026-07-05"
+  source: "bank rule of thumb; baufimanufaktur.de"
+  # Max share of net monthly household income that the loan payment may take (rule of thumb,
+  # not a regulatory limit; above ~40 % banks usually decline).
+  max_rate_to_net_income: 0.35
+  # Banks assume running/management costs per m² of living space (EUR/month).
+  management_cost_eur_per_sqm: 2.75
+
+reference_interest:
+  as_of: "2026-07-05"
+  source: "drklein.de/aktuelle-bauzinsen (top conditions, basis 350k EUR); INFORMATIONAL ONLY"
+  # Reference nominal (Sollzins) levels by fixed-rate period. NOT used by the calculators —
+  # the user always supplies their own rate; these are only for the assistant to cite.
+  sollzins_by_fixation_years:
+    5: 0.0345
+    10: 0.0332
+    15: 0.0359
+    20: 0.0379
+    30: 0.0407

@@ -64,9 +64,11 @@ Goal: pure, typed, fully unit-tested calculators. No LLM. Cross-check against ha
       payment-to-income cap. Tests: monotonicity (more income → higher max), rate cap respected.
 - [ ] `yield_metrics`: gross yield = annual rent / price; net yield after ancillary + running costs;
       Kaufpreisfaktor = price / annual rent. Tests: reciprocal relation, worked example.
-- [ ] `config/` loader: versioned YAML (Grunderwerbsteuer per Bundesland, notary/Makler %,
+- [x] `config/` loader: versioned YAML (Grunderwerbsteuer per Bundesland, notary/Makler %,
       rule-of-thumb thresholds), each value tagged source+date. Populated from the domain research;
-      loudly errors on unknown keys. Tests: parse + missing-key error.
+      loudly errors on unknown keys. DONE 2026-07-05: `config/rates.yaml` (all 16 GrESt rates +
+      full-name/NRW aliases, notary/GB, Makler, affordability, reference Sollzins — each source+date)
+      + `finance/config.py` (`load_config`, `grunderwerbsteuer_rate` by code/name). 5 tests.
 Acceptance: every calculator unit-tested against hand-computed references; gate green.
 
 ## Phase 2 — RAG knowledge base (`knowledge/` + `rag/`)

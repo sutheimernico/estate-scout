@@ -6,3 +6,5 @@
   (exact first-two-months split, r=0 edge, non-amortizing + invalid-input guards). Gate green.
 - 2026-07-05 — Phase 1: `annuity` optional `annual_sondertilgung` (contract option, ≠ § 489 BGB).
   4 tests (zero==base, shortens term/cuts interest, exact principal). Gate green (11 tests).
+- 2026-07-05 — Phase 1: `config/rates.yaml` (16 GrESt rates + aliases, notary/GB, Makler,
+  affordability, ref. Sollzins — all source+date) + `finance/config.py` loader. 5 tests, gate green.

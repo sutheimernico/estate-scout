@@ -34,3 +34,5 @@
   monthly_payment=1400 from finance/ (not the model). CLI+API done. Gate green (78 tests).
 - 2026-07-06 — Phase 5: React chat tab (`frontend/` Vite+React+TS, dark scout theme, App +
   AmortizationTable). npm build green; FastAPI serves frontend/dist. Python gate green (78).
+- 2026-07-06 — Phase 5: 3 vitest render tests (App + AmortizationTable) green; npm build green.
+  Portfolio coupling deferred to Needs Nico. Stage 1 COMPLETE.

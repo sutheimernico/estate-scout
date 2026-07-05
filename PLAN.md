@@ -144,9 +144,13 @@ answer correct. 78 tests, ruff clean.
       React + TS, dark amber "scout" theme, App chat + AmortizationTable + api client). `npm run
       build` green (tsc + vite). FastAPI mounts `frontend/dist` at `/` (existence-gated, /api takes
       precedence) — verified serving index.html + /api/health.
-- [ ] `npm run build` health + a thin component/render check. Portfolio coupling: add estate-scout
-      to `~/private/portfolio` once presentable.
-Acceptance: `npm run build` passes; API serves the built tab; a manual chat round-trip works.
+- [x] `npm run build` health + a thin component/render check. Portfolio coupling: add estate-scout
+      to `~/private/portfolio` once presentable. DONE 2026-07-06: 3 vitest render tests (App header/
+      disclaimer/empty-state, AmortizationTable formatting) green; `npm run build` green. Portfolio
+      coupling DEFERRED to Needs Nico — premature before merge/remote/screenshots.
+Acceptance: `npm run build` passes; API serves the built tab; a manual chat round-trip works. — MET
+2026-07-06: build green, FastAPI verified serving index.html at `/` with `/api/*` taking precedence;
+the live tool-calling round-trip was verified in Phase 4 (qwen2.5:7b → annuity → 1400 €).
 
 ---
 
@@ -154,5 +158,9 @@ Acceptance: `npm run build` passes; API serves the built tab; a manual chat roun
 
 - Merge `autopilot/work` → `main` (Nico reviews; `main` stays unborn until then).
 - Remote / GitHub visibility for estate-scout (none yet) — decide when Stage 1 is presentable.
-- Stage 2 (funnel) data-source go/no-go once the research + ADR-0001 land: which legal source, if
-  any, is worth building a funnel on.
+- Portfolio coupling: add estate-scout to `~/private/portfolio` once merged/public with a
+  screenshot or short demo (deferred from Phase 5 — premature before then).
+- Optional: `ollama pull nomic-embed-text` for real semantic RAG retrieval (the assistant works
+  with any pulled model for embeddings, but a dedicated embed model is better).
+- Stage 2 (funnel) data-source go/no-go once ADR-0001 lands: which legal source, if any, is worth
+  building a funnel on (no scraping — see `knowledge/06-datenzugriff-listings.md`).

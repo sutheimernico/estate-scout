@@ -18,3 +18,5 @@
   from the domain research. No code change, gate green (29 tests).
 - 2026-07-05 — Phase 2: `rag/chunker.py` (heading-aware) + `rag/embedder.py` (Embedder Protocol,
   FakeEmbedder deterministic, OllamaEmbedder httpx-injectable). 8 tests. Gate green (37 tests).
+- 2026-07-05 — Phase 2 COMPLETE: `rag/index.py` (load_corpus + RagIndex build/retrieve/save/load,
+  cosine). 6 tests incl. 2 golden queries + cache round-trip. Gate green (43 tests). RAG done.

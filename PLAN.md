@@ -91,10 +91,12 @@ Goal: curated corpus + local naive-vector retrieval with citations.
       `rag/chunker.py` (heading-aware, paragraph split at max_chars) + `rag/embedder.py`
       (`Embedder` Protocol, deterministic hashing `FakeEmbedder`, `OllamaEmbedder` w/ injectable
       httpx client). 8 tests (chunk headings/split, fake determinism/overlap, Ollama MockTransport).
-- [ ] Index: embed the corpus once → cached NumPy matrix under `data/rag_index/` (gitignored,
-      regenerable); `retrieve(query, k)` → top-k chunks + source. Tests: fake embedder, golden Q&A
-      hits expected source doc, cache round-trip.
-Acceptance: golden Q&A retrieval passes with the fake embedder; gate green.
+- [x] Index: embed the corpus once → cached NumPy matrix under `data/rag_index/` (gitignored,
+      regenerable); `retrieve(query, k)` → top-k chunks + source. DONE 2026-07-05: `rag/index.py`
+      (`load_corpus`, `RagIndex.build/retrieve/save/load`, row-normalized cosine). 6 tests
+      (corpus load, 2 golden queries hit expected source, cache round-trip, empty/k guards).
+Acceptance: golden Q&A retrieval passes with the fake embedder; gate green. — MET 2026-07-05
+(43 tests, ruff clean). Note: real semantic retrieval needs `ollama pull nomic-embed-text`.
 
 ## Phase 3 — Assistant (`assistant/`) — Ollama tool calling
 

@@ -14,6 +14,19 @@ import httpx
 
 _TOKEN = re.compile(r"\w+", re.UNICODE)
 
+# Common German/English function words dropped by the FakeEmbedder so distinctive content
+# tokens dominate the bag-of-words similarity. Only affects the test double — OllamaEmbedder
+# sends raw text to the real model.
+_STOPWORDS = {
+    "der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "einem", "einer",
+    "und", "oder", "ist", "sind", "war", "wird", "werden", "kann", "muss", "soll", "darf",
+    "in", "im", "an", "auf", "mit", "für", "von", "zu", "zum", "zur", "wie", "wo", "was",
+    "welche", "welcher", "welches", "ob", "ich", "du", "er", "sie", "es", "wir", "ihr", "man",
+    "nicht", "kein", "keine", "auch", "nur", "bei", "aus", "als", "am", "dass", "so", "noch",
+    "schon", "the", "a", "is", "are", "of", "to", "on", "with", "for", "and", "or", "how",
+    "what", "this", "that", "be",
+}
+
 
 @runtime_checkable
 class Embedder(Protocol):
@@ -23,7 +36,7 @@ class Embedder(Protocol):
 
 
 def _tokenize(text: str) -> list[str]:
-    return _TOKEN.findall(text.lower())
+    return [t for t in _TOKEN.findall(text.lower()) if t not in _STOPWORDS]
 
 
 class FakeEmbedder:

@@ -36,3 +36,5 @@
   AmortizationTable). npm build green; FastAPI serves frontend/dist. Python gate green (78).
 - 2026-07-06 — Phase 5: 3 vitest render tests (App + AmortizationTable) green; npm build green.
   Portfolio coupling deferred to Needs Nico. Stage 1 COMPLETE.
+- 2026-07-06 — Stage 1 COMPLETE (Phase 5 done). Wrote ADR-0001 (Stage-2 data source: NO scraping;
+  honest funnel over user-brought objects + public enrichment). Planned Stage 2 Phases 6-9.

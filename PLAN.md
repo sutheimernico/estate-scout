@@ -22,17 +22,17 @@ checks the box, and appends one line to `AUTOPILOT_LOG.md`.
 
 ## The vision (stages — only Stage 1 is detailed)
 
-1. **Knowledge & Finance Assistant** ← THIS STAGE. RAG over curated domain knowledge + deterministic
-   finance calculators + local tool-calling assistant, CLI/API/React chat.
-2. **Scouting funnel** — ingest legally-available listings/market data → score price-vs-location →
-   recommend. GATED on the data-source finding (see the research brief + ADR-0001); no scraping.
-3. **Per-object evaluation** — paste an exposé → extract fields (user confirms) → run calculators →
-   verdict. The bridge between Stage 1 and the funnel.
-4. **Copilot** — scheduled runs + notifications (equity-scout pattern), inherits the funnel's data.
+1. **Knowledge & Finance Assistant** — ✅ COMPLETE 2026-07-06. RAG over curated domain knowledge +
+   deterministic finance calculators + local tool-calling assistant, CLI/API/React chat.
+2. **Scouting funnel** (per ADR-0001, NO scraping) — user-assisted intake of objects + public-data
+   enrichment (Bodenrichtwert/Zensus/trend) → transparent price-vs-location + finance scoring. ←
+   CURRENT (Phases 6–9 below).
+3. **Per-object evaluation** — folded into Stage 2 (the intake + score IS the per-object verdict).
+4. **Copilot** — scheduled runs + notifications (equity-scout pattern), over the user's saved objects.
 5. **Unified dashboard** — one React app across all pillars, dark scout identity.
 
-Stages 2–5 are sketched in `docs/adr/` as they are designed; do not expand them here until Stage 1
-is done and the data-source question is settled.
+Data-source decision is settled in `docs/adr/0001-stage2-data-source.md`. The auto-scan-every-listing
+ambition is a Needs-Nico gap (no legal auto-source); the loop builds the honest funnel around it.
 
 ---
 
@@ -151,6 +151,46 @@ answer correct. 78 tests, ruff clean.
 Acceptance: `npm run build` passes; API serves the built tab; a manual chat round-trip works. — MET
 2026-07-06: build green, FastAPI verified serving index.html at `/` with `/api/*` taking precedence;
 the live tool-calling round-trip was verified in Phase 4 (qwen2.5:7b → annuity → 1400 €).
+
+---
+
+# Stage 2 — Honest scouting funnel (per ADR-0001; NO scraping)
+
+Goal: over objects the user brings in (manual/assisted intake — never scraped), enrich with public
+data and score price-vs-location transparently, reusing the Stage-1 `finance/` core. Numbers stay
+honest: a missing market figure lowers confidence, it is never invented.
+
+## Phase 6 — Object model + manual intake
+
+- [ ] `Listing` model (price, living_area_sqm, rooms, year_built, plz, ort, bundesland, object_type,
+      features, source_url; **NO seller contact data** per ADR-0001/DSGVO) + validation (positive
+      price/area, known Bundesland). TDD.
+- [ ] SQLite listings store (objects only): add/list/get/delete, behind a small repository seam.
+      TDD with a temp DB.
+- [ ] Manual intake: CLI `add-listing` + API `POST /api/listings` / `GET /api/listings`. Tests
+      (TestClient + CliRunner).
+
+## Phase 7 — Public-data enrichment (provider seams + fakes)
+
+- [ ] Bodenrichtwert seam: `BodenrichtwertProvider` Protocol + `FakeBodenrichtwert`; real adapter is
+      best-effort (BORIS has no documented REST API → degrade to "unavailable", never guess). Attach
+      the local Bodenrichtwert to a listing. Tests use the fake.
+- [ ] Regional signal seam: population trend + vacancy (Zensus/GENESIS + Destatis) Protocol + fakes;
+      attach to a listing's location, degrade honestly. Tests use the fake.
+
+## Phase 8 — Transparent scoring engine
+
+- [ ] Score a listing 0–100 from sub-scores with a visible per-factor contribution: price-vs-
+      Bodenrichtwert / local €-per-m², Kaufpreisfaktor + yield (reuse `finance/`), location signals.
+      Pure, TDD; missing inputs reduce a confidence field rather than being fabricated.
+- [ ] Rank saved listings; CLI + `GET /api/listings/scored`. Tests.
+
+## Phase 9 — Scout surface
+
+- [ ] React "Scout" tab: table of scored objects + per-object drilldown (score breakdown + finance
+      metrics) in the dark scout identity; `npm run build` + a render check.
+Acceptance: a user can add objects, they get enriched (or an honest "unavailable") + transparently
+scored, surfaced in CLI/API/UI; gates green (pytest + ruff + npm build).
 
 ---
 

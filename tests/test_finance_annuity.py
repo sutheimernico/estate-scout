@@ -61,3 +61,36 @@ def test_invalid_inputs_raise():
         annuity(principal=-1, annual_rate=0.03, initial_repayment=0.02)
     with pytest.raises(ValueError):
         annuity(principal=100_000, annual_rate=-0.01, initial_repayment=0.02)
+    with pytest.raises(ValueError):
+        annuity(
+            principal=100_000, annual_rate=0.03, initial_repayment=0.02, annual_sondertilgung=-1
+        )
+
+
+def test_sondertilgung_zero_matches_base():
+    base = annuity(principal=300_000, annual_rate=0.036, initial_repayment=0.02)
+    with_zero = annuity(
+        principal=300_000, annual_rate=0.036, initial_repayment=0.02, annual_sondertilgung=0.0
+    )
+    assert with_zero.months_to_payoff == base.months_to_payoff
+    assert with_zero.total_interest == pytest.approx(base.total_interest)
+
+
+def test_sondertilgung_shortens_term_and_cuts_interest():
+    base = annuity(principal=300_000, annual_rate=0.036, initial_repayment=0.02)
+    fast = annuity(
+        principal=300_000, annual_rate=0.036, initial_repayment=0.02, annual_sondertilgung=6_000
+    )
+    assert fast.months_to_payoff < base.months_to_payoff
+    assert fast.total_interest < base.total_interest
+
+
+def test_sondertilgung_still_repays_exact_principal():
+    res = annuity(
+        principal=250_000, annual_rate=0.04, initial_repayment=0.025, annual_sondertilgung=5_000
+    )
+    total_principal = sum(
+        y.principal_paid + y.sondertilgung_paid for y in res.yearly_schedule
+    )
+    assert total_principal == pytest.approx(250_000, abs=0.01)
+    assert res.yearly_schedule[-1].remaining_debt == pytest.approx(0.0, abs=0.01)

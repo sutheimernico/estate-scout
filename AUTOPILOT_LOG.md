@@ -4,3 +4,5 @@
   `autopilot/work`, register entry added. Gate green (1 smoke test), ruff clean.
 - 2026-07-05 — Phase 1: `annuity` (Annuitätendarlehen) — `amortize` + `annuity` summary, 8 tests
   (exact first-two-months split, r=0 edge, non-amortizing + invalid-input guards). Gate green.
+- 2026-07-05 — Phase 1: `annuity` optional `annual_sondertilgung` (contract option, ≠ § 489 BGB).
+  4 tests (zero==base, shortens term/cuts interest, exact principal). Gate green (11 tests).

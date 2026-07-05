@@ -5,6 +5,11 @@ payment is that divided by 12 and stays constant over the term. Each month the i
 share (``remaining * annual_rate / 12``) shrinks and the repayment share grows, so the
 loan amortizes faster over time. Rates are passed as fractions (0.036 = 3.6 %).
 
+Optional ``annual_sondertilgung`` models a contractual extra repayment applied once per
+full year. Note: this is a *contract option*, not the statutory § 489 BGB right (which is a
+special *termination* right after 10 years, not a repayment right) — they are different
+things and modelled separately.
+
 Pure and deterministic — no LLM, no I/O. This is a trust-anchor module: every number the
 assistant ever surfaces about a loan originates here.
 """
@@ -21,6 +26,7 @@ class MonthRow:
     month: int
     interest: float
     principal: float
+    sondertilgung: float
     remaining: float
 
 
@@ -31,6 +37,7 @@ class YearRow:
     year: int
     interest_paid: float
     principal_paid: float
+    sondertilgung_paid: float
     remaining_debt: float
 
 
@@ -48,6 +55,7 @@ def amortize(
     annual_rate: float,
     initial_repayment: float,
     *,
+    annual_sondertilgung: float = 0.0,
     max_years: int = 60,
 ) -> list[MonthRow]:
     """Month-by-month amortization of an Annuitätendarlehen.
@@ -56,6 +64,8 @@ def amortize(
         principal: loan amount in EUR (> 0).
         annual_rate: nominal annual interest rate as a fraction (>= 0), e.g. 0.036.
         initial_repayment: anfängliche Tilgung as a fraction (> 0), e.g. 0.02.
+        annual_sondertilgung: optional extra repayment in EUR applied after each full year
+            (>= 0), capped at the remaining debt.
         max_years: safety cap; a loan that has not amortized by then raises.
 
     Returns:
@@ -68,6 +78,8 @@ def amortize(
         raise ValueError("annual_rate must be >= 0")
     if initial_repayment <= 0:
         raise ValueError("initial_repayment must be > 0 (a loan with no repayment never amortizes)")
+    if annual_sondertilgung < 0:
+        raise ValueError("annual_sondertilgung must be >= 0")
 
     monthly_rate = annual_rate / 12.0
     payment = principal * (annual_rate + initial_repayment) / 12.0
@@ -81,10 +93,16 @@ def amortize(
         if principal_part >= remaining:  # final, partial payment clears the loan
             principal_part = remaining
         remaining -= principal_part
+
+        extra = 0.0
+        if annual_sondertilgung > 0 and month % 12 == 0 and remaining > _EPS:
+            extra = min(annual_sondertilgung, remaining)
+            remaining -= extra
+
         if remaining < _EPS:
             remaining = 0.0
         rows.append(MonthRow(month=month, interest=interest, principal=principal_part,
-                             remaining=remaining))
+                             sondertilgung=extra, remaining=remaining))
         if remaining == 0.0:
             return rows
 
@@ -96,13 +114,20 @@ def annuity(
     annual_rate: float,
     initial_repayment: float,
     *,
+    annual_sondertilgung: float = 0.0,
     max_years: int = 60,
 ) -> AnnuityResult:
     """Summarize an Annuitätendarlehen: monthly payment, totals, per-year schedule.
 
     See :func:`amortize` for the argument semantics.
     """
-    rows = amortize(principal, annual_rate, initial_repayment, max_years=max_years)
+    rows = amortize(
+        principal,
+        annual_rate,
+        initial_repayment,
+        annual_sondertilgung=annual_sondertilgung,
+        max_years=max_years,
+    )
     payment = principal * (annual_rate + initial_repayment) / 12.0
 
     yearly: list[YearRow] = []
@@ -113,12 +138,13 @@ def annuity(
                 year=start // 12 + 1,
                 interest_paid=sum(r.interest for r in chunk),
                 principal_paid=sum(r.principal for r in chunk),
+                sondertilgung_paid=sum(r.sondertilgung for r in chunk),
                 remaining_debt=chunk[-1].remaining,
             )
         )
 
     total_interest = sum(r.interest for r in rows)
-    total_paid = sum(r.interest + r.principal for r in rows)
+    total_paid = sum(r.interest + r.principal + r.sondertilgung for r in rows)
     return AnnuityResult(
         monthly_payment=payment,
         total_interest=total_interest,

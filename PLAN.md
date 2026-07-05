@@ -61,8 +61,10 @@ Goal: pure, typed, fully unit-tested calculators. No LLM. Cross-check against ha
       + Makler % → total costs, ancillary-cost quota, equity-needed. DONE 2026-07-05:
       `finance/purchase_costs.py` (optional Makler share for Bestellerprinzip, `min_equity` =
       ancillary). 4 tests (NI vs NRW, full breakdown, Makler excluded, invalid inputs).
-- [ ] `affordability`: max purchase price from net income, equity, interest, initial repayment,
-      payment-to-income cap. Tests: monotonicity (more income → higher max), rate cap respected.
+- [x] `affordability`: max purchase price from net income, equity, interest, initial repayment,
+      payment-to-income cap. DONE 2026-07-05: `finance/affordability.py` (budget→loan→price, backs
+      out the ancillary quota per Bundesland; obligations + running costs subtracted). 5 tests
+      (income cap, worked example max_loan=300k, monotonicity, obligations reduce, invalid inputs).
 - [ ] `yield_metrics`: gross yield = annual rent / price; net yield after ancillary + running costs;
       Kaufpreisfaktor = price / annual rent. Tests: reciprocal relation, worked example.
 - [x] `config/` loader: versioned YAML (Grunderwerbsteuer per Bundesland, notary/Makler %,

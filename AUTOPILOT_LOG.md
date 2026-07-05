@@ -10,3 +10,5 @@
   affordability, ref. Sollzins — all source+date) + `finance/config.py` loader. 5 tests, gate green.
 - 2026-07-05 — Phase 1: `purchase_costs` (GrESt per Bundesland + notary/GB + optional Makler,
   min_equity). 4 tests (NI vs NRW, breakdown, Makler off, invalid). Gate green (20 tests).
+- 2026-07-05 — Phase 1: `affordability` (max price from net-income budget, backs out ancillary
+  quota per Bundesland). 5 tests. Gate green (25 tests).

@@ -133,6 +133,9 @@ Acceptance: tool-routing tests green against the fake model; gate green. — MET
       SQLite chat history DEFERRED (YAGNI — no second use case yet). 9 tests (health, finance calcs,
       unknown/missing→400, ask via injected fake, Ollama-down→503, all calcs routable).
 Acceptance: CLI + API exercised in tests; a real local `ask` run verified against Ollama; gate green.
+— MET 2026-07-05: live qwen2.5:7b run called the `annuity` tool with correct args and surfaced
+`monthly_payment = 1400.0 €` straight from `finance/` (number from code, not the model); grounded
+answer correct. 78 tests, ruff clean.
 
 ## Phase 5 — React chat tab (dark scout identity)
 

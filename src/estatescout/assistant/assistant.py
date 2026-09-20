@@ -20,6 +20,11 @@ DISCLAIMER = (
     "veralten (Stand der Wissensbasis siehe Quellen)."
 )
 
+# Conservative cosine threshold for real embedding models (nomic-embed-text): hits below this
+# are treated as "no relevant context". Production callers (api/cli) pass this; tests with the
+# FakeEmbedder pass explicit values. Tune after observing real retrieval scores.
+MIN_RAG_SCORE = 0.35
+
 SYSTEM_PROMPT = (
     "Du bist ein sachlicher Immobilien-Assistent für den deutschen Wohnimmobilienmarkt "
     "(Fokus Niedersachsen und NRW). Regeln, die du strikt befolgst:\n"
@@ -27,7 +32,8 @@ SYSTEM_PROMPT = (
     "passende Tool auf und gibst dessen exakte Zahlen wieder. Du rechnest NIEMALS selbst und "
     "erfindest keine Zahlen.\n"
     "2. Bei Wissensfragen nutzt du die bereitgestellten Auszüge und nennst die Quelle "
-    "(Dateiname in Klammern).\n"
+    "(Dateiname in Klammern). Gibt es keine passenden Auszüge, sagst du offen, dass die "
+    "Wissensbasis dazu nichts enthält, statt zu spekulieren.\n"
     "3. Du gibst keine Steuer-, Anlage- oder Finanzierungsberatung — weise bei solchen Fragen "
     "darauf hin.\n"
     "4. Fehlt eine Angabe, die ein Tool braucht, fragst du nach, statt zu raten.\n"
@@ -75,17 +81,21 @@ class Assistant:
         *,
         k: int = 4,
         max_tool_rounds: int = 4,
+        min_score: float = -1.0,
     ):
         self.model = model
         self.index = index
         self.embedder = embedder
         self.k = k
         self.max_tool_rounds = max_tool_rounds
+        self.min_score = min_score
 
     def _context_message(self, question: str) -> tuple[dict | None, list[str]]:
         if self.index is None or self.embedder is None:
             return None, []
-        hits = self.index.retrieve(question, self.embedder, k=self.k)
+        hits = self.index.retrieve(
+            question, self.embedder, k=self.k, min_score=self.min_score
+        )
         if not hits:
             return None, []
         blocks = [f"[{h.source}] {h.heading}\n{h.text}" for h in hits]

@@ -53,3 +53,14 @@ def test_retrieve_invalid_k_raises():
     index = RagIndex.build([Chunk("a.md", "H", "some text")], FakeEmbedder())
     with pytest.raises(ValueError):
         index.retrieve("q", FakeEmbedder(), k=0)
+
+
+def test_retrieve_filters_hits_below_min_score():
+    emb = FakeEmbedder()
+    chunks = [
+        Chunk(source="a.md", heading="h", text="Grunderwerbsteuer Niedersachsen Kaufnebenkosten"),
+        Chunk(source="b.md", heading="h", text="Bananenbrot Rezept Zucker Backofen"),
+    ]
+    idx = RagIndex.build(chunks, emb)
+    hits = idx.retrieve("Grunderwerbsteuer Niedersachsen Kaufnebenkosten", emb, k=2, min_score=0.5)
+    assert [h.source for h in hits] == ["a.md"]

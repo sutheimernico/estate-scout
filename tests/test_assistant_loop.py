@@ -50,7 +50,11 @@ def test_knowledge_intent_injects_rag_context_and_reports_sources():
         "Wie funktioniert die Tilgung beim Darlehen?"
     )
     assert "03-finanzierung.md" in resp.sources
-    context_msgs = [m for m in model.calls[0]["messages"] if "Auszüge" in m.get("content", "")]
+    context_msgs = [
+        m
+        for m in model.calls[0]["messages"]
+        if "Auszüge aus der Wissensbasis" in m.get("content", "")
+    ]
     assert context_msgs, "RAG context should be injected into the prompt"
 
 
@@ -117,3 +121,15 @@ def test_type_error_inside_tool_is_fed_back_not_raised():
     )
     resp = Assistant(model).ask("Rechne.")
     assert "error" in resp.tool_calls[0]["result"]
+
+
+def test_no_context_message_when_all_hits_below_threshold():
+    chunks = [Chunk("a.md", "h", "Bananenbrot Rezept Zucker Backofen")]
+    index = RagIndex.build(chunks, FakeEmbedder())
+    model = FakeChat([_final("Dazu enthält die Wissensbasis nichts.")])
+    resp = Assistant(model, index=index, embedder=FakeEmbedder(), min_score=0.5).ask(
+        "Wie hoch ist die Grunderwerbsteuer?"
+    )
+    assert resp.sources == []
+    sent = model.calls[0]["messages"]
+    assert not any("Auszüge aus der Wissensbasis" in m.get("content", "") for m in sent)

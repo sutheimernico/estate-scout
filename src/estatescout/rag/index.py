@@ -63,7 +63,10 @@ class RagIndex:
         vectors = embedder.embed([c.text for c in chunks])
         return cls(chunks, np.array(vectors, dtype=np.float32))
 
-    def retrieve(self, query: str, embedder: Embedder, k: int = 4) -> list[RetrievedChunk]:
+    def retrieve(
+        self, query: str, embedder: Embedder, k: int = 4, *, min_score: float = -1.0
+    ) -> list[RetrievedChunk]:
+        """Top-k cosine hits. ``min_score`` drops weak hits (-1.0 = no filtering)."""
         if k <= 0:
             raise ValueError("k must be > 0")
         qv = np.array(embedder.embed([query])[0], dtype=np.float32)
@@ -78,6 +81,7 @@ class RagIndex:
                 score=float(sims[i]),
             )
             for i in top
+            if sims[i] >= min_score
         ]
 
     def save(self, index_dir: Path | str = DEFAULT_INDEX_DIR) -> None:

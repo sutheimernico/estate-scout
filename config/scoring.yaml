@@ -1,0 +1,42 @@
+# estate-scout — scoring weights and thresholds.
+#
+# These are OWN HEURISTICS, not published market standards: the point of the score is that
+# every step is visible and arguable, not that it is authoritative. Each block carries
+# `source` + `as_of` like `rates.yaml`, and the loader errors loudly on unknown keys rather
+# than assuming a default.
+#
+# Scores are 0-100 per building block; the total is the weighted mean of the blocks that
+# could actually be computed (weights renormalized over those).
+
+weights:
+  as_of: "2026-09-20"
+  source: "own heuristic"
+  # Must be > 0. Renormalized over the available sub-scores at scoring time.
+  yield: 0.4
+  price: 0.4
+  region: 0.2
+
+yield_score:
+  as_of: "2026-09-20"
+  source: "own heuristic; German buy-to-let rules of thumb put a decent gross yield at 4-6 %"
+  # Gross rental yield in % → linear 0..100 between these bounds (clamped).
+  gross_yield_percent_at_0: 0.0
+  gross_yield_percent_at_100: 6.0
+
+price_score:
+  as_of: "2026-09-20"
+  source: "own heuristic; Bodenrichtwert is LAND value, used here only as a transparent proxy"
+  # Ratio = listing EUR/m² of living area ÷ local Bodenrichtwert EUR/m² of land.
+  # Low ratio = cheap relative to the local land value. Linear 100..0 between the bounds.
+  ratio_at_100: 0.8
+  ratio_at_0: 1.5
+
+region_score:
+  as_of: "2026-09-20"
+  source: "own heuristic; Zensus/Destatis-style signals, bounds chosen for German districts"
+  # Yearly population change in % → linear 0..100 (shrinking region scores low).
+  population_trend_pct_at_0: -1.0
+  population_trend_pct_at_100: 1.0
+  # Marktaktiver Leerstand in % → inverted: low vacancy scores high.
+  vacancy_rate_pct_at_100: 1.0
+  vacancy_rate_pct_at_0: 8.0

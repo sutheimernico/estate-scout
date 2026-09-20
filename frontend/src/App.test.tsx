@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { AmortizationTable } from "./AmortizationTable";
 import { App } from "./App";
+import { CalcResultCard } from "./CalcResultCard";
 
 describe("App", () => {
   it("renders the header subtitle and the disclaimer", () => {
@@ -32,5 +33,49 @@ describe("AmortizationTable", () => {
     );
     expect(screen.getByText("Annuitätendarlehen")).toBeInTheDocument();
     expect(screen.getByText(/1\.400/)).toBeInTheDocument(); // de-DE currency formatting
+  });
+});
+
+describe("CalcResultCard", () => {
+  it("renders a purchase-costs breakdown", () => {
+    render(
+      <CalcResultCard
+        calc={{
+          kind: "purchase_costs",
+          result: {
+            bundesland: "NW",
+            grunderwerbsteuer: 19500,
+            notary: 4500,
+            land_registry: 1500,
+            makler: 10710,
+            total_ancillary: 36210,
+            total_investment: 336210,
+            ancillary_quota_percent: 12.07,
+            min_equity: 36210,
+          },
+        }}
+      />,
+    );
+    expect(screen.getByText(/Kaufnebenkosten/)).toBeInTheDocument();
+    expect(screen.getByText(/19\.500/)).toBeInTheDocument();
+  });
+
+  it("renders an equity-return card", () => {
+    render(
+      <CalcResultCard
+        calc={{
+          kind: "equity_return",
+          result: {
+            loan: 270000,
+            annual_debt_service: 15120,
+            net_operating_income: 15600,
+            cashflow_before_tax: 480,
+            cash_on_cash_percent: 0.8,
+          },
+        }}
+      />,
+    );
+    expect(screen.getByText("Eigenkapitalrendite (Jahr 1)")).toBeInTheDocument();
+    expect(screen.getByText("0,8 %")).toBeInTheDocument();
   });
 });

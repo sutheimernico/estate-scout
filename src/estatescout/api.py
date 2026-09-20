@@ -13,11 +13,10 @@ from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .assistant.assistant import DISCLAIMER, MIN_RAG_SCORE, Assistant
-from .assistant.chat import OllamaChat, OllamaUnavailable
-from .assistant.tools import dispatch, listing_tools
-from .rag.embedder import OllamaEmbedder
-from .rag.index import RagIndex, load_or_build
+from .assistant.assistant import DISCLAIMER, Assistant
+from .assistant.chat import OllamaUnavailable
+from .assistant.factory import build_assistant
+from .assistant.tools import dispatch
 from .scout.model import Listing
 from .scout.store import DEFAULT_DB, ListingStore
 
@@ -75,28 +74,16 @@ def _to_out(listing: Listing) -> ListingOut:
     )
 
 
-# Built once per process, invalidated via the on-disk corpus fingerprint (rag.index).
-_index_cache: RagIndex | None = None
-
-
 def get_assistant() -> Iterator[Assistant]:
-    """Build the live Ollama-backed assistant. Overridden in tests with a fake."""
-    global _index_cache
-    embedder = OllamaEmbedder()
-    if _index_cache is None:
-        try:
-            _index_cache = load_or_build(embedder)
-        except OllamaUnavailable as e:
-            raise HTTPException(status_code=503, detail=str(e)) from None
+    """Provide the live Ollama-backed assistant. Overridden in tests with a fake."""
     store = ListingStore(DEFAULT_DB)
     try:
-        yield Assistant(
-            OllamaChat(),
-            index=_index_cache,
-            embedder=embedder,
-            min_score=MIN_RAG_SCORE,
-            extra_tools=listing_tools(store),
-        )
+        assistant = build_assistant(store)
+    except OllamaUnavailable as e:
+        store.close()
+        raise HTTPException(status_code=503, detail=str(e)) from None
+    try:
+        yield assistant
     finally:
         store.close()
 

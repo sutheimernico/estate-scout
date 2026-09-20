@@ -124,15 +124,15 @@ def test_finance_wrong_type_is_400():
 
 
 def test_ask_returns_503_when_embedding_unavailable(monkeypatch):
-    import estatescout.api as api_mod
+    from estatescout.assistant import factory
     from estatescout.errors import OllamaUnavailable
 
-    monkeypatch.setattr(api_mod, "_index_cache", None)
+    monkeypatch.setattr(factory, "_index_cache", None)
 
     def boom(embedder):
         raise OllamaUnavailable("down")
 
-    monkeypatch.setattr(api_mod, "load_or_build", boom)
+    monkeypatch.setattr(factory, "load_or_build", boom)
     assert client.post("/api/ask", json={"question": "hallo"}).status_code == 503
 
 

@@ -160,24 +160,12 @@ def render_response(resp) -> str:
 
 def ask(question: str) -> None:
     """Ask a real-estate question; the assistant uses RAG for knowledge and tools for numbers."""
-    from .assistant.assistant import MIN_RAG_SCORE, Assistant
-    from .assistant.chat import OllamaChat, OllamaUnavailable
-    from .assistant.tools import listing_tools
-    from .rag.embedder import OllamaEmbedder
-    from .rag.index import load_or_build
+    from .assistant.chat import OllamaUnavailable
+    from .assistant.factory import build_assistant
 
     store = ListingStore(DEFAULT_DB)
     try:
-        embedder = OllamaEmbedder()
-        index = load_or_build(embedder)
-        assistant = Assistant(
-            OllamaChat(),
-            index=index,
-            embedder=embedder,
-            min_score=MIN_RAG_SCORE,
-            extra_tools=listing_tools(store),
-        )
-        resp = assistant.ask(question)
+        resp = build_assistant(store).ask(question)
     except OllamaUnavailable:
         typer.echo(
             "Ollama ist nicht erreichbar. Starte 'ollama serve' und ziehe ein Modell "

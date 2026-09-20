@@ -4,6 +4,7 @@ import json
 import math
 
 import httpx
+import pytest
 
 from estatescout.rag.embedder import Embedder, FakeEmbedder, OllamaEmbedder
 
@@ -50,3 +51,14 @@ def test_ollama_embedder_posts_and_parses():
     assert result == [[0.1, 0.2, 0.3]]
     assert seen["path"] == "/api/embeddings"
     assert seen["payload"] == {"model": "test-model", "prompt": "hello"}
+
+
+def test_ollama_embedder_maps_connect_error_to_unavailable():
+    from estatescout.errors import OllamaUnavailable
+
+    def raise_connect(request):
+        raise httpx.ConnectError("connection refused", request=request)
+
+    client = httpx.Client(transport=httpx.MockTransport(raise_connect))
+    with pytest.raises(OllamaUnavailable):
+        OllamaEmbedder(client=client).embed(["hallo"])

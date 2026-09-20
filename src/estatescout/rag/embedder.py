@@ -12,6 +12,8 @@ from typing import Protocol, runtime_checkable
 
 import httpx
 
+from estatescout.errors import OllamaUnavailable
+
 _TOKEN = re.compile(r"\w+", re.UNICODE)
 
 # Common German/English function words dropped by the FakeEmbedder so distinctive content
@@ -85,10 +87,13 @@ class OllamaEmbedder:
         try:
             out: list[list[float]] = []
             for text in texts:
-                resp = client.post(
-                    f"{self.host}/api/embeddings",
-                    json={"model": self.model, "prompt": text},
-                )
+                try:
+                    resp = client.post(
+                        f"{self.host}/api/embeddings",
+                        json={"model": self.model, "prompt": text},
+                    )
+                except httpx.HTTPError as err:  # ConnectError, timeout, etc.
+                    raise OllamaUnavailable(f"Ollama not reachable at {self.host}: {err}") from err
                 resp.raise_for_status()
                 out.append(resp.json()["embedding"])
             return out

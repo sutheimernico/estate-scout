@@ -9,9 +9,9 @@ from typing import Protocol, runtime_checkable
 
 import httpx
 
-
-class OllamaUnavailable(RuntimeError):
-    """Raised when the local Ollama server cannot be reached — callers degrade honestly."""
+# The `as`-alias re-export keeps `from estatescout.assistant.chat import OllamaUnavailable`
+# working for existing callers (and tells ruff the import is intentional, not unused).
+from estatescout.errors import OllamaUnavailable as OllamaUnavailable
 
 
 @runtime_checkable

@@ -73,3 +73,47 @@ def test_ollama_unavailable_propagates():
 
     with pytest.raises(OllamaUnavailable):
         Assistant(DownModel()).ask("hi")
+
+
+def test_malformed_tool_call_is_skipped_and_answer_still_returned():
+    model = FakeChat(
+        [
+            {"role": "assistant", "content": "", "tool_calls": [{"function": {"nope": True}}]},
+            _final("Das hat nicht geklappt — magst du die Frage umformulieren?"),
+        ]
+    )
+    resp = Assistant(model).ask("kaputt?")
+    assert resp.answer.startswith("Das hat nicht geklappt")
+    assert resp.tool_calls == []
+
+
+def test_string_tool_arguments_are_parsed_as_json():
+    call = {
+        "function": {
+            "name": "annuity",
+            "arguments": '{"principal": 300000, "annual_rate_percent": 3.6,'
+            ' "initial_repayment_percent": 2.0}',
+        }
+    }
+    model = FakeChat(
+        [
+            {"role": "assistant", "content": "", "tool_calls": [call]},
+            _final("Die Rate beträgt 1.400 €."),
+        ]
+    )
+    resp = Assistant(model).ask("Rate?")
+    assert resp.tool_calls[0]["result"]["monthly_payment"] == pytest.approx(1_400.0)
+
+
+def test_type_error_inside_tool_is_fed_back_not_raised():
+    # bypasses dispatch coercion paths: unknown-string arg for a number that float() accepts
+    # is coerced, so force a KeyError-ish structure instead: arguments as a list
+    call = {"function": {"name": "annuity", "arguments": [1, 2, 3]}}
+    model = FakeChat(
+        [
+            {"role": "assistant", "content": "", "tool_calls": [call]},
+            _final("Mir fehlen die Angaben."),
+        ]
+    )
+    resp = Assistant(model).ask("Rechne.")
+    assert "error" in resp.tool_calls[0]["result"]

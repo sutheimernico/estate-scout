@@ -43,6 +43,29 @@ class AssistantResponse:
     disclaimer: str = DISCLAIMER  # every response carries the honesty disclaimer
 
 
+def _parse_tool_call(call: object) -> tuple[str, dict] | None:
+    """Extract (name, args) from a model tool call; None if the structure is unusable.
+
+    Ollama's contract is arguments-as-dict, but small local models occasionally emit a JSON
+    string or garbage — degrade to empty args (dispatch then reports what is missing) instead
+    of crashing the request.
+    """
+    if not isinstance(call, dict):
+        return None
+    fn = call.get("function")
+    if not isinstance(fn, dict) or not isinstance(fn.get("name"), str):
+        return None
+    args = fn.get("arguments") or {}
+    if isinstance(args, str):
+        try:
+            args = json.loads(args)
+        except json.JSONDecodeError:
+            args = {}
+    if not isinstance(args, dict):
+        args = {}
+    return fn["name"], args
+
+
 class Assistant:
     def __init__(
         self,
@@ -94,12 +117,23 @@ class Assistant:
                     answer=msg.get("content", ""), tool_calls=tool_calls, sources=sources
                 )
             for call in requested:
-                name = call["function"]["name"]
-                args = call["function"].get("arguments", {}) or {}
+                parsed = _parse_tool_call(call)
+                if parsed is None:
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "name": "unknown",
+                            "content": json.dumps(
+                                {"error": "malformed tool call"}, ensure_ascii=False
+                            ),
+                        }
+                    )
+                    continue
+                name, args = parsed
                 try:
                     result = dispatch(name, args)
-                except ValueError as e:
-                    result = {"error": str(e)}  # feed the error back so the model can correct
+                except (ValueError, TypeError, KeyError) as e:
+                    result = {"error": str(e)}  # feed back so the model can correct itself
                 tool_calls.append({"name": name, "args": args, "result": result})
                 messages.append(
                     {

@@ -6,9 +6,11 @@ depend on; pass a file path for real use or ``:memory:`` / a temp path in tests.
 
 import json
 import sqlite3
-from dataclasses import replace
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from pathlib import Path
 
+from .enrich import Enrichment, from_dict, to_dict
 from .model import Listing
 
 # Default local DB (gitignored via *.db). CLI/API use this; tests pass :memory: or a temp path.
@@ -27,6 +29,9 @@ _COLUMNS = (
     "source_url",
 )
 
+# Bumped whenever the table shape changes; `_migrate` upgrades older files in place.
+SCHEMA_VERSION = 1
+
 _CREATE = """
 CREATE TABLE IF NOT EXISTS listings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,9 +44,28 @@ CREATE TABLE IF NOT EXISTS listings (
     year_built INTEGER,
     object_type TEXT,
     features TEXT,
-    source_url TEXT
+    source_url TEXT,
+    enrichment TEXT,
+    enriched_at TEXT
 )
 """
+
+
+@dataclass(frozen=True)
+class StoredEnrichment:
+    enrichment: Enrichment
+    enriched_at: str  # ISO-8601 UTC
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Bring an existing file up to SCHEMA_VERSION. No-op for a freshly created table."""
+    if conn.execute("PRAGMA user_version").fetchone()[0] >= SCHEMA_VERSION:
+        return
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(listings)")}
+    for column in ("enrichment", "enriched_at"):
+        if column not in existing:
+            conn.execute(f"ALTER TABLE listings ADD COLUMN {column} TEXT")
+    conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
 
 
 def _row_to_listing(row: sqlite3.Row) -> Listing:
@@ -65,6 +89,7 @@ class ListingStore:
         self._conn = sqlite3.connect(str(path))
         self._conn.row_factory = sqlite3.Row
         self._conn.execute(_CREATE)
+        _migrate(self._conn)
         self._conn.commit()
 
     def add(self, listing: Listing) -> Listing:
@@ -99,6 +124,46 @@ class ListingStore:
         cur = self._conn.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
         self._conn.commit()
         return cur.rowcount > 0
+
+    def schema_version(self) -> int:
+        return int(self._conn.execute("PRAGMA user_version").fetchone()[0])
+
+    def set_enrichment(self, listing_id: int, enrichment: Enrichment) -> bool:
+        """Store (or replace) the enrichment of a listing. False if the id is unknown."""
+        cur = self._conn.execute(
+            "UPDATE listings SET enrichment = ?, enriched_at = ? WHERE id = ?",
+            (
+                json.dumps(to_dict(enrichment), ensure_ascii=False),
+                datetime.now(UTC).isoformat(timespec="seconds"),
+                listing_id,
+            ),
+        )
+        self._conn.commit()
+        return cur.rowcount > 0
+
+    def get_enrichment(self, listing_id: int) -> StoredEnrichment | None:
+        row = self._conn.execute(
+            "SELECT enrichment, enriched_at FROM listings WHERE id = ?", (listing_id,)
+        ).fetchone()
+        if row is None or not row["enrichment"]:
+            return None
+        return StoredEnrichment(
+            enrichment=from_dict(json.loads(row["enrichment"])),
+            enriched_at=row["enriched_at"] or "",
+        )
+
+    def enrichment_map(self) -> dict[int, StoredEnrichment]:
+        """Every stored enrichment in one query (the listings view needs all of them)."""
+        rows = self._conn.execute(
+            "SELECT id, enrichment, enriched_at FROM listings WHERE enrichment IS NOT NULL"
+        ).fetchall()
+        return {
+            row["id"]: StoredEnrichment(
+                enrichment=from_dict(json.loads(row["enrichment"])),
+                enriched_at=row["enriched_at"] or "",
+            )
+            for row in rows
+        }
 
     def close(self) -> None:
         self._conn.close()

@@ -100,3 +100,46 @@ def enrich(
         )
 
     return Enrichment(bodenrichtwert_eur_per_sqm=brw, region=signal, unavailable=unavailable)
+
+
+def to_dict(enrichment: Enrichment) -> dict:
+    """JSON-ready view of an enrichment (used for persistence and the API)."""
+    region = enrichment.region
+    return {
+        "bodenrichtwert_eur_per_sqm": enrichment.bodenrichtwert_eur_per_sqm,
+        "region": (
+            None
+            if region is None
+            else {
+                "population_trend_pct": region.population_trend_pct,
+                "vacancy_rate_pct": region.vacancy_rate_pct,
+            }
+        ),
+        "unavailable": {k: v.value for k, v in enrichment.unavailable.items()},
+    }
+
+
+def from_dict(data: dict) -> Enrichment:
+    """Inverse of :func:`to_dict`. Unknown reasons raise rather than being silently dropped."""
+    region = data.get("region")
+    return Enrichment(
+        bodenrichtwert_eur_per_sqm=data.get("bodenrichtwert_eur_per_sqm"),
+        region=(
+            None
+            if region is None
+            else RegionSignal(
+                population_trend_pct=region.get("population_trend_pct"),
+                vacancy_rate_pct=region.get("vacancy_rate_pct"),
+            )
+        ),
+        unavailable={k: UnavailableReason(v) for k, v in (data.get("unavailable") or {}).items()},
+    )
+
+
+def configured_providers() -> tuple[BodenrichtwertProvider | None, RegionSignalProvider | None]:
+    """The providers the running app enriches with.
+
+    ``None`` means nothing is configured for that signal — enrichment then records
+    ``provider_missing`` instead of inventing a value.
+    """
+    return None, None

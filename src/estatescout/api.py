@@ -17,8 +17,16 @@ from .assistant.assistant import DISCLAIMER, Assistant
 from .assistant.chat import OllamaUnavailable
 from .assistant.factory import build_assistant
 from .assistant.tools import dispatch
+from .scout.enrich import (
+    BodenrichtwertProvider,
+    Enrichment,
+    RegionSignalProvider,
+    configured_providers,
+    enrich,
+)
+from .scout.enrich import to_dict as enrichment_to_dict
 from .scout.model import Listing
-from .scout.store import DEFAULT_DB, ListingStore
+from .scout.store import DEFAULT_DB, ListingStore, StoredEnrichment
 
 app = FastAPI(title="estate-scout", description="Local real-estate knowledge & finance assistant.")
 
@@ -52,12 +60,30 @@ class ListingIn(BaseModel):
     source_url: str = ""
 
 
+class RegionSignalOut(BaseModel):
+    population_trend_pct: float | None = None
+    vacancy_rate_pct: float | None = None
+
+
+class EnrichmentOut(BaseModel):
+    bodenrichtwert_eur_per_sqm: float | None = None
+    region: RegionSignalOut | None = None
+    # signal -> "provider_missing" | "no_data"; never a fabricated value
+    unavailable: dict[str, str] = {}
+    enriched_at: str | None = None
+
+
 class ListingOut(ListingIn):
     id: int
     price_per_sqm: float
+    enrichment: EnrichmentOut | None = None
 
 
-def _to_out(listing: Listing) -> ListingOut:
+def _enrichment_out(enrichment: Enrichment, enriched_at: str | None) -> EnrichmentOut:
+    return EnrichmentOut(**enrichment_to_dict(enrichment), enriched_at=enriched_at)
+
+
+def _to_out(listing: Listing, stored: StoredEnrichment | None = None) -> ListingOut:
     return ListingOut(
         id=listing.id or 0,
         price=listing.price,
@@ -71,6 +97,9 @@ def _to_out(listing: Listing) -> ListingOut:
         features=list(listing.features),
         source_url=listing.source_url,
         price_per_sqm=round(listing.price_per_sqm, 2),
+        enrichment=(
+            None if stored is None else _enrichment_out(stored.enrichment, stored.enriched_at)
+        ),
     )
 
 
@@ -149,7 +178,35 @@ def create_listing(
 
 @app.get("/api/listings", response_model=list[ListingOut])
 def list_listings(store: Annotated[ListingStore, Depends(get_store)]) -> list[ListingOut]:
-    return [_to_out(x) for x in store.list()]
+    enriched = store.enrichment_map()
+    return [_to_out(x, enriched.get(x.id or 0)) for x in store.list()]
+
+
+def get_providers() -> tuple[BodenrichtwertProvider | None, RegionSignalProvider | None]:
+    """Enrichment providers for this deployment (overridden in tests with static fakes)."""
+    return configured_providers()
+
+
+Providers = Annotated[
+    tuple[BodenrichtwertProvider | None, RegionSignalProvider | None], Depends(get_providers)
+]
+
+
+@app.post("/api/listings/{listing_id}/enrich", response_model=EnrichmentOut)
+def enrich_listing(
+    listing_id: int,
+    store: Annotated[ListingStore, Depends(get_store)],
+    providers: Providers,
+) -> EnrichmentOut:
+    """Run the configured providers for one listing, persist and return the result."""
+    listing = store.get(listing_id)
+    if listing is None:
+        raise HTTPException(status_code=404, detail=f"listing {listing_id} not found")
+    bodenrichtwert, region = providers
+    result = enrich(listing, bodenrichtwert=bodenrichtwert, region=region)
+    store.set_enrichment(listing_id, result)
+    stored = store.get_enrichment(listing_id)
+    return _enrichment_out(result, stored.enriched_at if stored else None)
 
 
 @app.delete("/api/listings/{listing_id}", status_code=204)

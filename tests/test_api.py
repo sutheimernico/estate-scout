@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from estatescout.api import app, get_assistant, get_store
+from estatescout.api import app, get_assistant, get_providers, get_store
 from estatescout.assistant.assistant import Assistant
 from estatescout.assistant.chat import FakeChat, OllamaUnavailable
 from estatescout.scout.store import ListingStore
@@ -159,5 +159,72 @@ def test_listings_empty_store_returns_empty_list(tmp_path):
         r = client.get("/api/listings")
         assert r.status_code == 200
         assert r.json() == []
+    finally:
+        app.dependency_overrides.clear()
+
+
+def _fake_providers():
+    from estatescout.scout.enrich import RegionSignal, StaticBodenrichtwert, StaticRegionSignal
+
+    return lambda: (
+        StaticBodenrichtwert({"49074": 420.0}),
+        StaticRegionSignal({"49074": RegionSignal(population_trend_pct=1.2, vacancy_rate_pct=2.1)}),
+    )
+
+
+def _create(price=300_000, area=100, plz="49074"):
+    return client.post(
+        "/api/listings",
+        json={"price": price, "living_area_sqm": area, "bundesland": "NI", "plz": plz},
+    ).json()
+
+
+def test_enrich_stores_and_returns_the_result(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    app.dependency_overrides[get_providers] = _fake_providers()
+    try:
+        created = _create()
+        r = client.post(f"/api/listings/{created['id']}/enrich")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["bodenrichtwert_eur_per_sqm"] == 420.0
+        assert body["region"]["vacancy_rate_pct"] == 2.1
+        assert body["unavailable"] == {}
+        assert body["enriched_at"]
+
+        # visible on the next listings read
+        listed = client.get("/api/listings").json()[0]
+        assert listed["enrichment"]["bodenrichtwert_eur_per_sqm"] == 420.0
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_enrich_without_providers_reports_provider_missing(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    try:
+        created = _create()
+        body = client.post(f"/api/listings/{created['id']}/enrich").json()
+        assert body["bodenrichtwert_eur_per_sqm"] is None
+        assert body["unavailable"]["bodenrichtwert"] == "provider_missing"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_enrich_unknown_listing_is_404(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    try:
+        assert client.post("/api/listings/4242/enrich").status_code == 404
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_reenriching_refreshes_enriched_at(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    app.dependency_overrides[get_providers] = _fake_providers()
+    try:
+        created = _create()
+        first = client.post(f"/api/listings/{created['id']}/enrich").json()["enriched_at"]
+        second = client.post(f"/api/listings/{created['id']}/enrich").json()["enriched_at"]
+        assert second >= first
     finally:
         app.dependency_overrides.clear()

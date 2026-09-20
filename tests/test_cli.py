@@ -112,3 +112,23 @@ def test_scout_delete_removes_listing(tmp_path):
     listing_id = json.loads(add.stdout)["id"]
     assert runner.invoke(scout_app, ["delete", str(listing_id), "--db", db]).exit_code == 0
     assert runner.invoke(scout_app, ["delete", str(listing_id), "--db", db]).exit_code == 1
+
+
+def test_scout_enrich_reports_provider_missing_without_providers(tmp_path):
+    db = str(tmp_path / "cli.db")
+    add = runner.invoke(
+        scout_app,
+        ["add", "--price", "300000", "--area", "100", "--bundesland", "NI", "--db", db],
+    )
+    assert add.exit_code == 0, add.stdout
+    listing_id = json.loads(add.stdout)["id"]
+    res = runner.invoke(scout_app, ["enrich", str(listing_id), "--db", db])
+    assert res.exit_code == 0, res.stdout
+    out = json.loads(res.stdout)
+    assert out["unavailable"]["bodenrichtwert"] == "provider_missing"
+    assert out["enriched_at"]
+
+
+def test_scout_enrich_unknown_id_exits_nonzero(tmp_path):
+    db = str(tmp_path / "cli.db")
+    assert runner.invoke(scout_app, ["enrich", "4242", "--db", db]).exit_code == 1

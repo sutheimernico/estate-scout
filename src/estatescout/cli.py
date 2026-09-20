@@ -262,3 +262,27 @@ def delete_listing_cmd(
         typer.echo(f"Kein Objekt mit id {listing_id}.")
         raise typer.Exit(code=1)
     typer.echo(f"Objekt {listing_id} gelöscht.")
+
+
+@scout_app.command("enrich")
+def enrich_listing_cmd(
+    listing_id: int = typer.Argument(..., help="listing id (see 'scout list')"),
+    db: str = typer.Option(str(DEFAULT_DB), help="SQLite path"),
+) -> None:
+    """Enrich a saved object with public reference data and store the result."""
+    from .scout.enrich import configured_providers, enrich
+    from .scout.enrich import to_dict as enrichment_to_dict
+
+    store = ListingStore(db)
+    try:
+        listing = store.get(listing_id)
+        if listing is None:
+            typer.echo(f"Kein Objekt mit id {listing_id}.")
+            raise typer.Exit(code=1)
+        bodenrichtwert, region = configured_providers()
+        result = enrich(listing, bodenrichtwert=bodenrichtwert, region=region)
+        store.set_enrichment(listing_id, result)
+        stored = store.get_enrichment(listing_id)
+    finally:
+        store.close()
+    _echo({**enrichment_to_dict(result), "enriched_at": stored.enriched_at if stored else None})

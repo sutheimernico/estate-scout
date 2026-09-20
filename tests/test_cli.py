@@ -132,3 +132,54 @@ def test_scout_enrich_reports_provider_missing_without_providers(tmp_path):
 def test_scout_enrich_unknown_id_exits_nonzero(tmp_path):
     db = str(tmp_path / "cli.db")
     assert runner.invoke(scout_app, ["enrich", "4242", "--db", db]).exit_code == 1
+
+
+def _seed_enriched(db: str) -> int:
+    """Add a listing and give it a hand-set enrichment (no providers configured in tests)."""
+    from estatescout.scout.enrich import Enrichment, RegionSignal
+    from estatescout.scout.store import ListingStore
+
+    add = runner.invoke(
+        scout_app,
+        ["add", "--price", "300000", "--area", "100", "--bundesland", "NI", "--db", db],
+    )
+    assert add.exit_code == 0, add.stdout
+    listing_id = json.loads(add.stdout)["id"]
+    store = ListingStore(db)
+    store.set_enrichment(
+        listing_id,
+        Enrichment(
+            bodenrichtwert_eur_per_sqm=2_500.0,
+            region=RegionSignal(population_trend_pct=0.5, vacancy_rate_pct=3.0),
+        ),
+    )
+    store.close()
+    return listing_id
+
+
+def test_scout_score_prints_the_breakdown(tmp_path):
+    db = str(tmp_path / "cli.db")
+    listing_id = _seed_enriched(db)
+    res = runner.invoke(scout_app, ["score", str(listing_id), "--rent", "1000", "--db", db])
+    assert res.exit_code == 0, res.stdout
+    assert "Gesamtscore: 59/100" in res.stdout
+    assert "yield" in res.stdout and "region" in res.stdout
+    assert "keine Anlageberatung" in res.stdout
+
+
+def test_scout_score_requires_enrichment_first(tmp_path):
+    db = str(tmp_path / "cli.db")
+    add = runner.invoke(
+        scout_app,
+        ["add", "--price", "300000", "--area", "100", "--bundesland", "NI", "--db", db],
+    )
+    listing_id = json.loads(add.stdout)["id"]
+    res = runner.invoke(scout_app, ["score", str(listing_id), "--db", db])
+    assert res.exit_code == 1
+    assert "noch nicht angereichert" in res.stdout
+
+
+def test_scout_score_unknown_id_exits_nonzero(tmp_path):
+    assert runner.invoke(
+        scout_app, ["score", "4242", "--db", str(tmp_path / "cli.db")]
+    ).exit_code == 1

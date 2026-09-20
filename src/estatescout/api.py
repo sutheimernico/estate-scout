@@ -26,6 +26,8 @@ from .scout.enrich import (
 )
 from .scout.enrich import to_dict as enrichment_to_dict
 from .scout.model import Listing
+from .scout.scoring import ScoreReport, score_listing
+from .scout.scoring import to_dict as score_to_dict
 from .scout.store import DEFAULT_DB, ListingStore, StoredEnrichment
 
 app = FastAPI(title="estate-scout", description="Local real-estate knowledge & finance assistant.")
@@ -73,17 +75,52 @@ class EnrichmentOut(BaseModel):
     enriched_at: str | None = None
 
 
+class SubScoreOut(BaseModel):
+    name: str
+    value: int | None = None
+    weight: float
+    detail: dict = {}
+    reason: str | None = None
+
+
+class ScoreOut(BaseModel):
+    total: int | None = None  # null means "not computable", never a fabricated 0
+    subscores: list[SubScoreOut] = []
+    weights_used: dict[str, float] = {}
+    confidence: float = 0.0
+    inputs_available: int = 0
+    inputs_expected: int = 0
+    reasons: dict[str, str] = {}
+    as_of: str = ""
+
+
+class ScoreSummary(BaseModel):
+    """What the listings table needs — the drilldown fetches the full report."""
+
+    total: int | None = None
+    confidence: float = 0.0
+
+
 class ListingOut(ListingIn):
     id: int
     price_per_sqm: float
     enrichment: EnrichmentOut | None = None
+    score: ScoreSummary | None = None  # only for enriched listings
 
 
 def _enrichment_out(enrichment: Enrichment, enriched_at: str | None) -> EnrichmentOut:
     return EnrichmentOut(**enrichment_to_dict(enrichment), enriched_at=enriched_at)
 
 
+def _score_of(listing: Listing, stored: StoredEnrichment | None, rent: float | None):
+    """Score against the stored enrichment. Unenriched listings get no score at all."""
+    if stored is None:
+        return None
+    return score_listing(listing, stored.enrichment, monthly_cold_rent=rent)
+
+
 def _to_out(listing: Listing, stored: StoredEnrichment | None = None) -> ListingOut:
+    report = _score_of(listing, stored, None)
     return ListingOut(
         id=listing.id or 0,
         price=listing.price,
@@ -99,6 +136,11 @@ def _to_out(listing: Listing, stored: StoredEnrichment | None = None) -> Listing
         price_per_sqm=round(listing.price_per_sqm, 2),
         enrichment=(
             None if stored is None else _enrichment_out(stored.enrichment, stored.enriched_at)
+        ),
+        score=(
+            None
+            if report is None
+            else ScoreSummary(total=report.total, confidence=round(report.confidence, 3))
         ),
     )
 
@@ -207,6 +249,34 @@ def enrich_listing(
     store.set_enrichment(listing_id, result)
     stored = store.get_enrichment(listing_id)
     return _enrichment_out(result, stored.enriched_at if stored else None)
+
+
+def _score_out(report: ScoreReport) -> ScoreOut:
+    return ScoreOut(**score_to_dict(report))
+
+
+@app.get("/api/listings/{listing_id}/score", response_model=ScoreOut)
+def get_listing_score(
+    listing_id: int,
+    store: Annotated[ListingStore, Depends(get_store)],
+    monthly_cold_rent: float | None = None,
+) -> ScoreOut:
+    """Score a listing from its stored enrichment. Pass a rent to unlock the yield block."""
+    listing = store.get(listing_id)
+    if listing is None:
+        raise HTTPException(status_code=404, detail=f"listing {listing_id} not found")
+    stored = store.get_enrichment(listing_id)
+    if stored is None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"listing {listing_id} has no enrichment yet — "
+                f"POST /api/listings/{listing_id}/enrich first"
+            ),
+        )
+    return _score_out(
+        score_listing(listing, stored.enrichment, monthly_cold_rent=monthly_cold_rent)
+    )
 
 
 @app.delete("/api/listings/{listing_id}", status_code=204)

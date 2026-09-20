@@ -13,6 +13,10 @@ from .assistant.tools import dispatch
 from .scout.model import Listing
 from .scout.store import DEFAULT_DB, ListingStore
 
+DISCLAIMER_HINT = (
+    "Hinweis: eigene Heuristik, keine Bewertung und keine Anlageberatung."
+)
+
 finance_app = typer.Typer(
     help="Deterministic real-estate finance calculators.", no_args_is_help=True
 )
@@ -286,3 +290,53 @@ def enrich_listing_cmd(
     finally:
         store.close()
     _echo({**enrichment_to_dict(result), "enriched_at": stored.enriched_at if stored else None})
+
+
+@scout_app.command("score")
+def score_listing_cmd(
+    listing_id: int = typer.Argument(..., help="listing id (see 'scout list')"),
+    rent: float | None = typer.Option(None, help="expected monthly Kaltmiete in EUR"),
+    db: str = typer.Option(str(DEFAULT_DB), help="SQLite path"),
+) -> None:
+    """Score a saved object from its stored enrichment and print the breakdown."""
+    from .scout.scoring import score_listing
+
+    store = ListingStore(db)
+    try:
+        listing = store.get(listing_id)
+        if listing is None:
+            typer.echo(f"Kein Objekt mit id {listing_id}.")
+            raise typer.Exit(code=1)
+        stored = store.get_enrichment(listing_id)
+        if stored is None:
+            typer.echo(
+                f"Objekt {listing_id} ist noch nicht angereichert. "
+                f"Zuerst: scout enrich {listing_id}"
+            )
+            raise typer.Exit(code=1)
+        report = score_listing(listing, stored.enrichment, monthly_cold_rent=rent)
+    finally:
+        store.close()
+    typer.echo(render_score(report))
+
+
+def render_score(report) -> str:
+    """Format a ScoreReport as a terminal table (pure — testable without a store)."""
+    total = "—" if report.total is None else f"{report.total}/100"
+    lines = [
+        f"Gesamtscore: {total}   "
+        f"Datenlage: {report.inputs_available}/{report.inputs_expected} "
+        f"({report.confidence:.0%})",
+        "",
+        f"{'Baustein':<10}{'Score':>7}{'Gewicht':>10}  Begründung",
+    ]
+    for sub in report.subscores:
+        value = "—" if sub.value is None else str(sub.value)
+        weight = report.weights_used.get(sub.name)
+        weight_text = "—" if weight is None else f"{weight:.0%}"
+        note = sub.reason or ", ".join(f"{k}={v}" for k, v in sub.detail.items() if k != "parts")
+        lines.append(f"{sub.name:<10}{value:>7}{weight_text:>10}  {note}")
+    lines.append("")
+    lines.append(f"Gewichte/Schwellen aus config/scoring.yaml (Stand {report.as_of}).")
+    lines.append(DISCLAIMER_HINT)
+    return "\n".join(lines)

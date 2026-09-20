@@ -228,3 +228,73 @@ def test_reenriching_refreshes_enriched_at(tmp_path):
         assert second >= first
     finally:
         app.dependency_overrides.clear()
+
+
+def test_score_route_computes_from_the_stored_enrichment(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    app.dependency_overrides[get_providers] = _fake_providers()
+    try:
+        created = _create()
+        client.post(f"/api/listings/{created['id']}/enrich")
+        r = client.get(f"/api/listings/{created['id']}/score", params={"monthly_cold_rent": 1000})
+        assert r.status_code == 200
+        body = r.json()
+        # fixture: 300k / 100 m² = 3_000 €/m², Bodenrichtwert 420, Bev. +1.2, Leerstand 2.1
+        # yield  1_000 €/M → 4.0 % → 67
+        # price  3_000/420 = 7.14 → past the 1.5 floor → 0
+        # region (100 + 84) / 2 = 92
+        # total  0.4·67 + 0.4·0 + 0.2·92 = 45.2 → 45
+        assert body["total"] == 45
+        assert [s["name"] for s in body["subscores"]] == ["yield", "price", "region"]
+        assert [s["value"] for s in body["subscores"]] == [67, 0, 92]
+        assert body["confidence"] == 1.0
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_score_without_rent_leaves_the_yield_block_unavailable(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    app.dependency_overrides[get_providers] = _fake_providers()
+    try:
+        created = _create()
+        client.post(f"/api/listings/{created['id']}/enrich")
+        body = client.get(f"/api/listings/{created['id']}/score").json()
+        assert body["reasons"]["yield"] == "rent_missing"
+        assert body["subscores"][0]["value"] is None
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_score_before_enrichment_is_409_with_a_hint(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    try:
+        created = _create()
+        r = client.get(f"/api/listings/{created['id']}/score")
+        assert r.status_code == 409
+        assert "enrich" in r.json()["detail"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_score_unknown_listing_is_404(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    try:
+        assert client.get("/api/listings/4242/score").status_code == 404
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_listings_carry_a_score_summary_once_enriched(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    app.dependency_overrides[get_providers] = _fake_providers()
+    try:
+        created = _create()
+        assert client.get("/api/listings").json()[0]["score"] is None  # not enriched yet
+        client.post(f"/api/listings/{created['id']}/enrich")
+        summary = client.get("/api/listings").json()[0]["score"]
+        # no rent in the table view → yield drops out; price 0 (w .4) and region 92 (w .2)
+        # renormalize to 2/3 and 1/3: 0·0.667 + 92·0.333 = 30.7 → 31
+        assert summary["total"] == 31
+        assert summary["confidence"] == 0.75  # 3 of 4 inputs (no rent in the table view)
+    finally:
+        app.dependency_overrides.clear()

@@ -154,3 +154,55 @@ def test_assistant_lists_saved_listings_via_extra_tool():
     assert resp.tool_calls[0]["result"]["listings"][0]["ort"] == "Lingen"
     sent_tools = model.calls[0]["tools"]
     assert any(t["function"]["name"] == "list_listings" for t in sent_tools)
+
+
+def test_assistant_explains_a_score_it_did_not_compute():
+    """The model receives the finished ScoreReport and only puts it into words."""
+    from estatescout.assistant.tools import listing_tools
+    from estatescout.scout.enrich import Enrichment, RegionSignal
+    from estatescout.scout.model import Listing
+    from estatescout.scout.store import ListingStore
+
+    store = ListingStore(":memory:")
+    saved = store.add(Listing(price=300_000, living_area_sqm=100, bundesland="NI", plz="49074"))
+    store.set_enrichment(
+        saved.id,
+        Enrichment(
+            bodenrichtwert_eur_per_sqm=2_500.0,
+            region=RegionSignal(population_trend_pct=0.5, vacancy_rate_pct=3.0),
+        ),
+    )
+    model = FakeChat(
+        [
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "function": {
+                            "name": "score_listing",
+                            "arguments": {"listing_id": saved.id, "monthly_cold_rent": 1000},
+                        }
+                    }
+                ],
+            },
+            _final("Das Objekt kommt auf 59 von 100 — die Rendite trägt am meisten."),
+        ]
+    )
+    resp = Assistant(model, extra_tools=listing_tools(store)).ask("Wie gut ist Objekt 1?")
+    result = resp.tool_calls[0]["result"]
+    assert result["total"] == 59  # computed by scoring.py, not by the model
+    assert [s["value"] for s in result["subscores"]] == [67, 43, 73]
+    assert "59" in resp.answer
+
+
+def test_score_tool_refuses_an_unenriched_listing():
+    from estatescout.assistant.tools import listing_tools
+    from estatescout.scout.model import Listing
+    from estatescout.scout.store import ListingStore
+
+    store = ListingStore(":memory:")
+    saved = store.add(Listing(price=300_000, living_area_sqm=100, bundesland="NI"))
+    tools = listing_tools(store)
+    assert "not been enriched" in tools["score_listing"].run({"listing_id": saved.id})["error"]
+    assert "no listing" in tools["score_listing"].run({"listing_id": 999})["error"]

@@ -16,6 +16,8 @@ from estatescout.finance.equity_return import equity_return
 from estatescout.finance.operating_costs import operating_costs
 from estatescout.finance.purchase_costs import purchase_costs
 from estatescout.finance.yield_metrics import yield_metrics
+from estatescout.scout.scoring import score_listing
+from estatescout.scout.scoring import to_dict as score_to_dict
 from estatescout.scout.store import ListingStore
 
 
@@ -335,6 +337,24 @@ def listing_tools(store: ListingStore) -> dict[str, Tool]:
             ],
         }
 
+    def _run_score(a: dict) -> dict:
+        listing_id = int(a["listing_id"])
+        listing = store.get(listing_id)
+        if listing is None:
+            return {"error": f"no listing with id {listing_id}"}
+        stored = store.get_enrichment(listing_id)
+        if stored is None:
+            return {
+                "error": (
+                    f"listing {listing_id} has not been enriched yet — "
+                    "run the enrichment before scoring"
+                )
+            }
+        report = score_listing(
+            listing, stored.enrichment, monthly_cold_rent=a.get("monthly_cold_rent")
+        )
+        return score_to_dict(report)
+
     return {
         "list_listings": Tool(
             spec=_spec(
@@ -346,5 +366,20 @@ def listing_tools(store: ListingStore) -> dict[str, Tool]:
                 [],
             ),
             run=_run_list,
-        )
+        ),
+        "score_listing": Tool(
+            spec=_spec(
+                "score_listing",
+                "Return the transparent 0-100 assessment of one saved object: total, the "
+                "three building blocks (yield/price/region) with their weights and inputs, "
+                "the confidence and the reasons for anything missing. Explain the returned "
+                "numbers; never compute a score yourself.",
+                {
+                    "listing_id": _p("id of the saved object (see list_listings)"),
+                    "monthly_cold_rent": _p("expected monthly Kaltmiete in EUR, if known"),
+                },
+                ["listing_id"],
+            ),
+            run=_run_score,
+        ),
     }

@@ -231,3 +231,26 @@ def score_listing(
         reasons={s.name: s.reason for s in subscores if s.reason is not None},
         as_of=str(cfg["weights"]["as_of"]),
     )
+
+
+def to_dict(report: ScoreReport) -> dict:
+    """JSON-ready view of a score report (shared by the API, the CLI and the assistant tool)."""
+    return {
+        "total": report.total,
+        "subscores": [
+            {
+                "name": s.name,
+                "value": s.value,
+                "weight": s.weight,
+                "detail": s.detail,
+                "reason": s.reason,
+            }
+            for s in report.subscores
+        ],
+        "weights_used": report.weights_used,
+        "confidence": round(report.confidence, 3),
+        "inputs_available": report.inputs_available,
+        "inputs_expected": report.inputs_expected,
+        "reasons": report.reasons,
+        "as_of": report.as_of,
+    }

@@ -162,3 +162,17 @@ def test_zero_weights_are_rejected(tmp_path):
     )
     with pytest.raises(ValueError, match="weight"):
         load_scoring_config(str(path))
+
+
+def test_to_dict_is_json_serializable_and_keeps_every_field():
+    import json
+
+    from estatescout.scout.scoring import to_dict
+
+    report = score_listing(_listing(), _full_enrichment(), monthly_cold_rent=1_000.0)
+    payload = json.loads(json.dumps(to_dict(report)))
+    assert payload["total"] == 59
+    assert [s["name"] for s in payload["subscores"]] == ["yield", "price", "region"]
+    assert payload["subscores"][1]["detail"]["heuristic"] == "price_per_sqm_vs_bodenrichtwert"
+    assert payload["confidence"] == 1.0
+    assert payload["as_of"]

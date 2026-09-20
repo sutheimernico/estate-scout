@@ -267,3 +267,47 @@ body {
   opacity: 0.5;
   cursor: default;
 }
+
+.pane-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+.listing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.listing-table th,
+.listing-table td {
+  text-align: right;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.listing-table th:first-child,
+.listing-table td:first-child {
+  text-align: left;
+}
+.listing-table td.num,
+.listing-table th {
+  font-family: var(--mono);
+}
+.listing-table .del {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.listing-table .del:hover {
+  border-color: #f2917a;
+  color: #f2917a;
+}

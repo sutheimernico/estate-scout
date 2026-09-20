@@ -80,6 +80,14 @@ def amortize(
         raise ValueError("initial_repayment must be > 0 (a loan with no repayment never amortizes)")
     if annual_sondertilgung < 0:
         raise ValueError("annual_sondertilgung must be >= 0")
+    if annual_rate > 0.25:
+        raise ValueError(
+            "annual_rate is a fraction (0.036 = 3.6 %) — a value above 0.25 looks like percent"
+        )
+    if initial_repayment > 0.2:
+        raise ValueError(
+            "initial_repayment is a fraction (0.02 = 2 %) — a value above 0.2 looks like percent"
+        )
 
     monthly_rate = annual_rate / 12.0
     payment = principal * (annual_rate + initial_repayment) / 12.0

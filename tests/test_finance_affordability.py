@@ -58,3 +58,10 @@ def test_invalid_inputs_raise():
         affordability(net_monthly_income=1_000, equity=0, annual_rate=0.03,
                       initial_repayment=0.02, bundesland="NI",
                       max_rate_to_net_income=0.35, existing_obligations=1_000)
+
+
+def test_percent_passed_as_fraction_is_rejected():
+    with pytest.raises(ValueError, match="looks like percent"):
+        affordability(4_000, 60_000, 3.6, 0.02, "NI")
+    with pytest.raises(ValueError, match="looks like percent"):
+        affordability(4_000, 60_000, 0.036, 2.0, "NI")

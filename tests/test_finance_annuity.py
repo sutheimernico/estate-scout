@@ -94,3 +94,10 @@ def test_sondertilgung_still_repays_exact_principal():
     )
     assert total_principal == pytest.approx(250_000, abs=0.01)
     assert res.yearly_schedule[-1].remaining_debt == pytest.approx(0.0, abs=0.01)
+
+
+def test_percent_passed_as_fraction_is_rejected():
+    with pytest.raises(ValueError, match="looks like percent"):
+        annuity(principal=300_000, annual_rate=3.6, initial_repayment=0.02)
+    with pytest.raises(ValueError, match="looks like percent"):
+        annuity(principal=300_000, annual_rate=0.036, initial_repayment=2.0)

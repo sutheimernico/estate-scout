@@ -58,6 +58,14 @@ def affordability(
         raise ValueError("annual_rate must be >= 0")
     if initial_repayment <= 0:
         raise ValueError("initial_repayment must be > 0")
+    if annual_rate > 0.25:
+        raise ValueError(
+            "annual_rate is a fraction (0.036 = 3.6 %) — a value above 0.25 looks like percent"
+        )
+    if initial_repayment > 0.2:
+        raise ValueError(
+            "initial_repayment is a fraction (0.02 = 2 %) — a value above 0.2 looks like percent"
+        )
 
     cfg = config or load_config()
     if max_rate_to_net_income is None:

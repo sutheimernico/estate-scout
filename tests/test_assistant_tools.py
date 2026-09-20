@@ -8,7 +8,10 @@ from estatescout.assistant.tools import TOOLS, dispatch, tool_specs
 def test_tool_specs_cover_all_calculators():
     specs = tool_specs()
     names = {s["function"]["name"] for s in specs}
-    assert names == {"annuity", "purchase_costs", "affordability", "yield_metrics"}
+    assert names == {
+        "annuity", "purchase_costs", "affordability", "yield_metrics",
+        "operating_costs", "equity_return",
+    }
     for s in specs:
         assert s["type"] == "function"
         assert "required" in s["function"]["parameters"]
@@ -111,3 +114,19 @@ def test_dispatch_null_required_arg_counts_as_missing():
             "annuity",
             {"principal": None, "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0},
         )
+
+
+def test_dispatch_operating_costs():
+    out = dispatch("operating_costs", {"living_area_sqm": 100, "monthly_cold_rent": 1_000})
+    assert out["total_annual"] == pytest.approx(1_790.0)
+
+
+def test_dispatch_equity_return_converts_percent():
+    out = dispatch(
+        "equity_return",
+        {"purchase_price": 300_000, "monthly_cold_rent": 1_500, "equity": 60_000,
+         "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0,
+         "ancillary_costs": 30_000, "annual_operating_costs": 2_400},
+    )
+    assert out["cashflow_before_tax"] == pytest.approx(480.0)
+    assert out["cash_on_cash_percent"] == pytest.approx(0.8)

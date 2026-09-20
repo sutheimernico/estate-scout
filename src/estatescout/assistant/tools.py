@@ -12,6 +12,8 @@ from dataclasses import dataclass
 
 from estatescout.finance.affordability import affordability
 from estatescout.finance.annuity import annuity
+from estatescout.finance.equity_return import equity_return
+from estatescout.finance.operating_costs import operating_costs
 from estatescout.finance.purchase_costs import purchase_costs
 from estatescout.finance.yield_metrics import yield_metrics
 
@@ -108,6 +110,39 @@ def _run_yield(a: dict) -> dict:
     }
 
 
+def _run_operating_costs(a: dict) -> dict:
+    res = operating_costs(
+        a["living_area_sqm"],
+        a["monthly_cold_rent"],
+        units=int(a.get("units", 1)),
+    )
+    return {
+        "instandhaltung": _eur(res.instandhaltung),
+        "verwaltung": _eur(res.verwaltung),
+        "mietausfallwagnis": _eur(res.mietausfallwagnis),
+        "total_annual": _eur(res.total_annual),
+    }
+
+
+def _run_equity_return(a: dict) -> dict:
+    res = equity_return(
+        a["purchase_price"],
+        a["monthly_cold_rent"],
+        a["equity"],
+        a["annual_rate_percent"] / 100,
+        a["initial_repayment_percent"] / 100,
+        ancillary_costs=a.get("ancillary_costs", 0.0),
+        annual_operating_costs=a.get("annual_operating_costs", 0.0),
+    )
+    return {
+        "loan": _eur(res.loan),
+        "annual_debt_service": _eur(res.annual_debt_service),
+        "net_operating_income": _eur(res.net_operating_income),
+        "cashflow_before_tax": _eur(res.cashflow_before_tax),
+        "cash_on_cash_percent": _pct(res.cash_on_cash),
+    }
+
+
 def _spec(name: str, description: str, properties: dict, required: list[str]) -> dict:
     return {
         "type": "function",
@@ -187,6 +222,44 @@ TOOLS: dict[str, Tool] = {
             ["purchase_price", "monthly_cold_rent"],
         ),
         run=_run_yield,
+    ),
+    "operating_costs": Tool(
+        spec=_spec(
+            "operating_costs",
+            "Estimate a landlord's annual Bewirtschaftungskosten (Instandhaltung, Verwaltung, "
+            "Mietausfallwagnis) from config-anchored practice values.",
+            {
+                "living_area_sqm": _p("living area in m²"),
+                "monthly_cold_rent": _p("monthly Kaltmiete in EUR"),
+                "units": _p("number of residential units, default 1"),
+            },
+            ["living_area_sqm", "monthly_cold_rent"],
+        ),
+        run=_run_operating_costs,
+    ),
+    "equity_return": Tool(
+        spec=_spec(
+            "equity_return",
+            "First-year Eigenkapitalrendite (cash-on-cash) of a financed buy-to-let: cashflow "
+            "after debt service relative to invested equity.",
+            {
+                "purchase_price": _p("property price in EUR"),
+                "monthly_cold_rent": _p("monthly Kaltmiete in EUR"),
+                "equity": _p("invested equity in EUR"),
+                "annual_rate_percent": _p("nominal interest p.a. in %, e.g. 3.6"),
+                "initial_repayment_percent": _p("anfängliche Tilgung in %, e.g. 2.0"),
+                "ancillary_costs": _p("Kaufnebenkosten in EUR"),
+                "annual_operating_costs": _p("Bewirtschaftungskosten EUR/year"),
+            },
+            [
+                "purchase_price",
+                "monthly_cold_rent",
+                "equity",
+                "annual_rate_percent",
+                "initial_repayment_percent",
+            ],
+        ),
+        run=_run_equity_return,
     ),
 }
 

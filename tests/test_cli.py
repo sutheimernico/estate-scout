@@ -2,6 +2,7 @@
 
 import json
 
+import pytest
 from typer.testing import CliRunner
 
 from estatescout.assistant.assistant import DISCLAIMER, AssistantResponse
@@ -85,3 +86,17 @@ def test_render_response_includes_answer_numbers_sources_disclaimer():
     assert "annuity" in text
     assert "03-finanzierung.md" in text
     assert DISCLAIMER in text
+
+
+def test_cli_opcosts():
+    out = _run(["opcosts", "--area", "100", "--rent", "1000"])
+    assert out["total_annual"] == pytest.approx(1_790.0)
+
+
+def test_cli_equity_return():
+    out = _run(
+        ["equity", "--price", "300000", "--rent", "1500", "--equity", "60000",
+         "--rate", "3.6", "--repayment", "2.0", "--ancillary", "30000",
+         "--operating", "2400"]
+    )
+    assert out["cash_on_cash_percent"] == pytest.approx(0.8)

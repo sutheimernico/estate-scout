@@ -100,6 +100,48 @@ def yield_cmd(
     )
 
 
+@finance_app.command()
+def opcosts(
+    area: float = typer.Option(..., help="living area in m²"),
+    rent: float = typer.Option(..., help="monthly Kaltmiete in EUR"),
+    units: int = typer.Option(1, help="number of residential units"),
+) -> None:
+    """Annual Bewirtschaftungskosten estimate (Instandhaltung, Verwaltung, Mietausfall)."""
+    _echo(
+        dispatch(
+            "operating_costs",
+            {"living_area_sqm": area, "monthly_cold_rent": rent, "units": units},
+        )
+    )
+
+
+@finance_app.command(name="equity")
+def equity_cmd(
+    price: float = typer.Option(..., help="purchase price in EUR"),
+    rent: float = typer.Option(..., help="monthly Kaltmiete in EUR"),
+    equity: float = typer.Option(..., help="invested equity in EUR"),
+    rate: float = typer.Option(..., help="nominal interest p.a. in %"),
+    repayment: float = typer.Option(..., help="anfängliche Tilgung in %"),
+    ancillary: float = typer.Option(0.0, help="Kaufnebenkosten in EUR"),
+    operating: float = typer.Option(0.0, help="Bewirtschaftungskosten EUR/year"),
+) -> None:
+    """First-year Eigenkapitalrendite (cash-on-cash) of a financed buy-to-let."""
+    _echo(
+        dispatch(
+            "equity_return",
+            {
+                "purchase_price": price,
+                "monthly_cold_rent": rent,
+                "equity": equity,
+                "annual_rate_percent": rate,
+                "initial_repayment_percent": repayment,
+                "ancillary_costs": ancillary,
+                "annual_operating_costs": operating,
+            },
+        )
+    )
+
+
 def render_response(resp) -> str:
     """Format an AssistantResponse for the terminal (pure — testable without Ollama)."""
     lines = [resp.answer.strip()]

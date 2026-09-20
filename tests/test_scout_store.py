@@ -56,3 +56,11 @@ def test_persists_to_a_file(tmp_path):
     got = reopened.get(saved.id)
     assert got is not None and got.ort == "Osnabrück"
     reopened.close()
+
+
+def test_delete_unknown_id_reports_false_and_keeps_the_rest():
+    store = ListingStore(":memory:")
+    kept = store.add(_sample())
+    assert store.delete(999_999) is False
+    assert [x.id for x in store.list()] == [kept.id]
+    store.close()

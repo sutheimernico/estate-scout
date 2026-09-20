@@ -15,6 +15,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8",
+    "pytest-cov>=5",
     "ruff>=0.6",
 ]
 
@@ -35,5 +36,15 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# Coverage runs on the full gate. Single-file TDD runs: add --no-cov (the floor needs the
+# whole suite to be meaningful).
+addopts = "-q --cov=estatescout --cov-report=term-missing"
 pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["src/estatescout"]
+
+[tool.coverage.report]
+# Measured floor, not an aspiration: raise it when coverage rises, never lower it silently.
+fail_under = 94  # measured 94.99 % on 2026-09-20
+show_missing = true

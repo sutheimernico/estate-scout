@@ -151,3 +151,13 @@ def test_listings_delete(tmp_path):
         assert client.delete(f"/api/listings/{created['id']}").status_code == 404
     finally:
         app.dependency_overrides.clear()
+
+
+def test_listings_empty_store_returns_empty_list(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "empty.db"))
+    try:
+        r = client.get("/api/listings")
+        assert r.status_code == 200
+        assert r.json() == []
+    finally:
+        app.dependency_overrides.clear()

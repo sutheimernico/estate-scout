@@ -64,3 +64,50 @@ def test_dispatch_missing_required_arg_raises():
 
 def test_every_tool_has_a_runner():
     assert all(callable(t.run) for t in TOOLS.values())
+
+
+def test_dispatch_coerces_numeric_strings():
+    out = dispatch(
+        "annuity",
+        {"principal": "300000", "annual_rate_percent": "3.6", "initial_repayment_percent": 2.0},
+    )
+    assert out["monthly_payment"] == pytest.approx(1_400.0)
+
+
+def test_dispatch_rejects_non_numeric_string():
+    with pytest.raises(ValueError, match="must be a number"):
+        dispatch(
+            "annuity",
+            {"principal": "dreihundert", "annual_rate_percent": 3.6,
+             "initial_repayment_percent": 2.0},
+        )
+
+
+def test_dispatch_rejects_bool_for_number():
+    with pytest.raises(ValueError, match="must be a number"):
+        dispatch(
+            "annuity",
+            {"principal": True, "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0},
+        )
+
+
+def test_dispatch_rejects_number_for_string():
+    with pytest.raises(ValueError, match="must be a string"):
+        dispatch("purchase_costs", {"purchase_price": 300_000, "bundesland": 42})
+
+
+def test_dispatch_treats_explicit_null_as_absent():
+    out = dispatch(
+        "annuity",
+        {"principal": 300_000, "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0,
+         "annual_sondertilgung": None},
+    )
+    assert out["monthly_payment"] == pytest.approx(1_400.0)
+
+
+def test_dispatch_null_required_arg_counts_as_missing():
+    with pytest.raises(ValueError, match="missing required"):
+        dispatch(
+            "annuity",
+            {"principal": None, "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0},
+        )

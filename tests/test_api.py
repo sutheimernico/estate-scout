@@ -116,3 +116,8 @@ def test_listings_invalid_input_is_400(tmp_path):
         assert r.status_code == 400
     finally:
         app.dependency_overrides.clear()
+
+
+def test_finance_wrong_type_is_400():
+    body = {"principal": "abc", "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0}
+    assert client.post("/api/finance/annuity", json=body).status_code == 400

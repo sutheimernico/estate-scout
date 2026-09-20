@@ -196,13 +196,42 @@ def tool_specs() -> list[dict]:
     return [t.spec for t in TOOLS.values()]
 
 
+def _clean_args(name: str, tool: Tool, args: dict) -> dict:
+    """Drop explicit nulls, coerce numeric strings, and type-check against the tool spec.
+
+    Local 7B models routinely send numbers as strings or explicit nulls — coerce what is
+    safe, reject the rest loudly so the caller (API 400 / loop error-feedback) can react.
+    """
+    props = tool.spec["function"]["parameters"]["properties"]
+    cleaned: dict = {}
+    for key, value in args.items():
+        if value is None:
+            continue  # explicit null == absent; required-check below reports it
+        expected = props.get(key, {}).get("type")
+        if expected == "number":
+            if isinstance(value, bool):
+                raise ValueError(f"tool '{name}' argument '{key}' must be a number, got {value!r}")
+            if not isinstance(value, int | float):
+                try:
+                    value = float(value)
+                except (TypeError, ValueError):
+                    raise ValueError(
+                        f"tool '{name}' argument '{key}' must be a number, got {value!r}"
+                    ) from None
+        elif expected == "string" and not isinstance(value, str):
+            raise ValueError(f"tool '{name}' argument '{key}' must be a string, got {value!r}")
+        cleaned[key] = value
+    return cleaned
+
+
 def dispatch(name: str, args: dict) -> dict:
-    """Validate required args and run the named finance tool. Numbers come from finance/."""
+    """Validate, type-coerce and run the named finance tool. Numbers come from finance/."""
     if name not in TOOLS:
         raise ValueError(f"unknown tool '{name}' (known: {', '.join(sorted(TOOLS))})")
     tool = TOOLS[name]
+    cleaned = _clean_args(name, tool, args)
     required = tool.spec["function"]["parameters"]["required"]
-    missing = [r for r in required if r not in args]
+    missing = [r for r in required if r not in cleaned]
     if missing:
         raise ValueError(f"tool '{name}' missing required args: {', '.join(missing)}")
-    return tool.run(args)
+    return tool.run(cleaned)

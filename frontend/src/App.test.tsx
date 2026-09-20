@@ -1,19 +1,40 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AmortizationTable } from "./AmortizationTable";
 import { App } from "./App";
 import { CalcResultCard } from "./CalcResultCard";
 
+beforeEach(() => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response("[]", { status: 200, headers: { "Content-Type": "application/json" } }),
+    ),
+  );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+// The Listings pane mounts with the App and fetches immediately; awaiting its settled
+// empty state keeps that async update inside act() instead of leaking after the test.
+async function renderApp() {
+  render(<App />);
+  await screen.findByText(/Noch keine Objekte gespeichert/);
+}
+
 describe("App", () => {
-  it("renders the header subtitle and the disclaimer", () => {
-    render(<App />);
+  it("renders the header subtitle and the disclaimer", async () => {
+    await renderApp();
     expect(screen.getByText(/Lokaler Immobilien-Assistent/)).toBeInTheDocument();
     expect(screen.getByText(/keine Steuer/i)).toBeInTheDocument();
   });
 
-  it("shows an empty-state prompt before any message", () => {
-    render(<App />);
+  it("shows an empty-state prompt before any message", async () => {
+    await renderApp();
     expect(screen.getByText(/Frag mich etwas zu Kauf/)).toBeInTheDocument();
   });
 });
@@ -77,5 +98,13 @@ describe("CalcResultCard", () => {
     );
     expect(screen.getByText("Eigenkapitalrendite (Jahr 1)")).toBeInTheDocument();
     expect(screen.getByText("0,8 %")).toBeInTheDocument();
+  });
+});
+
+describe("Tabs", () => {
+  it("switches to the Rechner tab", async () => {
+    await renderApp();
+    fireEvent.click(screen.getByRole("tab", { name: "Rechner" }));
+    expect(screen.getByRole("heading", { name: "Annuitätendarlehen" })).toBeInTheDocument();
   });
 });

@@ -38,7 +38,10 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 testpaths = ["tests"]
 # Coverage runs on the full gate. Single-file TDD runs: add --no-cov (the floor needs the
 # whole suite to be meaningful).
-addopts = "-q --cov=estatescout --cov-report=term-missing"
+# `-m "not live"` keeps the suite hermetic: anything touching a real Ollama is opt-in
+# (`uv run pytest -m live`), the repeatable live check is scripts/verify_live.sh.
+addopts = "-q --cov=estatescout --cov-report=term-missing -m 'not live'"
+markers = ["live: needs a running local Ollama (excluded by default)"]
 pythonpath = ["src"]
 
 [tool.coverage.run]

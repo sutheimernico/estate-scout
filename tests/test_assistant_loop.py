@@ -133,3 +133,24 @@ def test_no_context_message_when_all_hits_below_threshold():
     assert resp.sources == []
     sent = model.calls[0]["messages"]
     assert not any("Auszüge aus der Wissensbasis" in m.get("content", "") for m in sent)
+
+
+def test_assistant_lists_saved_listings_via_extra_tool():
+    from estatescout.assistant.tools import listing_tools
+    from estatescout.scout.model import Listing
+    from estatescout.scout.store import ListingStore
+
+    store = ListingStore(":memory:")
+    store.add(Listing(price=300_000, living_area_sqm=100, bundesland="NI", ort="Lingen"))
+    model = FakeChat(
+        [
+            {"role": "assistant", "content": "",
+             "tool_calls": [{"function": {"name": "list_listings", "arguments": {}}}]},
+            _final("Du hast 1 Objekt gespeichert: Lingen, 300.000 €."),
+        ]
+    )
+    resp = Assistant(model, extra_tools=listing_tools(store)).ask("Welche Objekte habe ich?")
+    assert resp.tool_calls[0]["result"]["count"] == 1
+    assert resp.tool_calls[0]["result"]["listings"][0]["ort"] == "Lingen"
+    sent_tools = model.calls[0]["tools"]
+    assert any(t["function"]["name"] == "list_listings" for t in sent_tools)

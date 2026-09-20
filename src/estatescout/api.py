@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from .assistant.assistant import DISCLAIMER, MIN_RAG_SCORE, Assistant
 from .assistant.chat import OllamaChat, OllamaUnavailable
-from .assistant.tools import dispatch
+from .assistant.tools import dispatch, listing_tools
 from .rag.embedder import OllamaEmbedder
 from .rag.index import RagIndex, load_or_build
 from .scout.model import Listing
@@ -79,7 +79,7 @@ def _to_out(listing: Listing) -> ListingOut:
 _index_cache: RagIndex | None = None
 
 
-def get_assistant() -> Assistant:
+def get_assistant() -> Iterator[Assistant]:
     """Build the live Ollama-backed assistant. Overridden in tests with a fake."""
     global _index_cache
     embedder = OllamaEmbedder()
@@ -88,7 +88,17 @@ def get_assistant() -> Assistant:
             _index_cache = load_or_build(embedder)
         except OllamaUnavailable as e:
             raise HTTPException(status_code=503, detail=str(e)) from None
-    return Assistant(OllamaChat(), index=_index_cache, embedder=embedder, min_score=MIN_RAG_SCORE)
+    store = ListingStore(DEFAULT_DB)
+    try:
+        yield Assistant(
+            OllamaChat(),
+            index=_index_cache,
+            embedder=embedder,
+            min_score=MIN_RAG_SCORE,
+            extra_tools=listing_tools(store),
+        )
+    finally:
+        store.close()
 
 
 @app.get("/api/health")

@@ -13,7 +13,7 @@ from estatescout.rag.embedder import Embedder
 from estatescout.rag.index import RagIndex
 
 from .chat import ChatModel
-from .tools import dispatch, tool_specs
+from .tools import TOOLS, Tool, dispatch
 
 DISCLAIMER = (
     "Hinweis: keine Steuer-, Anlage- oder Finanzierungsberatung. Steuersätze und Zinsen "
@@ -37,6 +37,8 @@ SYSTEM_PROMPT = (
     "3. Du gibst keine Steuer-, Anlage- oder Finanzierungsberatung — weise bei solchen Fragen "
     "darauf hin.\n"
     "4. Fehlt eine Angabe, die ein Tool braucht, fragst du nach, statt zu raten.\n"
+    "5. Fragen zu den gespeicherten Objekten des Nutzers beantwortest du über das Tool "
+    "list_listings — nie aus dem Gedächtnis.\n"
     "Antworte auf Deutsch, knapp und konkret."
 )
 
@@ -82,6 +84,7 @@ class Assistant:
         k: int = 4,
         max_tool_rounds: int = 4,
         min_score: float = -1.0,
+        extra_tools: dict[str, Tool] | None = None,
     ):
         self.model = model
         self.index = index
@@ -89,6 +92,8 @@ class Assistant:
         self.k = k
         self.max_tool_rounds = max_tool_rounds
         self.min_score = min_score
+        # Static finance tools plus any context-bound extras (e.g. the listing store).
+        self._tools = {**TOOLS, **(extra_tools or {})}
 
     def _context_message(self, question: str) -> tuple[dict | None, list[str]]:
         if self.index is None or self.embedder is None:
@@ -117,7 +122,7 @@ class Assistant:
         messages.append({"role": "user", "content": question})
 
         tool_calls: list[dict] = []
-        specs = tool_specs()
+        specs = [t.spec for t in self._tools.values()]
         for _ in range(self.max_tool_rounds):
             msg = self.model.chat(messages, tools=specs)
             messages.append(msg)
@@ -141,7 +146,7 @@ class Assistant:
                     continue
                 name, args = parsed
                 try:
-                    result = dispatch(name, args)
+                    result = dispatch(name, args, tools=self._tools)
                 except (ValueError, TypeError, KeyError) as e:
                     result = {"error": str(e)}  # feed back so the model can correct itself
                 tool_calls.append({"name": name, "args": args, "result": result})

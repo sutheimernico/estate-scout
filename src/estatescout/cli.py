@@ -162,15 +162,22 @@ def ask(question: str) -> None:
     """Ask a real-estate question; the assistant uses RAG for knowledge and tools for numbers."""
     from .assistant.assistant import MIN_RAG_SCORE, Assistant
     from .assistant.chat import OllamaChat, OllamaUnavailable
+    from .assistant.tools import listing_tools
     from .rag.embedder import OllamaEmbedder
     from .rag.index import load_or_build
 
+    store = ListingStore(DEFAULT_DB)
     try:
         embedder = OllamaEmbedder()
         index = load_or_build(embedder)
-        resp = Assistant(
-            OllamaChat(), index=index, embedder=embedder, min_score=MIN_RAG_SCORE
-        ).ask(question)
+        assistant = Assistant(
+            OllamaChat(),
+            index=index,
+            embedder=embedder,
+            min_score=MIN_RAG_SCORE,
+            extra_tools=listing_tools(store),
+        )
+        resp = assistant.ask(question)
     except OllamaUnavailable:
         typer.echo(
             "Ollama ist nicht erreichbar. Starte 'ollama serve' und ziehe ein Modell "
@@ -178,6 +185,8 @@ def ask(question: str) -> None:
             "Die Rechner funktionieren ohne LLM: 'uv run python scripts/finance.py --help'."
         )
         raise typer.Exit(code=1) from None
+    finally:
+        store.close()
     typer.echo(render_response(resp))
 
 

@@ -134,3 +134,7 @@ def test_ask_returns_503_when_embedding_unavailable(monkeypatch):
 
     monkeypatch.setattr(api_mod, "load_or_build", boom)
     assert client.post("/api/ask", json={"question": "hallo"}).status_code == 503
+
+
+def test_finance_endpoint_does_not_expose_listing_tools():
+    assert client.post("/api/finance/list_listings", json={}).status_code == 400

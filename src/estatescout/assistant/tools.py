@@ -16,6 +16,7 @@ from estatescout.finance.equity_return import equity_return
 from estatescout.finance.operating_costs import operating_costs
 from estatescout.finance.purchase_costs import purchase_costs
 from estatescout.finance.yield_metrics import yield_metrics
+from estatescout.scout.store import ListingStore
 
 
 def _eur(x: float) -> float:
@@ -297,14 +298,53 @@ def _clean_args(name: str, tool: Tool, args: dict) -> dict:
     return cleaned
 
 
-def dispatch(name: str, args: dict) -> dict:
-    """Validate, type-coerce and run the named finance tool. Numbers come from finance/."""
-    if name not in TOOLS:
-        raise ValueError(f"unknown tool '{name}' (known: {', '.join(sorted(TOOLS))})")
-    tool = TOOLS[name]
+def dispatch(name: str, args: dict, *, tools: dict[str, Tool] | None = None) -> dict:
+    """Validate, type-coerce and run the named tool. Numbers come from finance/."""
+    tools_map = tools if tools is not None else TOOLS
+    if name not in tools_map:
+        raise ValueError(f"unknown tool '{name}' (known: {', '.join(sorted(tools_map))})")
+    tool = tools_map[name]
     cleaned = _clean_args(name, tool, args)
     required = tool.spec["function"]["parameters"]["required"]
     missing = [r for r in required if r not in cleaned]
     if missing:
         raise ValueError(f"tool '{name}' missing required args: {', '.join(missing)}")
     return tool.run(cleaned)
+
+
+def listing_tools(store: ListingStore) -> dict[str, Tool]:
+    """Tools over the user's saved listings (Stage 2). Read-only for the model."""
+
+    def _run_list(a: dict) -> dict:
+        items = store.list()
+        return {
+            "count": len(items),
+            "listings": [
+                {
+                    "id": it.id,
+                    "ort": it.ort,
+                    "bundesland": it.bundesland,
+                    "object_type": it.object_type,
+                    "price": _eur(it.price),
+                    "living_area_sqm": it.living_area_sqm,
+                    "price_per_sqm": _eur(it.price_per_sqm),
+                    "rooms": it.rooms,
+                    "year_built": it.year_built,
+                }
+                for it in items
+            ],
+        }
+
+    return {
+        "list_listings": Tool(
+            spec=_spec(
+                "list_listings",
+                "List the property objects the user has saved (id, location, price, size, "
+                "price per m²). Use for any question about the user's own objects "
+                "('meine Objekte').",
+                {},
+                [],
+            ),
+            run=_run_list,
+        )
+    }

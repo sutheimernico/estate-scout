@@ -1,5 +1,7 @@
 """Tests for listing enrichment (Bodenrichtwert seam; honest 'unavailable' degradation)."""
 
+import pytest
+
 from estatescout.scout.enrich import (
     BodenrichtwertProvider,
     RegionSignal,
@@ -88,3 +90,52 @@ def test_unavailable_reason_serializes_as_its_string_value():
 
     e = enrich(_listing())
     assert json.loads(json.dumps(e.unavailable))["bodenrichtwert"] == "provider_missing"
+
+
+def test_configured_providers_reads_the_config_and_defaults_to_none():
+    from estatescout.scout.bodenrichtwert_wfs import WfsBodenrichtwert
+    from estatescout.scout.enrich import configured_providers
+
+    boris, region = configured_providers({"bodenrichtwert": {"provider": "none"}})
+    assert boris is None and region is None
+
+    boris, region = configured_providers(
+        {"bodenrichtwert": {"provider": "wfs_ni", "wfs_ni": {"max_features": 50}}}
+    )
+    assert isinstance(boris, WfsBodenrichtwert)
+    assert boris.max_features == 50
+
+
+def test_configured_providers_builds_the_static_tables():
+    from estatescout.scout.enrich import configured_providers
+
+    boris, region = configured_providers(
+        {
+            "bodenrichtwert": {"provider": "static", "static": {"by_plz": {"49074": 420.0}}},
+            "region_signal": {
+                "provider": "static",
+                "static": {"by_plz": {"49074": {"vacancy_rate_pct": 2.1}}},
+            },
+        }
+    )
+    assert boris.lookup(_listing("49074")) == 420.0
+    assert region.lookup(_listing("49074")).vacancy_rate_pct == 2.1
+
+
+def test_unknown_provider_name_errors_loudly():
+    from estatescout.scout.enrich import configured_providers
+
+    with pytest.raises(ValueError, match="unknown bodenrichtwert provider"):
+        configured_providers({"bodenrichtwert": {"provider": "magic"}})
+
+
+def test_the_shipped_provider_config_parses():
+    # parse the real file directly — conftest pins the loader to "no providers" for the suite
+    import yaml
+
+    from estatescout.scout.enrich import _PROVIDER_CONFIG, configured_providers
+
+    cfg = yaml.safe_load(_PROVIDER_CONFIG.read_text(encoding="utf-8"))
+    assert cfg["bodenrichtwert"]["source"]
+    assert cfg["bodenrichtwert"]["as_of"]
+    configured_providers(cfg)  # the shipped config must build without error

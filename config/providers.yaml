@@ -1,0 +1,27 @@
+# estate-scout — enrichment data sources.
+#
+# Which provider supplies which signal. `none` is a valid, honest choice: the enrichment then
+# records `provider_missing` for that signal and the scoring engine reports the gap instead of
+# inventing a value. Every entry carries `source` + `as_of` like the other config files.
+
+bodenrichtwert:
+  as_of: "2026-09-20"
+  source: "BORIS Niedersachsen WFS 2.0 (LGLN) — Datenlizenz Deutschland Namensnennung 2.0, © GDI-NI"
+  # none | wfs_ni | static
+  provider: wfs_ni
+  wfs_ni:
+    url: "https://opendata.lgln.niedersachsen.de/doorman/noauth/boris_wfs"
+    # Zones per Gemeinde to pull before taking the median of the residential ones.
+    max_features: 200
+    timeout_seconds: 60
+  # Used when provider == static: a table the user maintains from BORIS / Gutachterausschuss.
+  static:
+    by_plz: {}
+
+region_signal:
+  as_of: "2026-09-20"
+  source: "no keyless machine interface identified yet — see docs/bodenrichtwert-quelle.md"
+  # none | static
+  provider: none
+  static:
+    by_plz: {}

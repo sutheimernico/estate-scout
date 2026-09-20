@@ -1,0 +1,536 @@
+<?xml version='1.0' encoding='utf-8'?><wfs:FeatureCollection xmlns:boris="http://www.adv-online.de/namespaces/adv/boris/2.0" xmlns:adv="http://www.adv-online.de/namespaces/adv/gid/6.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" timeStamp="2026-09-20T16:39:47.311+02:00" numberReturned="8" numberMatched="unknown" xsi:schemaLocation="http://www.adv-online.de/namespaces/adv/boris/2.0 http://www.boris.niedersachsen.de/schema/BORIS/2.0/Boris.xsd http://www.opengis.net/wfs/2.0 http://www.boris.niedersachsen.de/schema/ogc/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://www.boris.niedersachsen.de/schema/NAS/6.0.1/schema/gml/3.2.1/gml.xsd http://www.isotc211.org/2005/gco http://www.boris.niedersachsen.de/schema/NAS/6.0.1/schema/iso/19139/20070417/gco/gco.xsd http://www.isotc211.org/2005/gmd http://www.boris.niedersachsen.de/schema/NAS/6.0.1/schema/iso/19139/20070417/gmd/gmd.xsd">
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00200">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00200</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00200"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00200"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00200"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033283</boris:nummer>
+<boris:name>Bramsche</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500200</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>46.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>W</boris:art>
+<boris:ergaenzung>ASB</boris:ergaenzung>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:flaeche>
+<boris:BR_WertOderWertespanneGanzzahl>
+<boris:wert>1500</boris:wert>
+</boris:BR_WertOderWertespanneGanzzahl>
+</boris:flaeche>
+<boris:bodenrichtwertzoneName>Gemeindewert Stadt Lingen</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00202">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00202</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00202"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00202"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00202"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033159</boris:nummer>
+<boris:name>Altenlingen</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500202</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>76.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>WA</boris:art>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:bodenrichtwertzoneName>Lingen. Clusorth Siedlung</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00203">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00203</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00203"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00203"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00203"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033282</boris:nummer>
+<boris:name>Baccum</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500203</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>86.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>GB</boris:art>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:bodenrichtwertzoneName>Baccum.Kirche</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00204">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00204</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00204"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00204"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00204"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033160</boris:nummer>
+<boris:name>Lingen</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500204</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>400.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>GB</boris:art>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:bodenrichtwertzoneName>Lingen.Elisabethstr. Rathaus</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00205">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00205</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00205"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00205"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00205"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033160</boris:nummer>
+<boris:name>Lingen</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500205</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>350.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>GB</boris:art>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:bodenrichtwertzoneName>Lingen.Hinter Burstraße</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00206">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00206</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00206"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00206"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00206"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033160</boris:nummer>
+<boris:name>Lingen</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500206</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>64.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>GB</boris:art>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:bodenrichtwertzoneName>Lingen.Sandbrinkerheide</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00207">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00207</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00207"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00207"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00207"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033282</boris:nummer>
+<boris:name>Baccum</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500207</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>135.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>WA</boris:art>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:bodenrichtwertzoneName>Lingen. Baccum</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+<wfs:member>
+<boris:BR_BodenrichtwertZonal gml:id="DENIBR7526B00208">
+<gml:identifier codeSpace="http://www.adv-online.de/">urn:adv:oid:DENIBR7526B00208</gml:identifier>
+<adv:lebenszeitintervall>
+<adv:AA_Lebenszeitintervall>
+<adv:beginnt>2026-02-17T11:19:31Z</adv:beginnt>
+<adv:endet>2025-04-16T10:19:31Z</adv:endet>
+</adv:AA_Lebenszeitintervall>
+</adv:lebenszeitintervall>
+<adv:modellart>
+<adv:AA_Modellart>
+<adv:advStandardModell>DLKM</adv:advStandardModell>
+</adv:AA_Modellart>
+</adv:modellart>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526P00208"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526Q00208"/>
+<adv:inversZu_dientZurDarstellungVon_AP_PTO xlink:href="urn:adv:oid:DENIBR7526R00208"/>
+<adv:position>
+<!-- geometry removed -->
+</adv:position>
+<boris:gemeinde>
+<boris:BR_Gemeinde>
+<boris:kennzeichen>
+<boris:BR_Gemeindekennzeichen>
+<boris:land>03</boris:land>
+<boris:regierungsbezirk>4</boris:regierungsbezirk>
+<boris:kreis>54</boris:kreis>
+<boris:gemeinde>032</boris:gemeinde>
+<boris:gemeindeteil>0000</boris:gemeindeteil>
+</boris:BR_Gemeindekennzeichen>
+</boris:kennzeichen>
+<boris:name>Lingen (Ems). Stadt</boris:name>
+</boris:BR_Gemeinde>
+</boris:gemeinde>
+<boris:gutachterausschuss>
+<boris:BR_Gutachterausschuss>
+<boris:kennziffer>03075</boris:kennziffer>
+<boris:bezeichnung>Gutachterausschuss für Grundstückswerte Osnabrück-Meppen</boris:bezeichnung>
+</boris:BR_Gutachterausschuss>
+</boris:gutachterausschuss>
+<boris:gemarkung>
+<boris:BR_Gemarkung>
+<boris:nummer>033159</boris:nummer>
+<boris:name>Altenlingen</boris:name>
+</boris:BR_Gemarkung>
+</boris:gemarkung>
+<boris:bodenrichtwertNummer>07500208</boris:bodenrichtwertNummer>
+<boris:bodenrichtwert>185.0</boris:bodenrichtwert>
+<boris:stichtag>2026-01-01</boris:stichtag>
+<boris:bodenrichtwertArt>1</boris:bodenrichtwertArt>
+<boris:basiskarte>
+<boris:BR_Basiskarte>
+<boris:bezeichnung>AK5</boris:bezeichnung>
+<boris:massstabszahl>5000</boris:massstabszahl>
+</boris:BR_Basiskarte>
+</boris:basiskarte>
+<boris:entwicklungszustand>B</boris:entwicklungszustand>
+<boris:beitragsAbgabenrechtlicherZustand>1</boris:beitragsAbgabenrechtlicherZustand>
+<boris:nutzung>
+<boris:BR_Nutzung>
+<boris:art>GB</boris:art>
+</boris:BR_Nutzung>
+</boris:nutzung>
+<boris:bodenrichtwertzoneName>Lingen.Forstweg Schule</boris:bodenrichtwertzoneName>
+</boris:BR_BodenrichtwertZonal>
+</wfs:member>
+</wfs:FeatureCollection>

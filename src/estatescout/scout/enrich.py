@@ -11,9 +11,15 @@ REST API) or for fine-grained regional signals. So the providers here are seams:
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from functools import lru_cache
+from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+import yaml
+
 from .model import Listing
+
+_PROVIDER_CONFIG = Path(__file__).resolve().parents[3] / "config" / "providers.yaml"
 
 
 class UnavailableReason(StrEnum):
@@ -136,10 +142,60 @@ def from_dict(data: dict) -> Enrichment:
     )
 
 
-def configured_providers() -> tuple[BodenrichtwertProvider | None, RegionSignalProvider | None]:
-    """The providers the running app enriches with.
+@lru_cache(maxsize=8)
+def load_provider_config(path: str | None = None) -> dict:
+    """Parse ``config/providers.yaml`` (or an explicit path). Cached per path."""
+    p = Path(path) if path else _PROVIDER_CONFIG
+    if not p.exists():
+        raise FileNotFoundError(f"provider config not found: {p}")
+    with p.open(encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    if not isinstance(data, dict):
+        raise ValueError(f"provider config at {p} is not a mapping")
+    return data
+
+
+def _build_bodenrichtwert(block: dict) -> BodenrichtwertProvider | None:
+    kind = block.get("provider", "none")
+    if kind == "none":
+        return None
+    if kind == "static":
+        return StaticBodenrichtwert(block.get("static", {}).get("by_plz") or {})
+    if kind == "wfs_ni":
+        from .bodenrichtwert_wfs import DEFAULT_URL, WfsBodenrichtwert
+
+        settings = block.get("wfs_ni") or {}
+        return WfsBodenrichtwert(
+            settings.get("url", DEFAULT_URL),
+            max_features=int(settings.get("max_features", 200)),
+            timeout=float(settings.get("timeout_seconds", 60)),
+        )
+    raise ValueError(f"unknown bodenrichtwert provider '{kind}' (none | static | wfs_ni)")
+
+
+def _build_region(block: dict) -> RegionSignalProvider | None:
+    kind = block.get("provider", "none")
+    if kind == "none":
+        return None
+    if kind == "static":
+        table = {
+            plz: RegionSignal(**fields)
+            for plz, fields in (block.get("static", {}).get("by_plz") or {}).items()
+        }
+        return StaticRegionSignal(table)
+    raise ValueError(f"unknown region_signal provider '{kind}' (none | static)")
+
+
+def configured_providers(
+    config: dict | None = None,
+) -> tuple[BodenrichtwertProvider | None, RegionSignalProvider | None]:
+    """The providers the running app enriches with, per ``config/providers.yaml``.
 
     ``None`` means nothing is configured for that signal — enrichment then records
     ``provider_missing`` instead of inventing a value.
     """
-    return None, None
+    cfg = config if config is not None else load_provider_config()
+    return (
+        _build_bodenrichtwert(cfg.get("bodenrichtwert") or {}),
+        _build_region(cfg.get("region_signal") or {}),
+    )

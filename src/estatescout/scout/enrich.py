@@ -9,10 +9,18 @@ REST API) or for fine-grained regional signals. So the providers here are seams:
   NEVER fabricated. Missing data is recorded in ``Enrichment.unavailable``, not guessed.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
 from .model import Listing
+
+
+class UnavailableReason(StrEnum):
+    """Why a signal has no value. A ``StrEnum`` so it serializes to JSON as its value."""
+
+    PROVIDER_MISSING = "provider_missing"  # nothing configured to look this up
+    NO_DATA = "no_data"  # provider ran, but knows nothing about this listing
 
 
 @dataclass(frozen=True)
@@ -25,7 +33,9 @@ class RegionSignal:
 class Enrichment:
     bodenrichtwert_eur_per_sqm: float | None = None
     region: RegionSignal | None = None
-    unavailable: tuple[str, ...] = ()  # source names that had no data for this listing
+    # signal name -> why it is absent. Scoring needs the distinction: a missing provider is a
+    # setup gap, missing data is a fact about this listing. Treat as read-only.
+    unavailable: dict[str, UnavailableReason] = field(default_factory=dict)
 
 
 @runtime_checkable
@@ -72,17 +82,21 @@ def enrich(
     bodenrichtwert: BodenrichtwertProvider | None = None,
     region: RegionSignalProvider | None = None,
 ) -> Enrichment:
-    """Attach available public reference data to a listing; record what was unavailable."""
-    unavailable: list[str] = []
+    """Attach available public reference data to a listing; record why anything is missing."""
+    unavailable: dict[str, UnavailableReason] = {}
 
     brw = bodenrichtwert.lookup(listing) if bodenrichtwert is not None else None
     if brw is None:
-        unavailable.append("bodenrichtwert")
+        unavailable["bodenrichtwert"] = (
+            UnavailableReason.PROVIDER_MISSING
+            if bodenrichtwert is None
+            else UnavailableReason.NO_DATA
+        )
 
     signal = region.lookup(listing) if region is not None else None
     if signal is None:
-        unavailable.append("region_signal")
+        unavailable["region_signal"] = (
+            UnavailableReason.PROVIDER_MISSING if region is None else UnavailableReason.NO_DATA
+        )
 
-    return Enrichment(
-        bodenrichtwert_eur_per_sqm=brw, region=signal, unavailable=tuple(unavailable)
-    )
+    return Enrichment(bodenrichtwert_eur_per_sqm=brw, region=signal, unavailable=unavailable)

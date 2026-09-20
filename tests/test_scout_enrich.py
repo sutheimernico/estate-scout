@@ -6,6 +6,7 @@ from estatescout.scout.enrich import (
     RegionSignalProvider,
     StaticBodenrichtwert,
     StaticRegionSignal,
+    UnavailableReason,
     enrich,
 )
 from estatescout.scout.model import Listing
@@ -53,10 +54,37 @@ def test_enrich_attaches_region_signal_and_clears_unavailable():
     assert e.region is not None
     assert e.region.population_trend_pct == 1.2
     assert e.region.vacancy_rate_pct == 2.1
-    assert e.unavailable == ()
+    assert e.unavailable == {}
 
 
 def test_enrich_region_unavailable_when_unknown():
     e = enrich(_listing("49074"), bodenrichtwert=StaticBodenrichtwert({"49074": 420.0}))
     assert e.region is None
     assert "region_signal" in e.unavailable
+
+
+def test_missing_provider_and_missing_data_are_distinguishable():
+    # no providers at all → both signals report PROVIDER_MISSING
+    e = enrich(_listing("49074"))
+    assert e.unavailable == {
+        "bodenrichtwert": UnavailableReason.PROVIDER_MISSING,
+        "region_signal": UnavailableReason.PROVIDER_MISSING,
+    }
+
+    # providers configured but with no entry for this listing → NO_DATA
+    e = enrich(
+        _listing("12345"),
+        bodenrichtwert=StaticBodenrichtwert({"49074": 420.0}),
+        region=StaticRegionSignal({"49074": RegionSignal(vacancy_rate_pct=2.1)}),
+    )
+    assert e.unavailable == {
+        "bodenrichtwert": UnavailableReason.NO_DATA,
+        "region_signal": UnavailableReason.NO_DATA,
+    }
+
+
+def test_unavailable_reason_serializes_as_its_string_value():
+    import json
+
+    e = enrich(_listing())
+    assert json.loads(json.dumps(e.unavailable))["bodenrichtwert"] == "provider_missing"

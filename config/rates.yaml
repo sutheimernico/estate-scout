@@ -80,3 +80,10 @@ bewirtschaftung:
   verwaltung_eur_per_unit_year: 350.0
   # Fraction of annual cold rent reserved for rent-loss risk (II. BV § 29: 2 %).
   mietausfallwagnis_rate: 0.02
+
+market_rate:
+  as_of: "2026-09-20"
+  source: "Bundesbank BBIM1/M.DE.B.A2C.A.R.A.2250.EUR.N (Effektivzins Neugeschäft Wohnungsbaukredite an private Haushalte), Stand 2026-07"
+  # Used ONLY when the live Bundesbank query fails — `finance/rates_live.py` then labels the
+  # value as a static fallback so a stale rate is never presented as today's.
+  fallback_annual_rate_percent: 3.94

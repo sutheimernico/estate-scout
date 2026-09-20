@@ -23,6 +23,7 @@ frontend/dist/
 *.sqlite3
 .cache/
 data/rag_index/
+data/market_rate_cache.json
 
 # Claude local settings
 .claude/settings.local.json

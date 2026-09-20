@@ -15,6 +15,7 @@ from estatescout.finance.annuity import annuity
 from estatescout.finance.equity_return import equity_return
 from estatescout.finance.operating_costs import operating_costs
 from estatescout.finance.purchase_costs import purchase_costs
+from estatescout.finance.rates_live import market_rate
 from estatescout.finance.yield_metrics import yield_metrics
 from estatescout.scout.scoring import score_listing
 from estatescout.scout.scoring import to_dict as score_to_dict
@@ -146,6 +147,16 @@ def _run_equity_return(a: dict) -> dict:
     }
 
 
+def _run_market_rate(a: dict) -> dict:
+    res = market_rate()
+    return {
+        "annual_rate_percent": res.annual_rate_percent,
+        "as_of": res.as_of,
+        "source": res.source,
+        "origin": res.origin,  # bundesbank_live | bundesbank_cache | static_fallback
+    }
+
+
 def _spec(name: str, description: str, properties: dict, required: list[str]) -> dict:
     return {
         "type": "function",
@@ -263,6 +274,18 @@ TOOLS: dict[str, Tool] = {
             ],
         ),
         run=_run_equity_return,
+    ),
+    "market_rate": Tool(
+        spec=_spec(
+            "market_rate",
+            "Current average effective interest rate for new German housing loans to private "
+            "households (Deutsche Bundesbank). Use it when the user asks what rates are right "
+            "now or has no rate of their own. Always report the returned 'as_of' and 'source', "
+            "and say so if 'origin' is 'static_fallback' (then the figure may be stale).",
+            {},
+            [],
+        ),
+        run=_run_market_rate,
     ),
 }
 

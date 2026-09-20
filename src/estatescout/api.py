@@ -17,6 +17,7 @@ from .assistant.assistant import DISCLAIMER, Assistant
 from .assistant.chat import OllamaUnavailable
 from .assistant.factory import build_assistant
 from .assistant.tools import dispatch
+from .finance.rates_live import market_rate
 from .scout.enrich import (
     BodenrichtwertProvider,
     Enrichment,
@@ -162,6 +163,26 @@ def get_assistant() -> Iterator[Assistant]:
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+class MarketRateOut(BaseModel):
+    annual_rate_percent: float
+    as_of: str
+    source: str
+    origin: str  # bundesbank_live | bundesbank_cache | static_fallback
+    disclaimer: str = DISCLAIMER
+
+
+@app.get("/api/market-rate", response_model=MarketRateOut)
+def get_market_rate() -> MarketRateOut:
+    """Current average mortgage rate, labelled with where the number came from."""
+    rate = market_rate()
+    return MarketRateOut(
+        annual_rate_percent=rate.annual_rate_percent,
+        as_of=rate.as_of,
+        source=rate.source,
+        origin=rate.origin,
+    )
 
 
 @app.post("/api/finance/{calc}", response_model=FinanceResponse)

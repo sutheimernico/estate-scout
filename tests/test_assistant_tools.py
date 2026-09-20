@@ -10,7 +10,7 @@ def test_tool_specs_cover_all_calculators():
     names = {s["function"]["name"] for s in specs}
     assert names == {
         "annuity", "purchase_costs", "affordability", "yield_metrics",
-        "operating_costs", "equity_return",
+        "operating_costs", "equity_return", "market_rate",
     }
     for s in specs:
         assert s["type"] == "function"

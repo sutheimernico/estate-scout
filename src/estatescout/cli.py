@@ -257,3 +257,20 @@ def list_listings(db: str = typer.Option(str(DEFAULT_DB), help="SQLite path")) -
             for it in items
         ]
     )
+
+
+@scout_app.command("delete")
+def delete_listing_cmd(
+    listing_id: int = typer.Argument(..., help="listing id (see 'scout list')"),
+    db: str = typer.Option(str(DEFAULT_DB), help="SQLite path"),
+) -> None:
+    """Delete a saved object by id."""
+    store = ListingStore(db)
+    try:
+        ok = store.delete(listing_id)
+    finally:
+        store.close()
+    if not ok:
+        typer.echo(f"Kein Objekt mit id {listing_id}.")
+        raise typer.Exit(code=1)
+    typer.echo(f"Objekt {listing_id} gelöscht.")

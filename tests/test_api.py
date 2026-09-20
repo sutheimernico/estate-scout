@@ -138,3 +138,16 @@ def test_ask_returns_503_when_embedding_unavailable(monkeypatch):
 
 def test_finance_endpoint_does_not_expose_listing_tools():
     assert client.post("/api/finance/list_listings", json={}).status_code == 400
+
+
+def test_listings_delete(tmp_path):
+    app.dependency_overrides[get_store] = _override_store_to(str(tmp_path / "api.db"))
+    try:
+        created = client.post(
+            "/api/listings",
+            json={"price": 100_000, "living_area_sqm": 50, "bundesland": "NI"},
+        ).json()
+        assert client.delete(f"/api/listings/{created['id']}").status_code == 204
+        assert client.delete(f"/api/listings/{created['id']}").status_code == 404
+    finally:
+        app.dependency_overrides.clear()

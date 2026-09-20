@@ -165,6 +165,12 @@ def list_listings(store: Annotated[ListingStore, Depends(get_store)]) -> list[Li
     return [_to_out(x) for x in store.list()]
 
 
+@app.delete("/api/listings/{listing_id}", status_code=204)
+def delete_listing(listing_id: int, store: Annotated[ListingStore, Depends(get_store)]) -> None:
+    if not store.delete(listing_id):
+        raise HTTPException(status_code=404, detail=f"listing {listing_id} not found")
+
+
 # Serve the built React chat tab from frontend/dist, if it has been built. Mounted last so the
 # /api/* routes above always take precedence. Absent build → API-only (honest degradation).
 _DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"

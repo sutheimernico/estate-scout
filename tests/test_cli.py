@@ -100,3 +100,15 @@ def test_cli_equity_return():
          "--operating", "2400"]
     )
     assert out["cash_on_cash_percent"] == pytest.approx(0.8)
+
+
+def test_scout_delete_removes_listing(tmp_path):
+    db = str(tmp_path / "cli.db")
+    add = runner.invoke(
+        scout_app,
+        ["add", "--price", "100000", "--area", "50", "--bundesland", "NI", "--db", db],
+    )
+    assert add.exit_code == 0, add.stdout
+    listing_id = json.loads(add.stdout)["id"]
+    assert runner.invoke(scout_app, ["delete", str(listing_id), "--db", db]).exit_code == 0
+    assert runner.invoke(scout_app, ["delete", str(listing_id), "--db", db]).exit_code == 1

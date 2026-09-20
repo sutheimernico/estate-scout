@@ -118,15 +118,17 @@ def render_response(resp) -> str:
 
 def ask(question: str) -> None:
     """Ask a real-estate question; the assistant uses RAG for knowledge and tools for numbers."""
-    from .assistant.assistant import Assistant
+    from .assistant.assistant import MIN_RAG_SCORE, Assistant
     from .assistant.chat import OllamaChat, OllamaUnavailable
     from .rag.embedder import OllamaEmbedder
-    from .rag.index import RagIndex, load_corpus
+    from .rag.index import load_or_build
 
     try:
         embedder = OllamaEmbedder()
-        index = RagIndex.build(load_corpus(), embedder)
-        resp = Assistant(OllamaChat(), index=index, embedder=embedder).ask(question)
+        index = load_or_build(embedder)
+        resp = Assistant(
+            OllamaChat(), index=index, embedder=embedder, min_score=MIN_RAG_SCORE
+        ).ask(question)
     except OllamaUnavailable:
         typer.echo(
             "Ollama ist nicht erreichbar. Starte 'ollama serve' und ziehe ein Modell "

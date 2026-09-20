@@ -121,3 +121,16 @@ def test_listings_invalid_input_is_400(tmp_path):
 def test_finance_wrong_type_is_400():
     body = {"principal": "abc", "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0}
     assert client.post("/api/finance/annuity", json=body).status_code == 400
+
+
+def test_ask_returns_503_when_embedding_unavailable(monkeypatch):
+    import estatescout.api as api_mod
+    from estatescout.errors import OllamaUnavailable
+
+    monkeypatch.setattr(api_mod, "_index_cache", None)
+
+    def boom(embedder):
+        raise OllamaUnavailable("down")
+
+    monkeypatch.setattr(api_mod, "load_or_build", boom)
+    assert client.post("/api/ask", json={"question": "hallo"}).status_code == 503

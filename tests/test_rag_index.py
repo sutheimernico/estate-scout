@@ -8,7 +8,7 @@ import pytest
 
 from estatescout.rag.chunker import Chunk
 from estatescout.rag.embedder import FakeEmbedder
-from estatescout.rag.index import RagIndex, load_corpus
+from estatescout.rag.index import RagIndex, load_corpus, load_or_build
 
 
 def test_load_corpus_reads_markdown_docs():
@@ -64,3 +64,38 @@ def test_retrieve_filters_hits_below_min_score():
     idx = RagIndex.build(chunks, emb)
     hits = idx.retrieve("Grunderwerbsteuer Niedersachsen Kaufnebenkosten", emb, k=2, min_score=0.5)
     assert [h.source for h in hits] == ["a.md"]
+
+
+class CountingEmbedder(FakeEmbedder):
+    def __init__(self):
+        super().__init__()
+        self.embed_calls = 0
+
+    def embed(self, texts):
+        self.embed_calls += 1
+        return super().embed(texts)
+
+
+def test_load_or_build_caches_and_skips_reembedding(tmp_path):
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "a.md").write_text("# T\n\nGrunderwerbsteuer in Niedersachsen.", encoding="utf-8")
+    emb = CountingEmbedder()
+    idx_dir = tmp_path / "idx"
+    load_or_build(emb, corpus_dir=corpus, index_dir=idx_dir)
+    assert emb.embed_calls == 1
+    load_or_build(emb, corpus_dir=corpus, index_dir=idx_dir)
+    assert emb.embed_calls == 1  # cache hit — no re-embedding
+
+
+def test_load_or_build_rebuilds_when_corpus_changes(tmp_path):
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "a.md").write_text("# T\n\nAlter Inhalt.", encoding="utf-8")
+    emb = CountingEmbedder()
+    idx_dir = tmp_path / "idx"
+    load_or_build(emb, corpus_dir=corpus, index_dir=idx_dir)
+    (corpus / "a.md").write_text("# T\n\nNeuer Inhalt über Mietrendite.", encoding="utf-8")
+    idx = load_or_build(emb, corpus_dir=corpus, index_dir=idx_dir)
+    assert emb.embed_calls == 2
+    assert "Neuer Inhalt" in idx.chunks[0].text

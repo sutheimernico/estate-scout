@@ -5,6 +5,7 @@ no external vector DB (that comparison is scouting-rag's job). The embedding mat
 to disk (regenerable, gitignored) so re-embedding only happens when the corpus changes.
 """
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,3 +101,37 @@ class RagIndex:
         payload = json.loads((index_dir / "chunks.json").read_text(encoding="utf-8"))
         chunks = [Chunk(source=d["source"], heading=d["heading"], text=d["text"]) for d in payload]
         return cls(chunks, matrix)
+
+
+def _fingerprint(chunks: list[Chunk], embedder: Embedder) -> str:
+    """Corpus+embedder identity; any content or model change invalidates the cache."""
+    h = hashlib.sha256()
+    h.update(getattr(embedder, "model", type(embedder).__name__).encode("utf-8"))
+    for c in chunks:
+        h.update(c.source.encode("utf-8"))
+        h.update(c.heading.encode("utf-8"))
+        h.update(c.text.encode("utf-8"))
+    return h.hexdigest()
+
+
+def load_or_build(
+    embedder: Embedder,
+    *,
+    corpus_dir: Path | str = DEFAULT_CORPUS_DIR,
+    index_dir: Path | str = DEFAULT_INDEX_DIR,
+) -> RagIndex:
+    """Load the cached index if the corpus is unchanged; otherwise build and cache it."""
+    index_dir = Path(index_dir)
+    chunks = load_corpus(corpus_dir)
+    fp = _fingerprint(chunks, embedder)
+    meta_path = index_dir / "meta.json"
+    if meta_path.exists():
+        try:
+            if json.loads(meta_path.read_text(encoding="utf-8")).get("fingerprint") == fp:
+                return RagIndex.load(index_dir)
+        except (OSError, ValueError):
+            pass  # unreadable/corrupt cache → rebuild below
+    index = RagIndex.build(chunks, embedder)
+    index.save(index_dir)
+    meta_path.write_text(json.dumps({"fingerprint": fp}), encoding="utf-8")
+    return index

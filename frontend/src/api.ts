@@ -93,6 +93,38 @@ export function toKnownCalc(name: string, result: Record<string, unknown>): Know
   }
 }
 
+export interface RegionSignal {
+  population_trend_pct: number | null;
+  vacancy_rate_pct: number | null;
+}
+
+export interface EnrichmentView {
+  bodenrichtwert_eur_per_sqm: number | null;
+  region: RegionSignal | null;
+  // signal -> "provider_missing" | "no_data"; the backend never fabricates a value
+  unavailable: Record<string, string>;
+  enriched_at: string | null;
+}
+
+export interface SubScore {
+  name: string;
+  value: number | null;
+  weight: number;
+  detail: Record<string, unknown>;
+  reason: string | null;
+}
+
+export interface ScoreReport {
+  total: number | null;
+  subscores: SubScore[];
+  weights_used: Record<string, number>;
+  confidence: number;
+  inputs_available: number;
+  inputs_expected: number;
+  reasons: Record<string, string>;
+  as_of: string;
+}
+
 export interface Listing {
   id: number;
   price: number;
@@ -106,6 +138,8 @@ export interface Listing {
   features: string[];
   source_url: string;
   price_per_sqm: number;
+  enrichment: EnrichmentView | null;
+  score: { total: number | null; confidence: number } | null;
 }
 
 export interface NewListing {
@@ -177,4 +211,14 @@ export function createListing(data: NewListing): Promise<Listing> {
 
 export function deleteListing(id: number): Promise<void> {
   return request(`/api/listings/${id}`, { method: "DELETE" });
+}
+
+export function enrichListing(id: number): Promise<EnrichmentView> {
+  return request(`/api/listings/${id}/enrich`, { method: "POST" });
+}
+
+export function scoreListing(id: number, monthlyColdRent?: number): Promise<ScoreReport> {
+  const query =
+    monthlyColdRent === undefined ? "" : `?monthly_cold_rent=${encodeURIComponent(monthlyColdRent)}`;
+  return request(`/api/listings/${id}/score${query}`);
 }

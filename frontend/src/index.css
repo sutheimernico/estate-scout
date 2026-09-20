@@ -341,3 +341,130 @@ body {
 .pane[hidden] {
   display: none;
 }
+
+.badge {
+  display: inline-block;
+  min-width: 34px;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+.badge.muted {
+  color: var(--muted);
+}
+.badge.score-high {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.badge.score-low {
+  border-color: var(--border);
+  color: var(--muted);
+}
+.drilldown {
+  padding: 10px 2px 14px;
+}
+.drilldown-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.drilldown-controls label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.drilldown-controls input {
+  display: block;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 5px 8px;
+  font-size: 13px;
+}
+.drilldown-controls button {
+  background: var(--accent);
+  color: #12161c;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.drilldown-controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.score-panel {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.score-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.score-total {
+  font-family: var(--mono);
+  font-size: 20px;
+  color: var(--accent);
+}
+.score-confidence {
+  font-size: 12px;
+  color: var(--muted);
+}
+.score-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 70px 60px;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 2px 0;
+}
+.score-bar {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.score-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.score-value,
+.score-weight {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.score-weight {
+  color: var(--muted);
+}
+.score-missing {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.score-missing h5 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.score-missing ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.score-foot {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}

@@ -1,31 +1,36 @@
-// Saved property objects: intake form + table over /api/listings.
+// Saved property objects: intake form + table over /api/listings, with the score drilldown.
 // Object attributes only — never seller contact data (ADR-0001 / DSGVO).
 
-import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 
-import { createListing, deleteListing, type Listing, listListings } from "./api";
+import {
+  createListing,
+  deleteListing,
+  enrichListing,
+  type Listing,
+  type ScoreReport,
+  scoreListing,
+} from "./api";
 import { eur, num } from "./format";
+import { ScoreDrilldown } from "./ScoreDrilldown";
+import { useListings } from "./useListings";
 
 const EMPTY_FORM = { price: "", area: "", bundesland: "", ort: "", rooms: "", year: "" };
 
+function parseRent(raw: string): number | undefined {
+  const value = Number(raw.replace(",", "."));
+  return raw.trim() === "" || Number.isNaN(value) || value <= 0 ? undefined : value;
+}
+
 export function Listings() {
-  const [items, setItems] = useState<Listing[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { items, error, setError, refresh } = useListings();
   const [form, setForm] = useState(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
-
-  async function refresh() {
-    try {
-      setItems(await listListings());
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  }
-
-  useEffect(() => {
-    void refresh();
-  }, []);
+  // per-listing UI state, keyed by id — one open row, one report cache, one pending id
+  const [openId, setOpenId] = useState<number | null>(null);
+  const [reports, setReports] = useState<Record<number, ScoreReport>>({});
+  const [rents, setRents] = useState<Record<number, string>>({});
+  const [pendingId, setPendingId] = useState<number | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -69,6 +74,41 @@ export function Listings() {
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onEvaluate(id: number) {
+    setError(null);
+    setPendingId(id);
+    try {
+      await enrichListing(id);
+      const report = await scoreListing(id, parseRent(rents[id] ?? ""));
+      setReports((r) => ({ ...r, [id]: report }));
+      setOpenId(id);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function onToggle(id: number) {
+    if (openId === id) {
+      setOpenId(null);
+      return;
+    }
+    setOpenId(id);
+    if (reports[id]) return;
+    try {
+      const report = await scoreListing(id, parseRent(rents[id] ?? ""));
+      setReports((r) => ({ ...r, [id]: report }));
+    } catch (err) {
+      // 409 = never enriched: not an error, the row simply offers the button instead
+      setReports((r) => ({ ...r }));
+      if (!(err instanceof Error) || !err.message.includes("enrich")) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
     }
   }
 
@@ -135,37 +175,130 @@ export function Listings() {
               <th>Preis</th>
               <th>m²</th>
               <th>€/m²</th>
-              <th>Zimmer</th>
-              <th>Baujahr</th>
+              <th>Score</th>
+              <th></th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {items.map((it) => (
-              <tr key={it.id}>
-                <td>{it.ort || "—"}</td>
-                <td>{it.bundesland}</td>
-                <td>{it.object_type}</td>
-                <td className="num">{eur(it.price)}</td>
-                <td className="num">{num(it.living_area_sqm)}</td>
-                <td className="num">{eur(it.price_per_sqm)}</td>
-                <td className="num">{it.rooms ?? "—"}</td>
-                <td className="num">{it.year_built ?? "—"}</td>
-                <td>
-                  <button
-                    type="button"
-                    className="del"
-                    onClick={() => void onDelete(it.id)}
-                    aria-label={`Objekt ${it.id} löschen`}
-                  >
-                    Löschen
-                  </button>
-                </td>
-              </tr>
+              <ListingRow
+                key={it.id}
+                listing={it}
+                open={openId === it.id}
+                pending={pendingId === it.id}
+                report={reports[it.id]}
+                rent={rents[it.id] ?? ""}
+                onRentChange={(value) => setRents((r) => ({ ...r, [it.id]: value }))}
+                onToggle={() => void onToggle(it.id)}
+                onEvaluate={() => void onEvaluate(it.id)}
+                onDelete={() => void onDelete(it.id)}
+              />
             ))}
           </tbody>
         </table>
       )}
     </div>
+  );
+}
+
+interface RowProps {
+  listing: Listing;
+  open: boolean;
+  pending: boolean;
+  report?: ScoreReport;
+  rent: string;
+  onRentChange: (value: string) => void;
+  onToggle: () => void;
+  onEvaluate: () => void;
+  onDelete: () => void;
+}
+
+function ScoreBadge({ listing }: { listing: Listing }) {
+  if (!listing.score || listing.score.total === null) return <span className="badge muted">—</span>;
+  const strength = listing.score.confidence >= 0.75 ? "high" : "low";
+  return (
+    <span className={`badge score-${strength}`} title={`Datenlage ${num(listing.score.confidence * 100, 0)} %`}>
+      {listing.score.total}
+    </span>
+  );
+}
+
+function ListingRow({
+  listing,
+  open,
+  pending,
+  report,
+  rent,
+  onRentChange,
+  onToggle,
+  onEvaluate,
+  onDelete,
+}: RowProps) {
+  return (
+    <>
+      <tr>
+        <td>{listing.ort || "—"}</td>
+        <td>{listing.bundesland}</td>
+        <td>{listing.object_type}</td>
+        <td className="num">{eur(listing.price)}</td>
+        <td className="num">{num(listing.living_area_sqm)}</td>
+        <td className="num">{eur(listing.price_per_sqm)}</td>
+        <td className="num">
+          <ScoreBadge listing={listing} />
+        </td>
+        <td>
+          <button
+            type="button"
+            className="del"
+            onClick={onToggle}
+            aria-expanded={open}
+            aria-label={`Bewertung von Objekt ${listing.id} ${open ? "schließen" : "anzeigen"}`}
+          >
+            {open ? "Zuklappen" : "Details"}
+          </button>
+        </td>
+        <td>
+          <button
+            type="button"
+            className="del"
+            onClick={onDelete}
+            aria-label={`Objekt ${listing.id} löschen`}
+          >
+            Löschen
+          </button>
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={9}>
+            <div className="drilldown">
+              <div className="drilldown-controls">
+                <label>
+                  Kaltmiete (€/Monat, optional)
+                  <input
+                    value={rent}
+                    onChange={(e) => onRentChange(e.target.value)}
+                    inputMode="decimal"
+                    placeholder="1000"
+                  />
+                </label>
+                <button type="button" onClick={onEvaluate} disabled={pending}>
+                  {pending ? "Bewertet …" : "Anreichern + bewerten"}
+                </button>
+              </div>
+              {report ? (
+                <ScoreDrilldown report={report} />
+              ) : (
+                <p className="empty">
+                  Noch keine Bewertung. „Anreichern + bewerten“ holt die öffentlichen Referenzdaten
+                  und berechnet den Score.
+                </p>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }

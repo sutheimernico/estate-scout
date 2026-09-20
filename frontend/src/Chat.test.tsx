@@ -8,7 +8,7 @@ const askResponse = {
   tool_calls: [
     {
       name: "annuity",
-      args: {},
+      args: { principal: 300000, annual_rate_percent: 3.6, initial_repayment_percent: 2.0 },
       result: {
         monthly_payment: 1400,
         total_interest: 181209.86,
@@ -78,5 +78,20 @@ describe("Chat", () => {
       }),
     );
     await waitFor(() => expect(screen.queryByText(/denkt nach/)).not.toBeInTheDocument());
+  });
+});
+
+describe("ToolTrace in the chat", () => {
+  it("shows which tool ran with which inputs, collapsed by default", async () => {
+    stubFetch(askResponse);
+    render(<Chat />);
+    submitQuestion("Was zahle ich monatlich?");
+    const summary = await screen.findByText("Werkzeuge (1)");
+    // <details> renders its content in the DOM even while closed — assert the closed state
+    expect(summary.closest("details")).not.toHaveAttribute("open");
+    fireEvent.click(summary);
+    expect(summary.closest("details")).toHaveAttribute("open");
+    expect(screen.getByText("annuity")).toBeInTheDocument();
+    expect(screen.getByText(/"monthly_payment":1400/)).toBeInTheDocument();
   });
 });

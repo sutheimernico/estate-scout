@@ -298,3 +298,43 @@ def test_listings_carry_a_score_summary_once_enriched(tmp_path):
         assert summary["confidence"] == 0.75  # 3 of 4 inputs (no rent in the table view)
     finally:
         app.dependency_overrides.clear()
+
+
+def test_ask_response_carries_the_full_tool_trace():
+    """The honest-harness claim must be inspectable: tool, arguments and result all travel."""
+
+    def fake_assistant() -> Assistant:
+        return Assistant(
+            FakeChat(
+                [
+                    {
+                        "role": "assistant",
+                        "content": "",
+                        "tool_calls": [
+                            {
+                                "function": {
+                                    "name": "annuity",
+                                    "arguments": {
+                                        "principal": 300_000,
+                                        "annual_rate_percent": 3.6,
+                                        "initial_repayment_percent": 2.0,
+                                    },
+                                }
+                            }
+                        ],
+                    },
+                    {"role": "assistant", "content": "Die Rate beträgt 1.400 €."},
+                ]
+            )
+        )
+
+    app.dependency_overrides[get_assistant] = fake_assistant
+    try:
+        body = client.post("/api/ask", json={"question": "Rate?"}).json()
+        assert len(body["tool_calls"]) == 1
+        trace = body["tool_calls"][0]
+        assert trace["name"] == "annuity"
+        assert trace["args"]["principal"] == 300_000
+        assert trace["result"]["monthly_payment"] == 1_400.0
+    finally:
+        app.dependency_overrides.clear()

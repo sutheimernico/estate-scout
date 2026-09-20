@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { ask, type AskResponse, toKnownCalc } from "./api";
 import { CalcResultCard } from "./CalcResultCard";
+import { ToolTrace } from "./ToolTrace";
 
 interface Msg {
   id: number;
@@ -70,6 +71,7 @@ export function Chat() {
               const known = toKnownCalc(t.name, t.result);
               return known ? <CalcResultCard key={`${m.id}-${i}`} calc={known} /> : null;
             })}
+            {m.response && <ToolTrace calls={m.response.tool_calls} />}
             {m.response && m.response.sources.length > 0 && (
               <div className="sources">
                 {m.response.sources.map((s) => (

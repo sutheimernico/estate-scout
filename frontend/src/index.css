@@ -468,3 +468,45 @@ body {
   font-size: 11px;
   color: var(--muted);
 }
+
+.tool-trace {
+  margin-top: 10px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 6px 10px;
+}
+.tool-trace summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.tool-trace summary:hover {
+  color: var(--text);
+}
+.tool-call {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+.tool-name {
+  color: var(--accent);
+  font-family: var(--mono);
+}
+.tool-io {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 8px;
+  margin-top: 3px;
+  color: var(--muted);
+}
+.tool-io code {
+  font-family: var(--mono);
+  color: var(--text);
+  word-break: break-all;
+}
+.tool-note {
+  margin: 8px 0 2px;
+  color: var(--muted);
+  font-size: 11px;
+}

@@ -48,3 +48,18 @@
   honest unavailable, no fabrication). 4 tests. Gate green (94 tests).
 - 2026-07-06 — Phase 7 COMPLETE: region-signal seam (RegionSignal + RegionSignalProvider +
   StaticRegionSignal; enrich() does both sources). 4 tests. Gate green (97 tests).
+- 2026-09-20 — Hardening+UX (plan 2026-07-07, all 18 tasks): typed dispatch with coercion, loop
+  guards against malformed tool calls, shared OllamaUnavailable, RAG min_score threshold +
+  fingerprint disk cache, rate fraction bounds, operating_costs + equity_return (tools + CLI),
+  assistant list_listings over the store, listing DELETE (API+CLI), frontend tabs
+  (Chat/Rechner/Objekte) with result cards, calc forms and listings view.
+  Gate green: 130 pytest, 14 vitest, ruff clean, npm build green.
+- 2026-09-20 — Stage-2 scoring+shine (plan 2026-07-20, 12/14 tasks): typed unavailable-reasons,
+  build_assistant factory, coverage floor 94 (pytest-cov), enrichment persisted (schema v1) with
+  enrich route+CLI, SCORING ENGINE (scout/scoring.py + config/scoring.yaml, 3 blocks, renormalized
+  weights, total=None when nothing computable), score via API/CLI/assistant tool, score drilldown
+  UI with honest gap reasons, tool-trace panel in the chat, BORIS-NI WFS Bodenrichtwert (keyless,
+  dl-de/by-2.0), live Bundesbank rate with labelled fallback, scripts/verify_live.sh + live marker.
+  Gate green: 205 pytest (95.2 % cov), 22 vitest, ruff clean, npm build green, 2 live checks green.
+  Open: Task 14 (stretch), region-signal source, price-block calibration (ratio reads 0 in rural NI).
+

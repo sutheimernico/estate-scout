@@ -162,3 +162,126 @@ Do not re-open the "which source" question; follow this tree top-down and stop a
 - Go for this plan (and decision whether 2026-07-07 hardening runs first — recommended).
 - Publish step: GitHub remote + public + portfolio link (highest-leverage zero-code item from the review; follow `~/.claude/CLAUDE.md` publish checklist — requires Nico's confirmations).
 - Optional: enable the nightly timer (Task 14); pick the Bundesland he actually cares about for Task 12 if not Niedersachsen.
+
+---
+
+## Outcome (2026-09-20)
+
+**Status: 12 of 14 tasks done.** Executed on `feat/stage1-hardening` (branched off
+`autopilot/work`) directly after the 2026-07-07 hardening plan, as recommended. Open: Task 14
+(explicit stretch) — see "Open" below.
+
+Gate at completion: **205 pytest** (97 before both plans), coverage **95.2 %** against a floor of
+94, ruff clean, **22 vitest**, `npm run build` green, `uv run pytest -m live` (2 opt-in checks
+against real public APIs) green.
+
+| Task | Status | Result |
+| ---- | ------ | ------ |
+| 1 | done | `UnavailableReason` (`StrEnum`: `provider_missing` / `no_data`); `Enrichment.unavailable` is now `dict[str, UnavailableReason]`. |
+| 2 | done | `assistant/factory.py::build_assistant(store=None)` — API and CLI share one wiring; the per-process index cache moved here. 3 tests. |
+| 3 | done | `pytest-cov` in the dev group, `fail_under = 94` (measured 94.99 % at the time), plus the two cheap tests the plan named (empty `GET /api/listings`, store-level delete of an unknown id). |
+| 4 | skipped (gate) | `DELETE /api/listings/{id}`, `scout delete` and the `list_listings` tool already existed from the 2026-07-07 plan (Tasks 10+11). Checked, not rebuilt. |
+| 5 | done | Schema v1 (`PRAGMA user_version`, in-place `ALTER TABLE` for older files, migration tested against a hand-built v0 DB); `POST /api/listings/{id}/enrich`, `scout enrich`, `enrichment_map()` for the list view. |
+| 6 | done | `scout/scoring.py` + `config/scoring.yaml` — the missing heart. |
+| 7 | done | `GET /api/listings/{id}/score` (404 / 409), score summary in `GET /api/listings`, `scout score` with a table, assistant tool `score_listing`. |
+| 8 | skipped (gate) | The listings tab and tab navigation already existed from the 2026-07-07 plan (Tasks 16+17). |
+| 9 | done | Score badge per row, expandable drilldown (bar + renormalized weight per block, confidence, honest "Nicht verfügbar" list with reasons), "Anreichern + bewerten" action, `useListings()` hook owning server state. 3 + 6 vitest cases incl. the 503 and 409 paths. |
+| 10 | done (adapted) | Tool trace surfaced in the chat as a collapsed "Werkzeuge (n)" panel with args and result per call. **No `tool_trace` field was added** — see deviations. |
+| 11 | done (adapted) | `finance/rates_live.py` — live Bundesbank rate, 24 h disk cache, labelled fallback. **Not wired as a silent calculator default** — see deviations. |
+| 12 | done | Branch 1 of the decision tree: BORIS-NI WFS. `scout/bodenrichtwert_wfs.py`, `config/providers.yaml`, `docs/bodenrichtwert-quelle.md`. |
+| 13 | done | `scripts/verify_live.sh` + `scripts/verify_live.py`, `live` pytest marker excluded by default. |
+| 14 | **open** | Stretch task (nightly re-score digest + systemd units). Not started. |
+
+### The scoring engine (Task 6)
+
+Three blocks, all thresholds in `config/scoring.yaml` with `source: own heuristic` + `as_of`:
+
+- `yield` — gross rental yield via `finance/yield_metrics.py`, 0 % → 0, ≥ 6 % → 100.
+- `price` — `PRICE_VS_LAND_VALUE`: €/m² living space ÷ Bodenrichtwert, ratio ≤ 0.8 → 100, ≥ 1.5 → 0.
+- `region` — population trend and vacancy rate, each mapped linearly, then averaged.
+
+Total = weighted mean of the available blocks with the weights renormalized over those, computed
+from the **rounded** sub-scores so the breakdown the UI shows adds up to the total it shows.
+`total is None` when no block is computable. Confidence = available / expected **raw signals**
+(4: rent, Bodenrichtwert, population trend, vacancy) rather than per block, so half a region
+signal honestly reads as half. 17 tests with hand-computed reference values, including
+renormalization, clamping, the no-data case and a parametrized property check that the total
+always lies between the available sub-scores.
+
+Rent is a per-run parameter, not a `Listing` field: the model records what the exposé says about
+the object, and adding a rent column was outside this plan's scope. Without a rent the yield block
+reports `rent_missing`.
+
+### Deviations from the plan
+
+1. **Task 10 — no `tool_trace` field.** `AskResponse.tool_calls` already carries exactly
+   `{name, args, result}` for every call. Adding a second, identically-shaped field under a
+   different key would be duplication with no gain, so the UI renders `tool_calls`. A backend test
+   pins the full trace shape (`test_ask_response_carries_the_full_tool_trace`).
+2. **Task 11 — the live rate is a suggestion, not a calculator default.** The plan says "wire as
+   the default rate source for calculators that consume a market rate". No calculator consumes one
+   implicitly — `annual_rate` is always a required argument. Injecting a network-dependent default
+   into `finance/` would break the one property that makes it the trust anchor: pure, deterministic,
+   hand-verifiable, offline. The rate is exposed via `GET /api/market-rate` and the `market_rate`
+   tool instead, each labelled `bundesbank_live` / `bundesbank_cache` / `static_fallback`.
+3. **Task 1 — `StrEnum` instead of `(str, Enum)`.** ruff `UP042`. Same JSON behaviour.
+4. **Task 3 — floor is 94, not 95.** Measured coverage was 94.99 %, which fails a floor of 95.
+   The plan says "do not inflate", so the integer below the measurement was used.
+5. **Task 12 — the WFS needs the POST binding.** A `GET` with `FILTER=` or `CQL_FILTER=` is
+   rejected by the portal's web application firewall with an HTML 400 page (not a WFS error).
+   Verified and documented in `docs/bodenrichtwert-quelle.md`.
+6. **Test-suite guard added (not in the plan).** `config/providers.yaml` ships with the real WFS
+   enabled, so `tests/conftest.py` now pins the provider config to "none" and stubs the
+   `market_rate` tool for every non-`live` test. Without it the hermetic suite would have started
+   reaching the internet — the plan's own iron rule.
+
+### New dependencies
+
+- `pytest-cov>=5` (dev only), required by Task 3. No new runtime dependencies: the two live
+  providers use `httpx`, which was already present, and `xml.etree.ElementTree` from the stdlib.
+
+### Coverage floor
+
+`fail_under = 94` in `pyproject.toml` (`[tool.coverage.report]`), measured 94.99 % when it was set
+and 95.2 % at completion. `uv run pytest` enforces it; single-file TDD runs need `--no-cov`.
+
+### Bodenrichtwert: which branch (Task 12)
+
+**Branch 1.** BORIS Niedersachsen WFS 2.0 at
+`https://opendata.lgln.niedersachsen.de/doorman/noauth/boris_wfs`, keyless, no registration,
+Datenlizenz Deutschland Namensnennung 2.0 (© GDI-NI). Verified live on 2026-09-20. The provider
+filters the Gemeinde's zones to residential building land (`nutzung/art ∈ {W, WA, WR, WB}`,
+`entwicklungszustand = B`) and returns the **median**. Full reasoning and the two honest
+limitations in `docs/bodenrichtwert-quelle.md`. The CSV-import fallback (branch 3) was not built —
+the plan says stop at the first branch that works.
+
+### Empirical finding on the price block — worth Nico's attention
+
+Running the full chain against the real WFS (Lingen, 300 000 € / 100 m²):
+
+```
+bodenrichtwert_eur_per_sqm = 190.0   (median residential land value, BORIS-NI)
+price_per_sqm              = 3000.0
+ratio                      = 15.789  →  price block = 0
+Gesamtscore 34/100, Datenlage 2/4
+```
+
+The ratio thresholds the plan fixed (0.8 → 100, 1.5 → 0) assume the two €/m² figures are
+comparable. They are not: living-space €/m² of a built apartment is an order of magnitude above
+land €/m² outside expensive urban land markets. In practice the price block will read **0 almost
+everywhere in rural Niedersachsen**, which makes it a constant rather than a signal. The plan
+marked these thresholds as fixed ("do not re-open"), so they were implemented as specified and are
+in config — but the calibration needs a decision before the price block carries 40 % of a score
+Nico acts on. Options: recalibrate the bounds against realistic ratios, switch the comparison to a
+€/m² *purchase-price* benchmark, or drop the block's weight until a better reference exists.
+
+### Open
+
+- **Task 14 (stretch):** nightly re-score digest + systemd user units. Not started; explicitly
+  gated on "only if A–E done and green".
+- **Region signal:** no keyless machine interface identified, so `region_signal.provider: none`
+  and the block honestly reports `provider_missing`. A hand-maintained `static` table works today.
+- **Live RAG verification:** this machine's Ollama has embeddings disabled, so
+  `scripts/verify_live.sh` cannot exercise `OllamaEmbedder` (see the verification section below
+  and `PLAN.md` → Needs Nico).
+- **Price-block calibration** (see the finding above) — needs Nico's call.

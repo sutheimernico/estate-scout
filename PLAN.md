@@ -191,17 +191,34 @@ honest: a missing market figure lowers confidence, it is never invented.
 
 ## Phase 8 — Transparent scoring engine
 
-- [ ] Score a listing 0–100 from sub-scores with a visible per-factor contribution: price-vs-
+- [x] Score a listing 0–100 from sub-scores with a visible per-factor contribution: price-vs-
       Bodenrichtwert / local €-per-m², Kaufpreisfaktor + yield (reuse `finance/`), location signals.
       Pure, TDD; missing inputs reduce a confidence field rather than being fabricated.
-- [ ] Rank saved listings; CLI + `GET /api/listings/scored`. Tests.
+      DONE 2026-09-20: `scout/scoring.py` + `config/scoring.yaml` — three blocks (yield / price /
+      region), weights renormalized over the available ones, `total=None` when nothing is
+      computable, confidence = available/expected raw signals, typed reasons passed through.
+      17 tests with hand-computed reference values.
+- [x] Rank saved listings; CLI + score in the API. DONE 2026-09-20: `GET /api/listings/{id}/score`
+      (409 before enrichment), score summary embedded in `GET /api/listings`, CLI `scout score`,
+      assistant tool `score_listing`. `GET /api/listings/scored` was NOT added — the summary in
+      the listings payload covers the same need without a second route.
 
 ## Phase 9 — Scout surface
 
-- [ ] React "Scout" tab: table of scored objects + per-object drilldown (score breakdown + finance
+- [x] React "Scout" tab: table of scored objects + per-object drilldown (score breakdown + finance
       metrics) in the dark scout identity; `npm run build` + a render check.
+      DONE 2026-09-20: the Objekte tab carries a score badge per row and an expandable drilldown
+      (bar per block, renormalized weight, confidence, honest "Nicht verfügbar" list with the
+      reason), plus an "Anreichern + bewerten" action. `useListings()` owns the server state.
 Acceptance: a user can add objects, they get enriched (or an honest "unavailable") + transparently
-scored, surfaced in CLI/API/UI; gates green (pytest + ruff + npm build).
+scored, surfaced in CLI/API/UI; gates green (pytest + ruff + npm build). — MET 2026-09-20.
+
+## Stage-2 hardening (plans 2026-07-07 + 2026-07-20, executed 2026-09-20)
+
+- [x] Plan `2026-07-07-stage1-hardening-and-ux.md` — all 18 tasks. See its Outcome section.
+- [x] Plan `2026-07-20-stage2-scoring-and-shine.md` — Tasks 1-10, 12, 13. See its Outcome section.
+- [ ] Plan `2026-07-20` Task 11 — live Bundesbank mortgage rate. Open.
+- [ ] Plan `2026-07-20` Task 14 (stretch) — nightly re-score digest. Open.
 
 ---
 
@@ -213,5 +230,11 @@ scored, surfaced in CLI/API/UI; gates green (pytest + ruff + npm build).
   screenshot or short demo (deferred from Phase 5 — premature before then).
 - Optional: `ollama pull nomic-embed-text` for real semantic RAG retrieval (the assistant works
   with any pulled model for embeddings, but a dedicated embed model is better).
+- **Ollama embeddings are currently switched off on this machine** (`/api/embeddings` answers
+  "This server does not support embeddings. Start it with `--embeddings`"), so the RAG half of
+  `scripts/verify_live.sh` cannot run. Chat + tool calling were verified live on 2026-09-20.
+- Region signal (population trend / vacancy) still has no keyless machine interface — decide
+  whether to maintain a small table by hand (`config/providers.yaml`, `provider: static`) or
+  leave the block honestly unavailable.
 - Stage 2 (funnel) data-source go/no-go once ADR-0001 lands: which legal source, if any, is worth
   building a funnel on (no scraping — see `knowledge/06-datenzugriff-listings.md`).

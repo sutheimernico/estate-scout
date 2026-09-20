@@ -3008,3 +3008,84 @@ uv run uvicorn estatescout.api:app --port 8000
 git add README.md AUTOPILOT_LOG.md docs/superpowers/plans/2026-07-07-stage1-hardening-and-ux.md
 git commit -m "docs: record hardening+ux outcome"
 ```
+
+---
+
+## Outcome (2026-09-20)
+
+**Status: complete — all 18 tasks implemented, 18 commits on `feat/stage1-hardening`
+(branched off `autopilot/work`).**
+
+Gate at completion of this plan: **130 pytest** (from 97 at plan time), ruff clean,
+**14 vitest**, `npm run build` green. One commit per task, Conventional Commits.
+
+### What was built
+
+| Task | Result |
+| ---- | ------ |
+| 1 | `_clean_args()` in `assistant/tools.py`: explicit `null` = absent, numeric strings coerced, bools and non-coercible values rejected loudly. `/api/finance/{calc}` now answers 400 instead of 500 on a wrong type. |
+| 2 | `_parse_tool_call()` in `assistant/assistant.py`: malformed tool calls are skipped with an error fed back, JSON-string arguments are parsed, `TypeError`/`KeyError` no longer escape the loop. |
+| 3 | `estatescout/errors.py` holds `OllamaUnavailable`; `chat.py` re-exports it, `rag/embedder.py` maps `httpx.HTTPError` onto it → `/api/ask` returns 503, not 500, when Ollama is down at index-build time. |
+| 4 | `RagIndex.retrieve(..., min_score=)` plus `MIN_RAG_SCORE = 0.35`; off-topic questions get no "Auszüge" block and the prompt tells the model to say the knowledge base has nothing. |
+| 5 | `rag.index.load_or_build()` with a SHA-256 corpus+model fingerprint and a per-process cache in the API; the corpus is no longer re-embedded on every request. |
+| 6 | Fraction sanity bounds (`annual_rate > 0.25`, `initial_repayment > 0.2`) in `annuity` and `affordability`. |
+| 7 | `finance/operating_costs.py` + the `bewirtschaftung` config block; the two dead blocks (`management_cost_eur_per_sqm`, `reference_interest`) removed. |
+| 8 | `finance/equity_return.py` — first-year cash-on-cash. |
+| 9 | Both new calculators exposed as tools and as `finance opcosts` / `finance equity`. |
+| 10 | `listing_tools(store)` + `Assistant(extra_tools=...)`; the assistant can read saved objects. `/api/finance/list_listings` stays a 400 (guard tested). |
+| 11 | `DELETE /api/listings/{id}` (404 on unknown) + `scout delete`. |
+| 12 | `frontend/src/format.ts` + rewritten `api.ts` with `toKnownCalc()` as the single narrowing boundary and German error messages. |
+| 13 | `CalcResultCard` renders all six calculator results. |
+| 14 | `Chat.tsx` extracted: all tool calls rendered, thinking indicator, auto-scroll, abort, `role="alert"`. |
+| 15 | `CalcForms.tsx` — six direct forms against `/api/finance/{calc}`, German decimal commas accepted, no LLM. |
+| 16 | `Listings.tsx` — intake form, table, delete. |
+| 17 | Tab navigation (Chat / Rechner / Objekte); panes stay mounted so tab state survives. |
+| 18 | Full gate, README, `AUTOPILOT_LOG.md`, this section. |
+
+### Deviations from the plan
+
+1. **Task 4, test assertion corrected.** The plan's `test_no_context_message_when_all_hits_below_threshold`
+   asserts `not any("Auszüge" in m["content"] ...)`, but `SYSTEM_PROMPT` rule 2 itself contains
+   the word "Auszüge" — the test could never pass. Tightened to the context block's own prefix
+   `"Auszüge aus der Wissensbasis"`, and the pre-existing positive test at
+   `test_assistant_loop.py:53` was tightened the same way (it was matching the system prompt).
+2. **Task 1, `isinstance(value, int | float)`** instead of the plan's `(int, float)` tuple — ruff's
+   `UP` ruleset rejects the tuple form. Same semantics.
+3. **Task 17, App tests made async.** Mounting the Listings pane fires a fetch on first render,
+   which produced React `act()` warnings in the App tests. Rather than leave the noise, the three
+   App tests await the settled empty state via a `renderApp()` helper.
+4. **README quickstart corrected.** The plan did not mention it, but the existing README's first
+   example (`finance.py annuity --price ... --equity ...`) used flags the CLI does not have. The
+   documented commands are now the real ones and were executed to verify.
+
+### Live verification (Ollama, 2026-09-20)
+
+Real `qwen2.5:7b` via `OllamaChat`, no fakes — both new integration points exercised:
+
+```
+### Was zahle ich monatlich für 300.000 Euro Darlehen bei 3,6 % Zins und 2 % Tilgung?
+TOOLS:  [{"name": "annuity", "args": {"principal": 300000, "annual_rate_percent": 3.6,
+          "initial_repayment_percent": 2}}]
+RESULT: {"monthly_payment": 1400.0, "total_interest": 181209.86, ...}
+ANSWER: Die monatliche Kreditrate beträgt 1400 EUR. ...
+
+### Welche Objekte habe ich gespeichert?
+TOOLS:  [{"name": "list_listings", "args": {}}]
+RESULT: {"count": 1, "listings": [{"id": 1, "ort": "Lingen", "bundesland": "NI",
+          "price": 300000.0, "living_area_sqm": 100.0, "price_per_sqm": 3000.0, ...}]}
+ANSWER: Sie haben ein Objekt in Lingen (Niedersachsen) gespeichert. ...
+```
+
+The monthly payment is the tested `finance/` number, not the model's arithmetic, and the new
+`list_listings` extra tool works against a real model.
+
+**Finding worth keeping:** in the first answer the model rendered the tool's `181209.86` as
+"181.210,86 EUR" — it garbled a number it was only supposed to quote. Prompt-only honesty does not
+bind free text (explicitly out of scope for this plan). The Stage-2 tool-trace panel makes exactly
+this inspectable; a code-level check that free-text numbers match tool results remains open.
+
+### Not verified
+
+The RAG half could not be exercised live: this machine's Ollama answers
+`/api/embeddings` with *"This server does not support embeddings. Start it with `--embeddings`"*,
+and `nomic-embed-text` is not pulled. → Needs Nico (see `PLAN.md`).

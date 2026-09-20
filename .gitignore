@@ -30,3 +30,4 @@ data/market_rate_cache.json
 
 # OS
 .DS_Store
+.coverage

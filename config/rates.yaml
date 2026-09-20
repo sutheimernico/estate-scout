@@ -71,17 +71,12 @@ affordability:
   # Max share of net monthly household income that the loan payment may take (rule of thumb,
   # not a regulatory limit; above ~40 % banks usually decline).
   max_rate_to_net_income: 0.35
-  # Banks assume running/management costs per m² of living space (EUR/month).
-  management_cost_eur_per_sqm: 2.75
 
-reference_interest:
-  as_of: "2026-07-05"
-  source: "drklein.de/aktuelle-bauzinsen (top conditions, basis 350k EUR); INFORMATIONAL ONLY"
-  # Reference nominal (Sollzins) levels by fixed-rate period. NOT used by the calculators —
-  # the user always supplies their own rate; these are only for the assistant to cite.
-  sollzins_by_fixation_years:
-    5: 0.0345
-    10: 0.0332
-    15: 0.0359
-    20: 0.0379
-    30: 0.0407
+bewirtschaftung:
+  as_of: "2026-07-07"
+  source: "II. BV §§ 26-29 Pauschalen (indexiert) als Praxis-Anker; Faustregel ~1 EUR/m²/Monat Instandhaltung; verify current index level"
+  # Annual operating-cost anchors for a landlord's calculation — estimates, not invoices.
+  instandhaltung_eur_per_sqm_year: 12.0
+  verwaltung_eur_per_unit_year: 350.0
+  # Fraction of annual cold rent reserved for rent-loss risk (II. BV § 29: 2 %).
+  mietausfallwagnis_rate: 0.02

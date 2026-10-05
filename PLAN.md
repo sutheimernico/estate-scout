@@ -1,7 +1,7 @@
 # estate-scout — Plan (AUTOPILOT-driven build backlog)
 
 **Source of truth for design:** `docs/superpowers/specs/2026-07-05-estate-scout-stage1-design.md`
-Personal rules (`~/.claude/CLAUDE.md`) + global loop rules (`~/private/AUTOPILOT.md`) apply.
+Global loop rules apply.
 
 This file is the binding backlog for the autonomous loop. Each iteration picks the SINGLE
 highest-value open `- [ ]` task, does it on `autopilot/work`, runs the gate, commits only if green,
@@ -10,7 +10,7 @@ checks the box, and appends one line to `AUTOPILOT_LOG.md`.
 ## Iron principles (never overridden)
 
 - **Local & free only.** Ollama + free public data sources. No paid APIs, no cloud. A task needing a
-  paid resource or a Nico-only input goes to "Needs Nico", never faked.
+  paid resource or a owner-only input goes to "Needs Owner", never faked.
 - **Numbers only from `finance/`.** The LLM never computes numbers; it calls tested calculators and
   explains the results. This is the whole point — never let the model do arithmetic.
 - **Gate is objective:** `uv run pytest -q` green AND `uv run ruff check .` clean. Never commit red.
@@ -32,7 +32,7 @@ checks the box, and appends one line to `AUTOPILOT_LOG.md`.
 5. **Unified dashboard** — one React app across all pillars, dark scout identity.
 
 Data-source decision is settled in `docs/adr/0001-stage2-data-source.md`. The auto-scan-every-listing
-ambition is a Needs-Nico gap (no legal auto-source); the loop builds the honest funnel around it.
+ambition is a Needs-Owner gap (no legal auto-source); the loop builds the honest funnel around it.
 
 ---
 
@@ -41,7 +41,7 @@ ambition is a Needs-Nico gap (no legal auto-source); the loop builds the honest 
 - [x] Repo skeleton: uv project (`pyproject.toml`), ruff + pytest gate, `.gitignore`, MIT `LICENSE`,
       `README`, `PROJECT.md`, `PLAN.md`, `LOOP.md`, `AUTOPILOT_LOG.md`, spec under
       `docs/superpowers/specs/`, package layout `src/estatescout/{finance,rag,assistant}`. Repo on
-      `autopilot/work`, `main` unborn until Nico merges. Register entry in `~/private/AUTOPILOT.md`.
+      `autopilot/work`, `main` unborn until the owner merges.
       DONE 2026-07-05: uv sync + smoke test green, ruff clean, register entry added.
 Acceptance: `uv run pytest -q` green (even with a trivial smoke test) + `uv run ruff check .` clean. — MET.
 
@@ -145,9 +145,9 @@ answer correct. 78 tests, ruff clean.
       build` green (tsc + vite). FastAPI mounts `frontend/dist` at `/` (existence-gated, /api takes
       precedence) — verified serving index.html + /api/health.
 - [x] `npm run build` health + a thin component/render check. Portfolio coupling: add estate-scout
-      to `~/private/portfolio` once presentable. DONE 2026-07-06: 3 vitest render tests (App header/
+      to the portfolio once presentable. DONE 2026-07-06: 3 vitest render tests (App header/
       disclaimer/empty-state, AmortizationTable formatting) green; `npm run build` green. Portfolio
-      coupling DEFERRED to Needs Nico — premature before merge/remote/screenshots.
+      coupling DEFERRED to Needs Owner — premature before merge/remote/screenshots.
 Acceptance: `npm run build` passes; API serves the built tab; a manual chat round-trip works. — MET
 2026-07-06: build green, FastAPI verified serving index.html at `/` with `/api/*` taking precedence;
 the live tool-calling round-trip was verified in Phase 4 (qwen2.5:7b → annuity → 1400 €).
@@ -222,11 +222,11 @@ scored, surfaced in CLI/API/UI; gates green (pytest + ruff + npm build). — MET
 
 ---
 
-## Needs Nico
+## Needs Owner
 
-- Merge `autopilot/work` → `main` (Nico reviews; `main` stays unborn until then).
+- Merge `autopilot/work` → `main` (the owner reviews; `main` stays unborn until then).
 - Remote / GitHub visibility for estate-scout (none yet) — decide when Stage 1 is presentable.
-- Portfolio coupling: add estate-scout to `~/private/portfolio` once merged/public with a
+- Portfolio coupling: add estate-scout to the portfolio once merged/public with a
   screenshot or short demo (deferred from Phase 5 — premature before then).
 - Optional: `ollama pull nomic-embed-text` for real semantic RAG retrieval (the assistant works
   with any pulled model for embeddings, but a dedicated embed model is better).

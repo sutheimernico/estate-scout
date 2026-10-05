@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.11, FastAPI, httpx, NumPy, typer, pytest, ruff (line-length 100) · React 18 + TypeScript + Vite, vitest + @testing-library/react (use `fireEvent`, NOT `user-event` — it is not installed and must not be added).
 
-**Context:** Repo `~/private/estate-scout`, branch `autopilot/work` (`main` is unborn — never switch). Gate: `uv run pytest -q` green AND `uv run ruff check .` clean; frontend gate: `cd frontend && npm test && npm run build`. 97 pytest tests + 3 vitest tests are green at plan time. One commit per task, Conventional Commits, English, imperative.
+**Context:** Repo `estate-scout`, branch `autopilot/work` (`main` is unborn — never switch). Gate: `uv run pytest -q` green AND `uv run ruff check .` clean; frontend gate: `cd frontend && npm test && npm run build`. 97 pytest tests + 3 vitest tests are green at plan time. One commit per task, Conventional Commits, English, imperative.
 
 **Iron rules from PROJECT.md that this plan must respect:**
 - Numbers only from `finance/` — the LLM never computes.
@@ -3088,4 +3088,4 @@ this inspectable; a code-level check that free-text numbers match tool results r
 
 The RAG half could not be exercised live: this machine's Ollama answers
 `/api/embeddings` with *"This server does not support embeddings. Start it with `--embeddings`"*,
-and `nomic-embed-text` is not pulled. → Needs Nico (see `PLAN.md`).
+and `nomic-embed-text` is not pulled. → Needs Owner (see `PLAN.md`).

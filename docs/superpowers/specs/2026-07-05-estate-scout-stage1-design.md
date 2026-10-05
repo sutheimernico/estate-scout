@@ -2,18 +2,18 @@
 
 **Date:** 2026-07-05
 **Status:** Approved (brainstorming) — binding design for Stage 1.
-**Author:** autopilot loop for Nico.
+**Author:** autopilot loop for the owner.
 
 ## 1. Purpose & framing
 
 A local, free, **honest harness** for real-estate decisions: a knowledge assistant you can
 ask anything about German residential property + financing, backed by **deterministic finance
 calculators** whose numbers are always correct. Long-term vision (multiple stages) is a full
-"real-estate scout" in the family of Nico's other `*-scout` projects; this spec covers **Stage 1
+"real-estate scout" in the family of the owner's other `*-scout` projects; this spec covers **Stage 1
 only**.
 
 Explicitly NOT: investment/tax/financing advice, listing scraping, price forecasts. Every surface
-carries a disclaimer. Runs entirely on Nico's machine (Ollama), no paid APIs.
+carries a disclaimer. Runs entirely on the owner's machine (Ollama), no paid APIs.
 
 ## 2. The core honesty constraint
 

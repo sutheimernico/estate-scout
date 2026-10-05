@@ -145,7 +145,7 @@ Do not re-open the "which source" question; follow this tree top-down and stop a
 ### Task 14 (stretch — only if A–E done and green): Nightly re-score digest
 **Files:** new `scripts/nightly_rescore.py`, `deploy/` systemd user units, docs.
 - Script: re-enrich + re-score all stored listings, compare to previous stored scores, append a German Markdown digest (`docs/digests/YYYY-MM-DD.md`) listing score deltas with the changed inputs ("Score 62→70: Zins gefallen 3.9%→3.6%").
-- Provide systemd user service+timer files and an install one-liner in docs. Do **not** enable the timer — installation is Nico's call.
+- Provide systemd user service+timer files and an install one-liner in docs. Do **not** enable the timer — installation is the owner's call.
 **Accept:** running the script twice with a rate change between runs produces a delta digest; unit tests on the delta logic.
 
 ---
@@ -158,9 +158,9 @@ Do not re-open the "which source" question; follow this tree top-down and stop a
 4. Append an **Outcome** section to this file: what was built, deviations + why, new dependencies, coverage floor, which Bodenrichtwert branch was taken, open items.
 5. Update `README.md` and `PLAN.md` phase status (Phases 8–9 done).
 
-## Needs Nico (not executable by the agent)
+## Needs Owner (not executable by the agent)
 - Go for this plan (and decision whether 2026-07-07 hardening runs first — recommended).
-- Publish step: GitHub remote + public + portfolio link (highest-leverage zero-code item from the review; follow `~/.claude/CLAUDE.md` publish checklist — requires Nico's confirmations).
+- Publish step: GitHub remote + public + portfolio link (highest-leverage zero-code item from the review).
 - Optional: enable the nightly timer (Task 14); pick the Bundesland he actually cares about for Task 12 if not Niedersachsen.
 
 ---
@@ -255,7 +255,7 @@ filters the Gemeinde's zones to residential building land (`nutzung/art ∈ {W, 
 limitations in `docs/bodenrichtwert-quelle.md`. The CSV-import fallback (branch 3) was not built —
 the plan says stop at the first branch that works.
 
-### Empirical finding on the price block — worth Nico's attention
+### Empirical finding on the price block — worth the owner's attention
 
 Running the full chain against the real WFS (Lingen, 300 000 € / 100 m²):
 
@@ -272,7 +272,7 @@ land €/m² outside expensive urban land markets. In practice the price block w
 everywhere in rural Niedersachsen**, which makes it a constant rather than a signal. The plan
 marked these thresholds as fixed ("do not re-open"), so they were implemented as specified and are
 in config — but the calibration needs a decision before the price block carries 40 % of a score
-Nico acts on. Options: recalibrate the bounds against realistic ratios, switch the comparison to a
+the owner acts on. Options: recalibrate the bounds against realistic ratios, switch the comparison to a
 €/m² *purchase-price* benchmark, or drop the block's weight until a better reference exists.
 
 ### Open
@@ -283,5 +283,5 @@ Nico acts on. Options: recalibrate the bounds against realistic ratios, switch t
   and the block honestly reports `provider_missing`. A hand-maintained `static` table works today.
 - **Live RAG verification:** this machine's Ollama has embeddings disabled, so
   `scripts/verify_live.sh` cannot exercise `OllamaEmbedder` (see the verification section below
-  and `PLAN.md` → Needs Nico).
-- **Price-block calibration** (see the finding above) — needs Nico's call.
+  and `PLAN.md` → Needs Owner).
+- **Price-block calibration** (see the finding above) — needs the owner's call.

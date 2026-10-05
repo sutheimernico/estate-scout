@@ -11,7 +11,7 @@
    key**, licensed **Datenlizenz Deutschland Namensnennung 2.0** (`dl-de/by-2.0`), attribution
    "© GDI-NI". That satisfies both the "free, keyless" constraint and ADR-0001 (documented
    machine interface, no HTML scraping).
-2. Other Bundesländer — not needed, branch 1 works. Niedersachsen is Nico's focus region;
+2. Other Bundesländer — not needed, branch 1 works. Niedersachsen is the owner's focus region;
    Berlin, Hamburg and NRW publish comparable WFS endpoints if the scope ever widens.
 3. CSV import provider — **not built.** The plan says stop at the first branch that works.
 

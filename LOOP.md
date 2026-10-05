@@ -5,7 +5,7 @@ on disk (this file, `PROJECT.md`/`PLAN.md`, git history, `AUTOPILOT_LOG.md`) —
 
 ## Per-iteration protocol
 
-1. Read `~/private/AUTOPILOT.md` (global rules), then this `LOOP.md`, then `PLAN.md` + `PROJECT.md`.
+1. Read the global loop rules, then this `LOOP.md`, then `PLAN.md` + `PROJECT.md`.
 2. Confirm you are on branch `autopilot/work` (if not, stop).
 3. Pick the SINGLE highest-value open `- [ ]` task (top-to-bottom, earlier phases first). If a phase
    boundary is reached, run the once-per-phase self-challenge/SOTA step first (write an ADR under
@@ -15,7 +15,7 @@ on disk (this file, `PROJECT.md`/`PLAN.md`, git history, `AUTOPILOT_LOG.md`) —
 5. Run the gate: `uv run pytest -q` (green) AND `uv run ruff check .` (clean). If red, fix or revert.
 6. On green: commit (Conventional Commits, English, imperative), check off the task in `PLAN.md`,
    append a one-line note to `AUTOPILOT_LOG.md`. Then exit.
-7. If a task needs a paid resource or a Nico-only input: move it to "Needs Nico", pick another, or
+7. If a task needs a paid resource or a owner-only input: move it to "Needs Owner", pick another, or
    exit. Never sign up for anything paid. Never fabricate facts, numbers, or metrics.
 
 ## Project-specific hard constraints (never override)

@@ -1,11 +1,10 @@
 # estate-scout — Project
 
-Local, free, honest real-estate assistant for Nico (aspiring real-estate investor, Niedersachsen /
+Local, free, honest real-estate assistant for aspiring real-estate investors (focus: Niedersachsen /
 NRW). A knowledge assistant you can ask anything about German residential property + financing,
 backed by deterministic finance calculators whose numbers are always correct.
 
-One of Nico's `*-scout` portfolio projects. Built by the autonomous loop (`AUTOPILOT.md` +
-`LOOP.md`), staged so each stage ships something usable.
+Built by an autonomous loop (see `LOOP.md`), staged so each stage ships something usable.
 
 ## Stages
 
@@ -24,7 +23,7 @@ local 7B model cannot be trusted with arithmetic — so it isn't.
 
 ## Framing
 
-Honest harness. Not tax/investment/financing advice. No listing scraping. Runs on Nico's machine
+Honest harness. Not tax/investment/financing advice. No listing scraping. Runs on the owner's machine
 (Ollama), no paid APIs. Every surface carries the disclaimer.
 
 ## Layout

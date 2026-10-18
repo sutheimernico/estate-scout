@@ -17,7 +17,7 @@ def _listing(price: float = 300_000, area: float = 100) -> Listing:
 
 def _full_enrichment() -> Enrichment:
     return Enrichment(
-        bodenrichtwert_eur_per_sqm=2_500.0,
+        bodenrichtwert_eur_per_sqm=500.0,
         region=RegionSignal(population_trend_pct=0.5, vacancy_rate_pct=3.0),
         unavailable={},
     )
@@ -29,15 +29,15 @@ def _sub(report, name):
 
 def test_full_data_worked_example():
     # yield:  1_000 €/month → 12_000 €/a ÷ 300_000 = 4.0 % → 4.0/6.0 · 100 = 66.67 → 67
-    # price:  3_000 €/m² ÷ 2_500 = 1.2 → (1.5-1.2)/(1.5-0.8) · 100 = 42.86 → 43
+    # price:  3_000 €/m² ÷ 500 = 6.0 → (20-6)/(20-3) · 100 = 82.35 → 82
     # region: Bev. +0.5 → (0.5+1)/2 · 100 = 75 ; Leerstand 3.0 → (8-3)/(8-1) · 100 = 71.43 → 71
     #         region = mean of the rounded parts (75 + 71) / 2 = 73
-    # total:  0.4·67 + 0.4·43 + 0.2·73 = 26.8 + 17.2 + 14.6 = 58.6 → 59
+    # total:  0.4·67 + 0.4·82 + 0.2·73 = 26.8 + 32.8 + 14.6 = 74.2 → 74
     report = score_listing(_listing(), _full_enrichment(), monthly_cold_rent=1_000.0)
     assert _sub(report, "yield").value == 67
-    assert _sub(report, "price").value == 43
+    assert _sub(report, "price").value == 82
     assert _sub(report, "region").value == 73
-    assert report.total == 59
+    assert report.total == 74
     assert report.confidence == pytest.approx(1.0)
     assert report.inputs_available == 4
     assert report.inputs_expected == 4
@@ -58,11 +58,11 @@ def test_partial_data_renormalizes_the_weights():
 
 
 def test_two_blocks_renormalize_proportionally():
-    # yield 67 (weight .4) + price 43 (weight .4) → both renormalize to .5
-    # total = 0.5·67 + 0.5·43 = 55.0 → 55
-    enrichment = Enrichment(bodenrichtwert_eur_per_sqm=2_500.0)
+    # yield 67 (weight .4) + price 82 (weight .4) → both renormalize to .5
+    # total = 0.5·67 + 0.5·82 = 74.5 → 74 (round half to even)
+    enrichment = Enrichment(bodenrichtwert_eur_per_sqm=500.0)
     report = score_listing(_listing(), enrichment, monthly_cold_rent=1_000.0)
-    assert report.total == 55
+    assert report.total == 74
     assert report.weights_used == {"yield": pytest.approx(0.5), "price": pytest.approx(0.5)}
 
 
@@ -97,7 +97,7 @@ def test_region_uses_a_single_available_field():
 
 
 def test_scores_are_clamped_to_the_0_100_range():
-    # gross yield 12 % is far above the 6 % ceiling; ratio 0.3 far below the 0.8 floor
+    # gross yield 12 % is far above the 6 % ceiling; ratio 0.3 far below the 3.0 ceiling
     enrichment = Enrichment(bodenrichtwert_eur_per_sqm=10_000.0)
     report = score_listing(_listing(), enrichment, monthly_cold_rent=3_000.0)
     assert _sub(report, "yield").value == 100
@@ -107,7 +107,7 @@ def test_scores_are_clamped_to_the_0_100_range():
 
 def test_worst_case_is_zero_not_negative():
     enrichment = Enrichment(
-        bodenrichtwert_eur_per_sqm=100.0,  # ratio 30 → far past the 1.5 floor
+        bodenrichtwert_eur_per_sqm=100.0,  # ratio 30 → far past the 20 floor
         region=RegionSignal(population_trend_pct=-5.0, vacancy_rate_pct=20.0),
     )
     report = score_listing(_listing(), enrichment, monthly_cold_rent=1.0)
@@ -118,7 +118,7 @@ def test_worst_case_is_zero_not_negative():
 @pytest.mark.parametrize(
     "rent,brw,trend,vacancy",
     [
-        (1_000.0, 2_500.0, 0.5, 3.0),
+        (1_000.0, 500.0, 0.5, 3.0),
         (500.0, 1_000.0, -0.4, 6.5),
         (2_000.0, 4_000.0, 0.9, 1.5),
         (1_250.0, 3_300.0, 0.0, 4.0),
@@ -138,7 +138,7 @@ def test_subscore_detail_shows_the_inputs_it_used():
     report = score_listing(_listing(), _full_enrichment(), monthly_cold_rent=1_000.0)
     assert _sub(report, "yield").detail["gross_yield_percent"] == pytest.approx(4.0)
     assert _sub(report, "price").detail["price_per_sqm"] == pytest.approx(3_000.0)
-    assert _sub(report, "price").detail["bodenrichtwert_eur_per_sqm"] == pytest.approx(2_500.0)
+    assert _sub(report, "price").detail["bodenrichtwert_eur_per_sqm"] == pytest.approx(500.0)
     assert _sub(report, "region").detail["vacancy_rate_pct"] == pytest.approx(3.0)
 
 
@@ -171,8 +171,21 @@ def test_to_dict_is_json_serializable_and_keeps_every_field():
 
     report = score_listing(_listing(), _full_enrichment(), monthly_cold_rent=1_000.0)
     payload = json.loads(json.dumps(to_dict(report)))
-    assert payload["total"] == 59
+    assert payload["total"] == 74
     assert [s["name"] for s in payload["subscores"]] == ["yield", "price", "region"]
     assert payload["subscores"][1]["detail"]["heuristic"] == "price_per_sqm_vs_bodenrichtwert"
     assert payload["confidence"] == 1.0
     assert payload["as_of"]
+
+
+def test_price_block_is_not_a_constant_on_a_realistic_rural_object():
+    # Live finding (Lingen): 3_000 €/m² ÷ 190 = 15.79 → (20-15.79)/17 · 100 = 24.8 → 25.
+    # With the original 0.8..1.5 bounds this read 0 for every real object.
+    report = score_listing(_listing(), Enrichment(bodenrichtwert_eur_per_sqm=190.0))
+    assert _sub(report, "price").value == 25
+
+
+def test_price_block_separates_rural_from_urban_land_markets():
+    rural = score_listing(_listing(), Enrichment(bodenrichtwert_eur_per_sqm=150.0))
+    urban = score_listing(_listing(), Enrichment(bodenrichtwert_eur_per_sqm=800.0))
+    assert _sub(urban, "price").value > _sub(rural, "price").value

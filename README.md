@@ -22,7 +22,7 @@ Saved objects get a transparent **0–100 assessment** built from three visible 
 | Block          | What it measures                                            | Weight |
 | -------------- | ----------------------------------------------------------- | ------ |
 | Rendite        | gross rental yield (0 % → 0, ≥ 6 % → 100)                     | 0.4    |
-| Preisniveau    | €/m² living space ÷ local Bodenrichtwert (≤ 0.8 → 100, ≥ 1.5 → 0) | 0.4    |
+| Preisniveau    | €/m² living space ÷ local Bodenrichtwert (≤ 3 → 100, ≥ 20 → 0) | 0.4    |
 | Lage           | population trend and vacancy rate                             | 0.2    |
 
 Weights and thresholds live in `config/scoring.yaml` with `source` + `as_of` — they are own

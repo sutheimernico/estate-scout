@@ -168,7 +168,7 @@ def test_assistant_explains_a_score_it_did_not_compute():
     store.set_enrichment(
         saved.id,
         Enrichment(
-            bodenrichtwert_eur_per_sqm=2_500.0,
+            bodenrichtwert_eur_per_sqm=500.0,
             region=RegionSignal(population_trend_pct=0.5, vacancy_rate_pct=3.0),
         ),
     )
@@ -186,14 +186,14 @@ def test_assistant_explains_a_score_it_did_not_compute():
                     }
                 ],
             },
-            _final("Das Objekt kommt auf 59 von 100 — die Rendite trägt am meisten."),
+            _final("Das Objekt kommt auf 74 von 100 — die Rendite trägt am meisten."),
         ]
     )
     resp = Assistant(model, extra_tools=listing_tools(store)).ask("Wie gut ist Objekt 1?")
     result = resp.tool_calls[0]["result"]
-    assert result["total"] == 59  # computed by scoring.py, not by the model
-    assert [s["value"] for s in result["subscores"]] == [67, 43, 73]
-    assert "59" in resp.answer
+    assert result["total"] == 74  # computed by scoring.py, not by the model
+    assert [s["value"] for s in result["subscores"]] == [67, 82, 73]
+    assert "74" in resp.answer
 
 
 def test_score_tool_refuses_an_unenriched_listing():

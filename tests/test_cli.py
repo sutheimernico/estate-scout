@@ -149,7 +149,7 @@ def _seed_enriched(db: str) -> int:
     store.set_enrichment(
         listing_id,
         Enrichment(
-            bodenrichtwert_eur_per_sqm=2_500.0,
+            bodenrichtwert_eur_per_sqm=500.0,
             region=RegionSignal(population_trend_pct=0.5, vacancy_rate_pct=3.0),
         ),
     )
@@ -162,7 +162,7 @@ def test_scout_score_prints_the_breakdown(tmp_path):
     listing_id = _seed_enriched(db)
     res = runner.invoke(scout_app, ["score", str(listing_id), "--rent", "1000", "--db", db])
     assert res.exit_code == 0, res.stdout
-    assert "Gesamtscore: 59/100" in res.stdout
+    assert "Gesamtscore: 74/100" in res.stdout
     assert "yield" in res.stdout and "region" in res.stdout
     assert "keine Anlageberatung" in res.stdout
 

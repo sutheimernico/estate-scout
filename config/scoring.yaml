@@ -24,12 +24,16 @@ yield_score:
   gross_yield_percent_at_100: 6.0
 
 price_score:
-  as_of: "2026-09-20"
+  as_of: "2026-10-18"
   source: "own heuristic; Bodenrichtwert is LAND value, used here only as a transparent proxy"
   # Ratio = listing EUR/m² of living area ÷ local Bodenrichtwert EUR/m² of land.
-  # Low ratio = cheap relative to the local land value. Linear 100..0 between the bounds.
-  ratio_at_100: 0.8
-  ratio_at_0: 1.5
+  # Low ratio = much of the price is backed by land value. Linear 100..0 between the bounds.
+  # Recalibrated 2026-10-18: living-space EUR/m² is an order of magnitude above land EUR/m²,
+  # so the original 0.8..1.5 bounds read 0 for any real object (live check: 3,000 / 190 = 15.8).
+  # The bounds now span the plausible range - roughly 3 in dear urban land markets up to 20 in
+  # cheap rural ones. Calibrated on reasoning plus ONE live data point, not on a sales sample.
+  ratio_at_100: 3.0
+  ratio_at_0: 20.0
 
 region_score:
   as_of: "2026-09-20"

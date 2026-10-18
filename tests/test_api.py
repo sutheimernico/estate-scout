@@ -241,12 +241,12 @@ def test_score_route_computes_from_the_stored_enrichment(tmp_path):
         body = r.json()
         # fixture: 300k / 100 m² = 3_000 €/m², Bodenrichtwert 420, Bev. +1.2, Leerstand 2.1
         # yield  1_000 €/M → 4.0 % → 67
-        # price  3_000/420 = 7.14 → past the 1.5 floor → 0
+        # price  3_000/420 = 7.14 → (20-7.14)/17 · 100 = 75.6 → 76
         # region (100 + 84) / 2 = 92
-        # total  0.4·67 + 0.4·0 + 0.2·92 = 45.2 → 45
-        assert body["total"] == 45
+        # total  0.4·67 + 0.4·76 + 0.2·92 = 75.6 → 76
+        assert body["total"] == 76
         assert [s["name"] for s in body["subscores"]] == ["yield", "price", "region"]
-        assert [s["value"] for s in body["subscores"]] == [67, 0, 92]
+        assert [s["value"] for s in body["subscores"]] == [67, 76, 92]
         assert body["confidence"] == 1.0
     finally:
         app.dependency_overrides.clear()
@@ -292,9 +292,9 @@ def test_listings_carry_a_score_summary_once_enriched(tmp_path):
         assert client.get("/api/listings").json()[0]["score"] is None  # not enriched yet
         client.post(f"/api/listings/{created['id']}/enrich")
         summary = client.get("/api/listings").json()[0]["score"]
-        # no rent in the table view → yield drops out; price 0 (w .4) and region 92 (w .2)
-        # renormalize to 2/3 and 1/3: 0·0.667 + 92·0.333 = 30.7 → 31
-        assert summary["total"] == 31
+        # no rent in the table view → yield drops out; price 76 (w .4) and region 92 (w .2)
+        # renormalize to 2/3 and 1/3: 76·0.667 + 92·0.333 = 81.3 → 81
+        assert summary["total"] == 81
         assert summary["confidence"] == 0.75  # 3 of 4 inputs (no rent in the table view)
     finally:
         app.dependency_overrides.clear()

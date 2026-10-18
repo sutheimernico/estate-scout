@@ -67,6 +67,12 @@ export function Chat() {
         {messages.map((m) => (
           <div key={m.id} className={`bubble ${m.role}`}>
             <div className="answer">{m.text}</div>
+            {m.response?.unverified_numbers && m.response.unverified_numbers.length > 0 && (
+              <div className="number-warning" role="alert">
+                Achtung: {m.response.unverified_numbers.join(", ")} stammt aus keinem Rechenergebnis
+                — bitte gegen die Karten unten prüfen.
+              </div>
+            )}
             {m.response?.tool_calls.map((t, i) => {
               const known = toKnownCalc(t.name, t.result);
               return known ? <CalcResultCard key={`${m.id}-${i}`} calc={known} /> : null;

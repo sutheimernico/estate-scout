@@ -53,6 +53,21 @@ describe("Chat", () => {
     expect(screen.getByText("Annuitätendarlehen")).toBeInTheDocument();
   });
 
+  it("warns when the answer quotes a number no tool produced", async () => {
+    stubFetch({ ...askResponse, unverified_numbers: ["181.210,86"] });
+    render(<Chat />);
+    submitQuestion("Was zahle ich monatlich?");
+    expect(await screen.findByRole("alert")).toHaveTextContent("181.210,86");
+  });
+
+  it("shows no warning when every number is traced", async () => {
+    stubFetch({ ...askResponse, unverified_numbers: [] });
+    render(<Chat />);
+    submitQuestion("Was zahle ich monatlich?");
+    await screen.findByText("Deine Monatsrate liegt bei 1.400 €.");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
   it("shows the German Ollama hint on 503", async () => {
     stubFetch({ detail: "down" }, 503);
     render(<Chat />);

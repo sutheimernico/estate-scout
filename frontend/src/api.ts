@@ -15,6 +15,8 @@ export interface AskResponse {
   tool_calls: ToolCall[];
   sources: string[];
   disclaimer: string;
+  // Numbers in the answer text that match no tool result; absent on older servers.
+  unverified_numbers?: string[];
 }
 
 export interface PurchaseCostsResult {

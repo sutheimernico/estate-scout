@@ -1,0 +1,8 @@
+[Unit]
+Description=estate-scout nightly re-score digest
+
+[Service]
+Type=oneshot
+# Adjust to where the repository lives (%h = your home directory).
+WorkingDirectory=%h/estate-scout
+ExecStart=/usr/bin/env uv run python scripts/nightly_rescore.py

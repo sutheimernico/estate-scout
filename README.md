@@ -120,6 +120,23 @@ Three tabs:
 Each assistant answer carries a collapsed **"Werkzeuge (n)"** panel listing every calculator it
 called with the exact arguments and the exact result — the honest-harness claim, inspectable.
 
+A code-level guard (`assistant/number_check.py`) compares every number in the answer text with the
+tool results and the user's own figures; anything untraceable is shown as a warning above the
+answer (and in the CLI output). It reports, it never rewrites. It exists because a live run
+garbled a tool figure in prose (181,209.86 became "181.210,86").
+
+## Nightly re-score digest
+
+```bash
+uv run python scripts/nightly_rescore.py   # writes data/digests/<date>.md (German Markdown)
+```
+
+Re-enriches and re-scores all saved objects and lists what changed since the last run (score
+before → after, and which input moved). Previous scores are kept in `data/score_state.json`; both
+paths are gitignored. Ready-made systemd user units live in `deploy/` — they are **not**
+installed or enabled by anything in this repo; copy them to `~/.config/systemd/user/`, adjust
+`WorkingDirectory`, then `systemctl --user enable --now estate-scout-rescore.timer`.
+
 ## Development
 
 ```bash

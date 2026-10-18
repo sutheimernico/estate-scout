@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the estate-scout re-score digest every night
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

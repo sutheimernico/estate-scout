@@ -285,3 +285,20 @@ the owner acts on. Options: recalibrate the bounds against realistic ratios, swi
   `scripts/verify_live.sh` cannot exercise `OllamaEmbedder` (see the verification section below
   and `PLAN.md` → Needs Owner).
 - **Price-block calibration** (see the finding above) — needs the owner's call.
+
+
+## Outcome addendum (2026-10-18, finish pass)
+
+- **Task 14 done:** `scout/digest.py` (pure snapshot/diff/render), `scout/rescore.py` (I/O),
+  `scripts/nightly_rescore.py`, unit files in `deploy/` (not installed). 11 tests incl. the plan's
+  acceptance (two runs with a changed provider value produce a delta digest). Deviation: the
+  plan's example delta "Zins gefallen" cannot occur, because the score does not depend on the
+  mortgage rate; the digest names the inputs that do feed the score (Bodenrichtwert, region).
+- **Price block recalibrated** (the "needs a decision" finding above): bounds 0.8..1.5 → 3..20.
+  Decision taken autonomously and marked as such in `config/scoring.yaml`: reasoning plus one live
+  data point, not a sales sample. Alternatives (purchase-price benchmark, dropping the weight)
+  remain open if the owner prefers them.
+- **Prose-number guard** closes the open item from the live run: `assistant/number_check.py`.
+- **Fresh-clone bug:** `ListingStore` now creates the missing `data/` directory (a clean checkout
+  failed `test_ask_returns_503_when_embedding_unavailable` and any first API/CLI use).
+- Coverage floor raised 94 → 95 (measured 95.5 %).

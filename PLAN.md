@@ -217,8 +217,11 @@ scored, surfaced in CLI/API/UI; gates green (pytest + ruff + npm build). — MET
 
 - [x] Plan `2026-07-07-stage1-hardening-and-ux.md` — all 18 tasks. See its Outcome section.
 - [x] Plan `2026-07-20-stage2-scoring-and-shine.md` — Tasks 1-10, 12, 13. See its Outcome section.
-- [ ] Plan `2026-07-20` Task 11 — live Bundesbank mortgage rate. Open.
-- [ ] Plan `2026-07-20` Task 14 (stretch) — nightly re-score digest. Open.
+- [x] Plan `2026-07-20` Task 11 — live Bundesbank mortgage rate. DONE 2026-09-20 (adapted, see plan Outcome).
+- [x] Plan `2026-07-20` Task 14 (stretch) — nightly re-score digest. DONE 2026-10-18 (`scripts/nightly_rescore.py`, units in `deploy/`, not installed).
+- [x] Price block recalibrated 2026-10-18 (bounds 3..20, was 0.8..1.5 and read 0 for every real object).
+- [x] Prose-number guard 2026-10-18 (`assistant/number_check.py`, warning in API/CLI/UI).
+- [ ] Region signal source (no keyless interface; block stays honestly `provider_missing`).
 
 ---
 

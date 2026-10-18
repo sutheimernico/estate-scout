@@ -49,5 +49,5 @@ source = ["src/estatescout"]
 
 [tool.coverage.report]
 # Measured floor, not an aspiration: raise it when coverage rises, never lower it silently.
-fail_under = 94  # measured 94.99 % on 2026-09-20
+fail_under = 95  # measured 95.53 % on 2026-10-18
 show_missing = true

@@ -48,6 +48,7 @@ class AskResponse(BaseModel):
     tool_calls: list[dict] = []
     sources: list[str] = []
     disclaimer: str = DISCLAIMER
+    unverified_numbers: list[str] = []
 
 
 class ListingIn(BaseModel):
@@ -205,6 +206,7 @@ def ask(req: AskRequest, assistant: Annotated[Assistant, Depends(get_assistant)]
         tool_calls=resp.tool_calls,
         sources=resp.sources,
         disclaimer=resp.disclaimer,
+        unverified_numbers=resp.unverified_numbers,
     )
 
 

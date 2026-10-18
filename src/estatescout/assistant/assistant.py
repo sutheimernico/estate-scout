@@ -13,6 +13,7 @@ from estatescout.rag.embedder import Embedder
 from estatescout.rag.index import RagIndex
 
 from .chat import ChatModel
+from .number_check import unverified_numbers
 from .tools import TOOLS, Tool, dispatch
 
 DISCLAIMER = (
@@ -49,6 +50,8 @@ class AssistantResponse:
     tool_calls: list[dict] = field(default_factory=list)  # {name, args, result}
     sources: list[str] = field(default_factory=list)  # retrieved corpus doc names
     disclaimer: str = DISCLAIMER  # every response carries the honesty disclaimer
+    # Numbers in the answer that match no tool result (see number_check); empty = all traced.
+    unverified_numbers: list[str] = field(default_factory=list)
 
 
 def _parse_tool_call(call: object) -> tuple[str, dict] | None:
@@ -114,6 +117,17 @@ class Assistant:
         )
         return {"role": "system", "content": content}, sources
 
+    @staticmethod
+    def _response(
+        answer: str, tool_calls: list[dict], sources: list[str], question: str
+    ) -> AssistantResponse:
+        return AssistantResponse(
+            answer=answer,
+            tool_calls=tool_calls,
+            sources=sources,
+            unverified_numbers=unverified_numbers(answer, tool_calls, question),
+        )
+
     def ask(self, question: str) -> AssistantResponse:
         context_msg, sources = self._context_message(question)
         messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -128,9 +142,7 @@ class Assistant:
             messages.append(msg)
             requested = msg.get("tool_calls") or []
             if not requested:
-                return AssistantResponse(
-                    answer=msg.get("content", ""), tool_calls=tool_calls, sources=sources
-                )
+                return self._response(msg.get("content", ""), tool_calls, sources, question)
             for call in requested:
                 parsed = _parse_tool_call(call)
                 if parsed is None:
@@ -160,6 +172,4 @@ class Assistant:
 
         # Tool budget exhausted: ask once more for a final answer without tools.
         final = self.model.chat(messages, tools=None)
-        return AssistantResponse(
-            answer=final.get("content", ""), tool_calls=tool_calls, sources=sources
-        )
+        return self._response(final.get("content", ""), tool_calls, sources, question)

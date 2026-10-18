@@ -154,6 +154,12 @@ def render_response(resp) -> str:
         lines.append("Berechnungen (aus dem Finanzkern):")
         for tc in resp.tool_calls:
             lines.append(f"  - {tc['name']}: {json.dumps(tc['result'], ensure_ascii=False)}")
+    if resp.unverified_numbers:
+        lines.append("")
+        lines.append(
+            "Achtung: diese Zahlen im Text stammen aus keinem Rechenergebnis - bitte gegen "
+            "die Berechnungen oben prüfen: " + ", ".join(resp.unverified_numbers)
+        )
     if resp.sources:
         lines.append("")
         lines.append("Quellen: " + ", ".join(resp.sources))

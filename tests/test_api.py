@@ -336,6 +336,36 @@ def test_ask_response_carries_the_full_tool_trace():
         assert trace["name"] == "annuity"
         assert trace["args"]["principal"] == 300_000
         assert trace["result"]["monthly_payment"] == 1_400.0
+        assert body["unverified_numbers"] == []  # 1.400 is the tool's figure
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_ask_response_flags_a_number_the_tool_did_not_produce():
+    def fake_assistant() -> Assistant:
+        call = {
+            "function": {
+                "name": "annuity",
+                "arguments": {
+                    "principal": 300_000,
+                    "annual_rate_percent": 3.6,
+                    "initial_repayment_percent": 2.0,
+                },
+            }
+        }
+        return Assistant(
+            FakeChat(
+                [
+                    {"role": "assistant", "content": "", "tool_calls": [call]},
+                    {"role": "assistant", "content": "Die Rate beträgt 1.450 €."},
+                ]
+            )
+        )
+
+    app.dependency_overrides[get_assistant] = fake_assistant
+    try:
+        body = client.post("/api/ask", json={"question": "Rate?"}).json()
+        assert body["unverified_numbers"] == ["1.450"]
     finally:
         app.dependency_overrides.clear()
 

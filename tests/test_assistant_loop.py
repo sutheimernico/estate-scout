@@ -206,3 +206,39 @@ def test_score_tool_refuses_an_unenriched_listing():
     tools = listing_tools(store)
     assert "not been enriched" in tools["score_listing"].run({"listing_id": saved.id})["error"]
     assert "no listing" in tools["score_listing"].run({"listing_id": 999})["error"]
+
+
+def test_garbled_prose_number_is_flagged_on_the_response():
+    # live finding: the model quoted a tool figure garbled; the code must notice
+    model = FakeChat(
+        [
+            _tool_call(
+                "annuity",
+                {
+                    "principal": 300_000,
+                    "annual_rate_percent": 3.6,
+                    "initial_repayment_percent": 2.0,
+                },
+            ),
+            _final("Monatsrate 1.400 €, Gesamtzinsen 999.999,99 €."),
+        ]
+    )
+    resp = Assistant(model).ask("Was zahle ich monatlich?")
+    assert resp.unverified_numbers == ["999.999,99"]
+
+
+def test_clean_answer_has_no_unverified_numbers():
+    model = FakeChat(
+        [
+            _tool_call(
+                "annuity",
+                {
+                    "principal": 300_000,
+                    "annual_rate_percent": 3.6,
+                    "initial_repayment_percent": 2.0,
+                },
+            ),
+            _final("Deine Monatsrate liegt bei 1.400 €."),
+        ]
+    )
+    assert Assistant(model).ask("Was zahle ich monatlich?").unverified_numbers == []

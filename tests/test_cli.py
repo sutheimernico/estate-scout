@@ -88,6 +88,14 @@ def test_render_response_includes_answer_numbers_sources_disclaimer():
     assert DISCLAIMER in text
 
 
+def test_render_response_warns_about_untraced_numbers():
+    resp = AssistantResponse(answer="Rate 1.500 €.", unverified_numbers=["1.500"])
+    text = render_response(resp)
+    assert "Achtung" in text
+    assert "1.500" in text.split("Achtung", 1)[1]
+    assert "Achtung" not in render_response(AssistantResponse(answer="Rate 1.400 €."))
+
+
 def test_cli_opcosts():
     out = _run(["opcosts", "--area", "100", "--rent", "1000"])
     assert out["total_annual"] == pytest.approx(1_790.0)

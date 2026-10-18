@@ -64,3 +64,11 @@ def test_delete_unknown_id_reports_false_and_keeps_the_rest():
     assert store.delete(999_999) is False
     assert [x.id for x in store.list()] == [kept.id]
     store.close()
+
+
+def test_store_creates_missing_parent_directory(tmp_path):
+    db = tmp_path / "not" / "yet" / "listings.db"
+    store = ListingStore(db)
+    store.add(_sample())
+    store.close()
+    assert db.exists()

@@ -86,6 +86,9 @@ def _row_to_listing(row: sqlite3.Row) -> Listing:
 
 class ListingStore:
     def __init__(self, path: str | Path = ":memory:"):
+        # A fresh clone has no data/ dir (it is gitignored); create it instead of crashing.
+        if str(path) != ":memory:":
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(path))
         self._conn.row_factory = sqlite3.Row
         self._conn.execute(_CREATE)

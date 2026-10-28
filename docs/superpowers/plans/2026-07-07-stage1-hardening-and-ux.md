@@ -78,7 +78,7 @@ The single guard for BOTH the API (`/api/finance/{calc}`) and the LLM tool path.
 - Modify: `src/estatescout/assistant/tools.py`
 - Test: `tests/test_assistant_tools.py`, `tests/test_api.py`
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_assistant_tools.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_assistant_tools.py`:
 
 ```python
 def test_dispatch_coerces_numeric_strings():
@@ -136,12 +136,12 @@ def test_finance_wrong_type_is_400():
     assert client.post("/api/finance/annuity", json=body).status_code == 400
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_assistant_tools.py tests/test_api.py -q`
 Expected: the 6 new tool tests FAIL (`TypeError` / `DID NOT RAISE`), `test_finance_wrong_type_is_400` FAILS with 500.
 
-- [ ] **Step 3: Implement** — in `src/estatescout/assistant/tools.py`, insert directly above `def dispatch(...)`:
+- [x] **Step 3: Implement** — in `src/estatescout/assistant/tools.py`, insert directly above `def dispatch(...)`:
 
 ```python
 def _clean_args(name: str, tool: Tool, args: dict) -> dict:
@@ -188,12 +188,12 @@ def dispatch(name: str, args: dict) -> dict:
     return tool.run(cleaned)
 ```
 
-- [ ] **Step 4: Run the gate**
+- [x] **Step 4: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all tests pass, ruff clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/estatescout/assistant/tools.py tests/test_assistant_tools.py tests/test_api.py
@@ -206,7 +206,7 @@ git commit -m "fix(tools): validate and coerce tool argument types in dispatch"
 - Modify: `src/estatescout/assistant/assistant.py`
 - Test: `tests/test_assistant_loop.py`
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_assistant_loop.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_assistant_loop.py`:
 
 ```python
 def test_malformed_tool_call_is_skipped_and_answer_still_returned():
@@ -253,12 +253,12 @@ def test_type_error_inside_tool_is_fed_back_not_raised():
     assert "error" in resp.tool_calls[0]["result"]
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_assistant_loop.py -q`
 Expected: new tests FAIL (KeyError / TypeError / json decode issues).
 
-- [ ] **Step 3: Implement** — in `src/estatescout/assistant/assistant.py`, insert above `class Assistant:`:
+- [x] **Step 3: Implement** — in `src/estatescout/assistant/assistant.py`, insert above `class Assistant:`:
 
 ```python
 def _parse_tool_call(call: object) -> tuple[str, dict] | None:
@@ -315,12 +315,12 @@ Then replace the `for call in requested:` block inside `ask()` with:
                 )
 ```
 
-- [ ] **Step 4: Run the gate**
+- [x] **Step 4: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/estatescout/assistant/assistant.py tests/test_assistant_loop.py
@@ -336,7 +336,7 @@ Today `OllamaEmbedder` raises raw `httpx.ConnectError` — `/api/ask` 500s inste
 - Modify: `src/estatescout/assistant/chat.py`, `src/estatescout/rag/embedder.py`
 - Test: `tests/test_rag_embedder.py`
 
-- [ ] **Step 1: Write the failing test** — append to `tests/test_rag_embedder.py`:
+- [x] **Step 1: Write the failing test** — append to `tests/test_rag_embedder.py`:
 
 ```python
 def test_ollama_embedder_maps_connect_error_to_unavailable():
@@ -352,12 +352,12 @@ def test_ollama_embedder_maps_connect_error_to_unavailable():
 
 (If `httpx`/`pytest` are not yet imported at the top of that test file, add the imports.)
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/test_rag_embedder.py -q`
 Expected: FAIL — `ModuleNotFoundError: estatescout.errors`.
 
-- [ ] **Step 3: Create `src/estatescout/errors.py`:**
+- [x] **Step 3: Create `src/estatescout/errors.py`:**
 
 ```python
 """Shared error types (kept dependency-free so rag/ and assistant/ can both use them)."""
@@ -367,13 +367,13 @@ class OllamaUnavailable(RuntimeError):
     """Raised when the local Ollama server cannot be reached — callers degrade honestly."""
 ```
 
-- [ ] **Step 4: In `src/estatescout/assistant/chat.py`**, delete the local `class OllamaUnavailable(RuntimeError): ...` definition and add near the top (the `as`-alias re-export keeps every existing `from estatescout.assistant.chat import OllamaUnavailable` working and silences ruff F401):
+- [x] **Step 4: In `src/estatescout/assistant/chat.py`**, delete the local `class OllamaUnavailable(RuntimeError): ...` definition and add near the top (the `as`-alias re-export keeps every existing `from estatescout.assistant.chat import OllamaUnavailable` working and silences ruff F401):
 
 ```python
 from estatescout.errors import OllamaUnavailable as OllamaUnavailable
 ```
 
-- [ ] **Step 5: In `src/estatescout/rag/embedder.py`**, add `from estatescout.errors import OllamaUnavailable` to the imports and wrap the POST inside `OllamaEmbedder.embed`:
+- [x] **Step 5: In `src/estatescout/rag/embedder.py`**, add `from estatescout.errors import OllamaUnavailable` to the imports and wrap the POST inside `OllamaEmbedder.embed`:
 
 ```python
             for text in texts:
@@ -388,12 +388,12 @@ from estatescout.errors import OllamaUnavailable as OllamaUnavailable
                 out.append(resp.json()["embedding"])
 ```
 
-- [ ] **Step 6: Run the gate**
+- [x] **Step 6: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green (existing chat tests keep passing via the re-export).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/estatescout/errors.py src/estatescout/assistant/chat.py \
@@ -407,7 +407,7 @@ git commit -m "fix(rag): map embedder network errors to OllamaUnavailable"
 - Modify: `src/estatescout/rag/index.py`, `src/estatescout/assistant/assistant.py`
 - Test: `tests/test_rag_index.py`, `tests/test_assistant_loop.py`
 
-- [ ] **Step 1: Write the failing tests.** Append to `tests/test_rag_index.py` — make sure the file imports `Chunk` (`from estatescout.rag.chunker import Chunk`) and `FakeEmbedder` (`from estatescout.rag.embedder import FakeEmbedder`); add whichever is missing:
+- [x] **Step 1: Write the failing tests.** Append to `tests/test_rag_index.py` — make sure the file imports `Chunk` (`from estatescout.rag.chunker import Chunk`) and `FakeEmbedder` (`from estatescout.rag.embedder import FakeEmbedder`); add whichever is missing:
 
 ```python
 def test_retrieve_filters_hits_below_min_score():
@@ -436,12 +436,12 @@ def test_no_context_message_when_all_hits_below_threshold():
     assert not any("Auszüge" in m.get("content", "") for m in sent)
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_rag_index.py tests/test_assistant_loop.py -q`
 Expected: FAIL — `retrieve() got an unexpected keyword argument 'min_score'` / `__init__() got an unexpected keyword argument 'min_score'`.
 
-- [ ] **Step 3: Implement in `src/estatescout/rag/index.py`** — change the `retrieve` signature and return:
+- [x] **Step 3: Implement in `src/estatescout/rag/index.py`** — change the `retrieve` signature and return:
 
 ```python
     def retrieve(
@@ -467,7 +467,7 @@ Expected: FAIL — `retrieve() got an unexpected keyword argument 'min_score'` /
 
 (Default `-1.0` = no filtering — cosine similarity is bounded below by −1, so existing callers and golden tests are unaffected.)
 
-- [ ] **Step 4: Implement in `src/estatescout/assistant/assistant.py`:**
+- [x] **Step 4: Implement in `src/estatescout/assistant/assistant.py`:**
 
 Add a module-level constant below `DISCLAIMER`:
 
@@ -492,12 +492,12 @@ Replace rule 2 of `SYSTEM_PROMPT` with:
     "Wissensbasis dazu nichts enthält, statt zu spekulieren.\n"
 ```
 
-- [ ] **Step 5: Run the gate**
+- [x] **Step 5: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green (honesty tests assert substrings that still exist).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/estatescout/rag/index.py src/estatescout/assistant/assistant.py \
@@ -511,7 +511,7 @@ git commit -m "feat(rag): add retrieval similarity threshold with honest no-cont
 - Modify: `src/estatescout/rag/index.py`, `src/estatescout/api.py`, `src/estatescout/cli.py`
 - Test: `tests/test_rag_index.py`, `tests/test_api.py`
 
-- [ ] **Step 1: Write the failing tests** — append to `tests/test_rag_index.py`:
+- [x] **Step 1: Write the failing tests** — append to `tests/test_rag_index.py`:
 
 ```python
 class CountingEmbedder(FakeEmbedder):
@@ -567,12 +567,12 @@ def test_ask_returns_503_when_embedding_unavailable(monkeypatch):
     assert client.post("/api/ask", json={"question": "hallo"}).status_code == 503
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_rag_index.py tests/test_api.py -q`
 Expected: FAIL — `ImportError: cannot import name 'load_or_build'` / `AttributeError: _index_cache`.
 
-- [ ] **Step 3: Implement in `src/estatescout/rag/index.py`** — add `import hashlib` to the imports and append at module level (below the `RagIndex` class):
+- [x] **Step 3: Implement in `src/estatescout/rag/index.py`** — add `import hashlib` to the imports and append at module level (below the `RagIndex` class):
 
 ```python
 def _fingerprint(chunks: list[Chunk], embedder: Embedder) -> str:
@@ -609,7 +609,7 @@ def load_or_build(
     return index
 ```
 
-- [ ] **Step 4: Implement in `src/estatescout/api.py`** — change the rag import to `from .rag.index import RagIndex, load_or_build` and replace `get_assistant()` with:
+- [x] **Step 4: Implement in `src/estatescout/api.py`** — change the rag import to `from .rag.index import RagIndex, load_or_build` and replace `get_assistant()` with:
 
 ```python
 # Built once per process, invalidated via the on-disk corpus fingerprint (rag.index).
@@ -632,7 +632,7 @@ def get_assistant() -> Assistant:
 
 Extend the assistant import at the top to `from .assistant.assistant import DISCLAIMER, MIN_RAG_SCORE, Assistant`. Remove the now-unused `load_corpus` import.
 
-- [ ] **Step 5: Implement in `src/estatescout/cli.py`** — inside `ask()`, replace the two lines building embedder+index with:
+- [x] **Step 5: Implement in `src/estatescout/cli.py`** — inside `ask()`, replace the two lines building embedder+index with:
 
 ```python
         from .assistant.assistant import MIN_RAG_SCORE, Assistant
@@ -647,12 +647,12 @@ Extend the assistant import at the top to `from .assistant.assistant import DISC
 
 (Adjust the local imports in `ask()` accordingly — `RagIndex, load_corpus` are no longer needed there.)
 
-- [ ] **Step 6: Run the gate**
+- [x] **Step 6: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/estatescout/rag/index.py src/estatescout/api.py src/estatescout/cli.py \
@@ -670,7 +670,7 @@ git commit -m "perf(rag): build the index once per process with a corpus-fingerp
 - Modify: `src/estatescout/finance/annuity.py`, `src/estatescout/finance/affordability.py`
 - Test: `tests/test_finance_annuity.py`, `tests/test_finance_affordability.py`
 
-- [ ] **Step 1: Write the failing tests.** Append to `tests/test_finance_annuity.py`:
+- [x] **Step 1: Write the failing tests.** Append to `tests/test_finance_annuity.py`:
 
 ```python
 def test_percent_passed_as_fraction_is_rejected():
@@ -690,12 +690,12 @@ def test_percent_passed_as_fraction_is_rejected():
         affordability(4_000, 60_000, 0.036, 2.0, "NI")
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_finance_annuity.py tests/test_finance_affordability.py -q`
 Expected: new tests FAIL (`DID NOT RAISE`).
 
-- [ ] **Step 3: Implement.** In `src/estatescout/finance/annuity.py` (`amortize`, directly after the existing four input checks) and in `src/estatescout/finance/affordability.py` (after the existing `initial_repayment` check), add the same two guards:
+- [x] **Step 3: Implement.** In `src/estatescout/finance/annuity.py` (`amortize`, directly after the existing four input checks) and in `src/estatescout/finance/affordability.py` (after the existing `initial_repayment` check), add the same two guards:
 
 ```python
     if annual_rate > 0.25:
@@ -710,12 +710,12 @@ Expected: new tests FAIL (`DID NOT RAISE`).
 
 (All existing tests use rates ≤ 0.05, verified at plan time — nothing else changes.)
 
-- [ ] **Step 4: Run the gate**
+- [x] **Step 4: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/estatescout/finance/annuity.py src/estatescout/finance/affordability.py \
@@ -732,7 +732,7 @@ git commit -m "feat(finance): reject percent-looking rate fractions in the core"
 - Modify: `config/rates.yaml`
 - Test: create `tests/test_finance_operating_costs.py`
 
-- [ ] **Step 1: Write the failing test** — create `tests/test_finance_operating_costs.py`:
+- [x] **Step 1: Write the failing test** — create `tests/test_finance_operating_costs.py`:
 
 ```python
 """Tests for the config-anchored Bewirtschaftungskosten estimator."""
@@ -765,12 +765,12 @@ def test_invalid_inputs_raise():
         operating_costs(100.0, 1_000.0, units=0)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/test_finance_operating_costs.py -q`
 Expected: FAIL — `ModuleNotFoundError`.
 
-- [ ] **Step 3: Add the config block** to `config/rates.yaml` (append at the end) and delete both dead blocks — remove the `management_cost_eur_per_sqm` line (plus its comment line) from `affordability:` and remove the entire `reference_interest:` block:
+- [x] **Step 3: Add the config block** to `config/rates.yaml` (append at the end) and delete both dead blocks — remove the `management_cost_eur_per_sqm` line (plus its comment line) from `affordability:` and remove the entire `reference_interest:` block:
 
 ```yaml
 bewirtschaftung:
@@ -783,7 +783,7 @@ bewirtschaftung:
   mietausfallwagnis_rate: 0.02
 ```
 
-- [ ] **Step 4: Create `src/estatescout/finance/operating_costs.py`:**
+- [x] **Step 4: Create `src/estatescout/finance/operating_costs.py`:**
 
 ```python
 """Bewirtschaftungskosten — annual non-allocable operating costs of a rental unit.
@@ -843,12 +843,12 @@ def operating_costs(
     )
 ```
 
-- [ ] **Step 5: Run the gate**
+- [x] **Step 5: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green (no test references the removed config keys — verified at plan time).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/estatescout/finance/operating_costs.py config/rates.yaml \
@@ -862,7 +862,7 @@ git commit -m "feat(finance): add config-anchored operating-costs estimator, dro
 - Create: `src/estatescout/finance/equity_return.py`
 - Test: create `tests/test_finance_equity_return.py`
 
-- [ ] **Step 1: Write the failing test** — create `tests/test_finance_equity_return.py`:
+- [x] **Step 1: Write the failing test** — create `tests/test_finance_equity_return.py`:
 
 ```python
 """Tests for the first-year Eigenkapitalrendite (cash-on-cash) calculator."""
@@ -911,12 +911,12 @@ def test_invalid_inputs_raise():
         equity_return(100_000, 500.0, 20_000, 3.6, 0.02)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `uv run pytest tests/test_finance_equity_return.py -q`
 Expected: FAIL — `ModuleNotFoundError`.
 
-- [ ] **Step 3: Create `src/estatescout/finance/equity_return.py`:**
+- [x] **Step 3: Create `src/estatescout/finance/equity_return.py`:**
 
 ```python
 """Eigenkapitalrendite — first-year cash-on-cash return of a financed buy-to-let.
@@ -996,12 +996,12 @@ def equity_return(
     )
 ```
 
-- [ ] **Step 4: Run the gate**
+- [x] **Step 4: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/estatescout/finance/equity_return.py tests/test_finance_equity_return.py
@@ -1014,7 +1014,7 @@ git commit -m "feat(finance): add first-year cash-on-cash equity-return calculat
 - Modify: `src/estatescout/assistant/tools.py`, `src/estatescout/cli.py`
 - Test: `tests/test_assistant_tools.py`, `tests/test_cli.py`
 
-- [ ] **Step 1: Write the failing tests.** In `tests/test_assistant_tools.py`, UPDATE the existing name-set assertion in `test_tool_specs_cover_all_calculators` to:
+- [x] **Step 1: Write the failing tests.** In `tests/test_assistant_tools.py`, UPDATE the existing name-set assertion in `test_tool_specs_cover_all_calculators` to:
 
 ```python
     assert names == {
@@ -1061,12 +1061,12 @@ def test_cli_equity_return():
 
 (`tests/test_cli.py` needs `import pytest` if not already present.)
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_assistant_tools.py tests/test_cli.py -q`
 Expected: FAIL — unknown tool / name-set mismatch / unknown CLI command.
 
-- [ ] **Step 3: Implement in `src/estatescout/assistant/tools.py`.** Add the imports:
+- [x] **Step 3: Implement in `src/estatescout/assistant/tools.py`.** Add the imports:
 
 ```python
 from estatescout.finance.equity_return import equity_return
@@ -1152,7 +1152,7 @@ Add both entries to the `TOOLS` dict:
     ),
 ```
 
-- [ ] **Step 4: Implement in `src/estatescout/cli.py`** — append to the `finance_app` commands:
+- [x] **Step 4: Implement in `src/estatescout/cli.py`** — append to the `finance_app` commands:
 
 ```python
 @finance_app.command()
@@ -1197,12 +1197,12 @@ def equity_cmd(
     )
 ```
 
-- [ ] **Step 5: Run the gate**
+- [x] **Step 5: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/estatescout/assistant/tools.py src/estatescout/cli.py \
@@ -1222,7 +1222,7 @@ Break the silo: a `list_listings` tool over the `ListingStore`, injected only wh
 - Modify: `src/estatescout/assistant/tools.py`, `src/estatescout/assistant/assistant.py`, `src/estatescout/api.py`, `src/estatescout/cli.py`
 - Test: `tests/test_assistant_loop.py`, `tests/test_api.py`
 
-- [ ] **Step 1: Write the failing tests.** Append to `tests/test_assistant_loop.py`:
+- [x] **Step 1: Write the failing tests.** Append to `tests/test_assistant_loop.py`:
 
 ```python
 def test_assistant_lists_saved_listings_via_extra_tool():
@@ -1253,12 +1253,12 @@ def test_finance_endpoint_does_not_expose_listing_tools():
     assert client.post("/api/finance/list_listings", json={}).status_code == 400
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_assistant_loop.py tests/test_api.py -q`
 Expected: FAIL — `ImportError: listing_tools` / unexpected keyword `extra_tools`.
 
-- [ ] **Step 3: Implement in `src/estatescout/assistant/tools.py`.** Change the `dispatch` signature to accept an optional tools mapping (keeps the finance-only default for the API):
+- [x] **Step 3: Implement in `src/estatescout/assistant/tools.py`.** Change the `dispatch` signature to accept an optional tools mapping (keeps the finance-only default for the API):
 
 ```python
 def dispatch(name: str, args: dict, *, tools: dict[str, Tool] | None = None) -> dict:
@@ -1318,7 +1318,7 @@ def listing_tools(store: "ListingStore") -> dict[str, Tool]:
 
 Add the import at the top: `from estatescout.scout.store import ListingStore`.
 
-- [ ] **Step 4: Implement in `src/estatescout/assistant/assistant.py`.** Change the tools import to `from .tools import TOOLS, Tool, dispatch`. Extend `__init__` with `extra_tools: dict[str, Tool] | None = None` (keyword-only, after `min_score`) and set:
+- [x] **Step 4: Implement in `src/estatescout/assistant/assistant.py`.** Change the tools import to `from .tools import TOOLS, Tool, dispatch`. Extend `__init__` with `extra_tools: dict[str, Tool] | None = None` (keyword-only, after `min_score`) and set:
 
 ```python
         self._tools = {**TOOLS, **(extra_tools or {})}
@@ -1339,7 +1339,7 @@ Append a fifth rule to `SYSTEM_PROMPT` (before the final "Antworte auf Deutsch" 
     "list_listings — nie aus dem Gedächtnis.\n"
 ```
 
-- [ ] **Step 5: Wire in `src/estatescout/api.py`** — turn `get_assistant` into a generator dependency that owns a store connection:
+- [x] **Step 5: Wire in `src/estatescout/api.py`** — turn `get_assistant` into a generator dependency that owns a store connection:
 
 ```python
 def get_assistant() -> Iterator[Assistant]:
@@ -1366,7 +1366,7 @@ def get_assistant() -> Iterator[Assistant]:
 
 Extend the tools import: `from .assistant.tools import dispatch, listing_tools`.
 
-- [ ] **Step 6: Wire in `src/estatescout/cli.py`** — replace the body of `ask()` with:
+- [x] **Step 6: Wire in `src/estatescout/cli.py`** — replace the body of `ask()` with:
 
 ```python
 def ask(question: str) -> None:
@@ -1401,12 +1401,12 @@ def ask(question: str) -> None:
     typer.echo(render_response(resp))
 ```
 
-- [ ] **Step 7: Run the gate**
+- [x] **Step 7: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green (honesty-prompt substring asserts unaffected).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/estatescout/assistant/tools.py src/estatescout/assistant/assistant.py \
@@ -1421,7 +1421,7 @@ git commit -m "feat(assistant): let the assistant read saved listings via extra 
 - Modify: `src/estatescout/api.py`, `src/estatescout/cli.py`
 - Test: `tests/test_api.py`, `tests/test_cli.py`
 
-- [ ] **Step 1: Write the failing tests.** Append to `tests/test_api.py`:
+- [x] **Step 1: Write the failing tests.** Append to `tests/test_api.py`:
 
 ```python
 def test_listings_delete(tmp_path):
@@ -1452,12 +1452,12 @@ def test_scout_delete_removes_listing(tmp_path):
     assert runner.invoke(scout_app, ["delete", str(listing_id), "--db", db]).exit_code == 1
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `uv run pytest tests/test_api.py tests/test_cli.py -q`
 Expected: FAIL — 405 (no DELETE route) / CLI usage error.
 
-- [ ] **Step 3: Implement.** In `src/estatescout/api.py`, below `list_listings`:
+- [x] **Step 3: Implement.** In `src/estatescout/api.py`, below `list_listings`:
 
 ```python
 @app.delete("/api/listings/{listing_id}", status_code=204)
@@ -1488,12 +1488,12 @@ def delete_listing_cmd(
     typer.echo(f"Objekt {listing_id} gelöscht.")
 ```
 
-- [ ] **Step 4: Run the gate**
+- [x] **Step 4: Run the gate**
 
 Run: `uv run pytest -q && uv run ruff check .`
 Expected: all green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/estatescout/api.py src/estatescout/cli.py tests/test_api.py tests/test_cli.py
@@ -1512,7 +1512,7 @@ All frontend commands run from `frontend/`: tests `npm test`, build `npm run bui
 - Create: `frontend/src/format.ts`
 - Modify: `frontend/src/api.ts` (rewrite), `frontend/src/AmortizationTable.tsx` (use format.ts)
 
-- [ ] **Step 1: Create `frontend/src/format.ts`:**
+- [x] **Step 1: Create `frontend/src/format.ts`:**
 
 ```ts
 // de-DE number formatting shared by all result cards and tables.
@@ -1526,9 +1526,9 @@ export const num = (n: number, digits = 1) =>
   n.toLocaleString("de-DE", { maximumFractionDigits: digits });
 ```
 
-- [ ] **Step 2: In `frontend/src/AmortizationTable.tsx`**, delete the local `const eur = ...` definition and add `import { eur } from "./format";` at the top.
+- [x] **Step 2: In `frontend/src/AmortizationTable.tsx`**, delete the local `const eur = ...` definition and add `import { eur } from "./format";` at the top.
 
-- [ ] **Step 3: Rewrite `frontend/src/api.ts`:**
+- [x] **Step 3: Rewrite `frontend/src/api.ts`:**
 
 ```ts
 // Types mirror the FastAPI responses (src/estatescout/api.py) and the finance tool results
@@ -1711,12 +1711,12 @@ export function deleteListing(id: number): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Verify** — `App.tsx` still imports `ask`/`AskResponse`/`ToolCall`, which all still exist.
+- [x] **Step 4: Verify** — `App.tsx` still imports `ask`/`AskResponse`/`ToolCall`, which all still exist.
 
 Run: `cd frontend && npm test && npm run build`
 Expected: 3 existing tests pass, tsc + vite build green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/format.ts frontend/src/api.ts frontend/src/AmortizationTable.tsx
@@ -1729,7 +1729,7 @@ git commit -m "refactor(frontend): typed API layer with single narrowing boundar
 - Create: `frontend/src/CalcResultCard.tsx`
 - Test: `frontend/src/App.test.tsx` (append)
 
-- [ ] **Step 1: Write the failing test** — append to `frontend/src/App.test.tsx`:
+- [x] **Step 1: Write the failing test** — append to `frontend/src/App.test.tsx`:
 
 ```tsx
 import { CalcResultCard } from "./CalcResultCard";
@@ -1779,12 +1779,12 @@ describe("CalcResultCard", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd frontend && npm test`
 Expected: FAIL — cannot resolve `./CalcResultCard`.
 
-- [ ] **Step 3: Create `frontend/src/CalcResultCard.tsx`:**
+- [x] **Step 3: Create `frontend/src/CalcResultCard.tsx`:**
 
 ```tsx
 // One card per calculator result. All numbers come from the backend (finance/);
@@ -1883,12 +1883,12 @@ export function CalcResultCard({ calc }: { calc: KnownCalc }) {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `cd frontend && npm test && npm run build`
 Expected: all pass, build green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/CalcResultCard.tsx frontend/src/App.test.tsx
@@ -1901,7 +1901,7 @@ git commit -m "feat(frontend): render every calculator result as a typed card"
 - Create: `frontend/src/Chat.tsx`, `frontend/src/Chat.test.tsx`
 - Modify: `frontend/src/App.tsx`, `frontend/src/index.css`
 
-- [ ] **Step 1: Create `frontend/src/Chat.tsx`** (replaces the chat portion of App; new: renders ALL tool calls via `CalcResultCard`, thinking bubble, auto-scroll, abort button, `role="alert"`):
+- [x] **Step 1: Create `frontend/src/Chat.tsx`** (replaces the chat portion of App; new: renders ALL tool calls via `CalcResultCard`, thinking bubble, auto-scroll, abort button, `role="alert"`):
 
 ```tsx
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -2028,7 +2028,7 @@ export function Chat() {
 }
 ```
 
-- [ ] **Step 2: Slim `frontend/src/App.tsx`** down to layout + Chat (tabs come in Task 17):
+- [x] **Step 2: Slim `frontend/src/App.tsx`** down to layout + Chat (tabs come in Task 17):
 
 ```tsx
 import { Chat } from "./Chat";
@@ -2054,7 +2054,7 @@ export function App() {
 }
 ```
 
-- [ ] **Step 3: Append the thinking-indicator styles to `frontend/src/index.css`:**
+- [x] **Step 3: Append the thinking-indicator styles to `frontend/src/index.css`:**
 
 ```css
 .thinking {
@@ -2087,7 +2087,7 @@ export function App() {
 }
 ```
 
-- [ ] **Step 4: Create `frontend/src/Chat.test.tsx`:**
+- [x] **Step 4: Create `frontend/src/Chat.test.tsx`:**
 
 ```tsx
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -2174,12 +2174,12 @@ describe("Chat", () => {
 });
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `cd frontend && npm test && npm run build`
 Expected: all pass (existing App tests still pass — header, empty state and disclaimer are unchanged), build green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/Chat.tsx frontend/src/Chat.test.tsx frontend/src/App.tsx frontend/src/index.css
@@ -2192,7 +2192,7 @@ git commit -m "feat(frontend): chat pane with full tool rendering, waiting feedb
 - Create: `frontend/src/CalcForms.tsx`, `frontend/src/CalcForms.test.tsx`
 - Modify: `frontend/src/index.css`
 
-- [ ] **Step 1: Create `frontend/src/CalcForms.tsx`:**
+- [x] **Step 1: Create `frontend/src/CalcForms.tsx`:**
 
 ```tsx
 // Direct, deterministic calculator forms against /api/finance/{calc} — no LLM involved.
@@ -2387,7 +2387,7 @@ export function CalcForms() {
 }
 ```
 
-- [ ] **Step 2: Append the form styles to `frontend/src/index.css`:**
+- [x] **Step 2: Append the form styles to `frontend/src/index.css`:**
 
 ```css
 .cards {
@@ -2447,7 +2447,7 @@ export function CalcForms() {
 }
 ```
 
-- [ ] **Step 3: Create `frontend/src/CalcForms.test.tsx`:**
+- [x] **Step 3: Create `frontend/src/CalcForms.test.tsx`:**
 
 ```tsx
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -2521,12 +2521,12 @@ describe("CalcForms", () => {
 });
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `cd frontend && npm test && npm run build`
 Expected: all pass, build green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/CalcForms.tsx frontend/src/CalcForms.test.tsx frontend/src/index.css
@@ -2539,7 +2539,7 @@ git commit -m "feat(frontend): direct calculator forms without the LLM"
 - Create: `frontend/src/Listings.tsx`, `frontend/src/Listings.test.tsx`
 - Modify: `frontend/src/index.css`
 
-- [ ] **Step 1: Create `frontend/src/Listings.tsx`:**
+- [x] **Step 1: Create `frontend/src/Listings.tsx`:**
 
 ```tsx
 // Saved property objects: intake form + table over /api/listings.
@@ -2710,7 +2710,7 @@ export function Listings() {
 }
 ```
 
-- [ ] **Step 2: Append the listing styles to `frontend/src/index.css`:**
+- [x] **Step 2: Append the listing styles to `frontend/src/index.css`:**
 
 ```css
 .pane-scroll {
@@ -2758,7 +2758,7 @@ export function Listings() {
 }
 ```
 
-- [ ] **Step 3: Create `frontend/src/Listings.test.tsx`:**
+- [x] **Step 3: Create `frontend/src/Listings.test.tsx`:**
 
 ```tsx
 import { render, screen } from "@testing-library/react";
@@ -2821,12 +2821,12 @@ describe("Listings", () => {
 });
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `cd frontend && npm test && npm run build`
 Expected: all pass, build green.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add frontend/src/Listings.tsx frontend/src/Listings.test.tsx frontend/src/index.css
@@ -2838,7 +2838,7 @@ git commit -m "feat(frontend): listings tab with intake form and delete"
 **Files:**
 - Modify: `frontend/src/App.tsx`, `frontend/src/index.css`, `frontend/src/App.test.tsx`
 
-- [ ] **Step 1: Write the failing test** — append to `frontend/src/App.test.tsx` (add `fireEvent` to the testing-library import):
+- [x] **Step 1: Write the failing test** — append to `frontend/src/App.test.tsx` (add `fireEvent` to the testing-library import):
 
 ```tsx
 describe("Tabs", () => {
@@ -2850,12 +2850,12 @@ describe("Tabs", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify it fails**
+- [x] **Step 2: Run tests to verify it fails**
 
 Run: `cd frontend && npm test`
 Expected: FAIL — no element with role `tab`.
 
-- [ ] **Step 3: Rewrite `frontend/src/App.tsx`:**
+- [x] **Step 3: Rewrite `frontend/src/App.tsx`:**
 
 ```tsx
 import { useState } from "react";
@@ -2917,7 +2917,7 @@ export function App() {
 }
 ```
 
-- [ ] **Step 4: Append the tab styles to `frontend/src/index.css`:**
+- [x] **Step 4: Append the tab styles to `frontend/src/index.css`:**
 
 ```css
 .tabs {
@@ -2951,12 +2951,12 @@ export function App() {
 }
 ```
 
-- [ ] **Step 5: Run tests.** Note: the Listings pane mounts on first render and fires its initial `fetch` — in the existing App tests no fetch stub exists, so `refresh()` catches the error and shows it in the (hidden) pane; no test asserts against it, and nothing throws. If a test run shows unhandled-rejection noise, stub a default fetch in those App tests with `vi.stubGlobal("fetch", vi.fn(async () => new Response("[]", { status: 200 })))`.
+- [x] **Step 5: Run tests.** Note: the Listings pane mounts on first render and fires its initial `fetch` — in the existing App tests no fetch stub exists, so `refresh()` catches the error and shows it in the (hidden) pane; no test asserts against it, and nothing throws. If a test run shows unhandled-rejection noise, stub a default fetch in those App tests with `vi.stubGlobal("fetch", vi.fn(async () => new Response("[]", { status: 200 })))`.
 
 Run: `cd frontend && npm test && npm run build`
 Expected: all pass, build green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add frontend/src/App.tsx frontend/src/App.test.tsx frontend/src/index.css
@@ -2972,7 +2972,7 @@ git commit -m "feat(frontend): tab navigation for chat, calculators and listings
 **Files:**
 - Modify: `README.md`, `AUTOPILOT_LOG.md`, this plan file
 
-- [ ] **Step 1: Run everything**
+- [x] **Step 1: Run everything**
 
 ```bash
 uv run pytest -q && uv run ruff check .
@@ -2981,9 +2981,9 @@ cd frontend && npm test && npm run build && cd ..
 
 Expected: pytest all green (well above the 97 baseline), ruff clean, vitest green, build green.
 
-- [ ] **Step 2: Update `README.md`:** document the three frontend tabs (Chat / Rechner / Objekte), the two new calculators (`operating_costs`, `equity_return`) with their CLI commands (`finance opcosts`, `finance equity`), `scout delete`, and the assistant's `list_listings` tool. Match the README's existing tone and structure — extend the relevant sections, do not restructure.
+- [x] **Step 2: Update `README.md`:** document the three frontend tabs (Chat / Rechner / Objekte), the two new calculators (`operating_costs`, `equity_return`) with their CLI commands (`finance opcosts`, `finance equity`), `scout delete`, and the assistant's `list_listings` tool. Match the README's existing tone and structure — extend the relevant sections, do not restructure.
 
-- [ ] **Step 3: Append one line to `AUTOPILOT_LOG.md`** following its existing format, e.g.:
+- [x] **Step 3: Append one line to `AUTOPILOT_LOG.md`** following its existing format, e.g.:
 
 ```
 - 2026-07-XX — Hardening+UX (plan 2026-07-07): typed dispatch, loop guards, RAG threshold+cache,
@@ -2991,9 +2991,9 @@ Expected: pytest all green (well above the 97 baseline), ruff clean, vitest gree
   frontend tabs (Chat/Rechner/Objekte) with forms+listings view. Gate green.
 ```
 
-- [ ] **Step 4: Append an Outcome section to THIS plan file** (`docs/superpowers/plans/2026-07-07-stage1-hardening-and-ux.md`): what was implemented, any deviations, open points.
+- [x] **Step 4: Append an Outcome section to THIS plan file** (`docs/superpowers/plans/2026-07-07-stage1-hardening-and-ux.md`): what was implemented, any deviations, open points.
 
-- [ ] **Step 5: Optional live smoke (Needs Ollama — skip if not running):**
+- [x] **Step 5: Optional live smoke (Needs Ollama — skip if not running):**
 
 ```bash
 uv run uvicorn estatescout.api:app --port 8000
@@ -3002,7 +3002,7 @@ uv run uvicorn estatescout.api:app --port 8000
 #   and verify the assistant calls list_listings.
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add README.md AUTOPILOT_LOG.md docs/superpowers/plans/2026-07-07-stage1-hardening-and-ux.md

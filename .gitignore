@@ -33,3 +33,13 @@ data/market_rate_cache.json
 .coverage
 data/digests/
 data/score_state.json
+
+# Agent process files — kept on disk for the local workflow, not part of the public tree
+/LOOP.md
+/PLAN.md
+/PROJECT.md
+/AUTOPILOT_LOG.md
+/AGENTS.md
+/CLAUDE.md
+/.vscode/
+/.claude/

@@ -98,12 +98,13 @@ class Assistant:
         # Static finance tools plus any context-bound extras (e.g. the listing store).
         self._tools = {**TOOLS, **(extra_tools or {})}
 
-    def _context_message(self, question: str) -> tuple[dict | None, list[str]]:
+    def _context_message(self, question: str) -> tuple[dict | None, list[str], list[str]]:
+        """(system message, source names, excerpt texts) for the retrieved knowledge."""
         if self.index is None or self.embedder is None:
-            return None, []
+            return None, [], []
         hits = self.index.retrieve(question, self.embedder, k=self.k, min_score=self.min_score)
         if not hits:
-            return None, []
+            return None, [], []
         blocks = [f"[{h.source}] {h.heading}\n{h.text}" for h in hits]
         sources: list[str] = []
         for h in hits:
@@ -113,21 +114,25 @@ class Assistant:
             "Auszüge aus der Wissensbasis (nur für Wissensfragen nutzen, Quelle nennen):\n\n"
             + "\n\n---\n\n".join(blocks)
         )
-        return {"role": "system", "content": content}, sources
+        return {"role": "system", "content": content}, sources, [h.text for h in hits]
 
     @staticmethod
     def _response(
-        answer: str, tool_calls: list[dict], sources: list[str], question: str
+        answer: str,
+        tool_calls: list[dict],
+        sources: list[str],
+        question: str,
+        context: list[str],
     ) -> AssistantResponse:
         return AssistantResponse(
             answer=answer,
             tool_calls=tool_calls,
             sources=sources,
-            unverified_numbers=unverified_numbers(answer, tool_calls, question),
+            unverified_numbers=unverified_numbers(answer, tool_calls, question, context),
         )
 
     def ask(self, question: str) -> AssistantResponse:
-        context_msg, sources = self._context_message(question)
+        context_msg, sources, context = self._context_message(question)
         messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
         if context_msg is not None:
             messages.append(context_msg)
@@ -140,7 +145,9 @@ class Assistant:
             messages.append(msg)
             requested = msg.get("tool_calls") or []
             if not requested:
-                return self._response(msg.get("content", ""), tool_calls, sources, question)
+                return self._response(
+                    msg.get("content", ""), tool_calls, sources, question, context
+                )
             for call in requested:
                 parsed = _parse_tool_call(call)
                 if parsed is None:
@@ -170,4 +177,4 @@ class Assistant:
 
         # Tool budget exhausted: ask once more for a final answer without tools.
         final = self.model.chat(messages, tools=None)
-        return self._response(final.get("content", ""), tool_calls, sources, question)
+        return self._response(final.get("content", ""), tool_calls, sources, question, context)

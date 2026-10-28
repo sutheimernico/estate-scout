@@ -245,3 +245,23 @@ def test_clean_answer_has_no_unverified_numbers():
         ]
     )
     assert Assistant(model).ask("Was zahle ich monatlich?").unverified_numbers == []
+
+
+def test_knowledge_answer_numbers_are_checked_against_the_retrieved_excerpts():
+    chunks = [
+        Chunk("04-kaufnebenkosten.md", "Steuer", "Grunderwerbsteuer Niedersachsen beträgt 5,0 %"),
+    ]
+    index = RagIndex.build(chunks, FakeEmbedder())
+    question = "Wie hoch ist die Grunderwerbsteuer in Niedersachsen?"
+
+    grounded = Assistant(
+        FakeChat([_final("Sie beträgt 5,0 % (04-kaufnebenkosten.md).")]),
+        index=index,
+        embedder=FakeEmbedder(),
+    ).ask(question)
+    assert grounded.unverified_numbers == []
+
+    invented = Assistant(
+        FakeChat([_final("Sie beträgt 6,5 %.")]), index=index, embedder=FakeEmbedder()
+    ).ask(question)
+    assert invented.unverified_numbers == ["6,5"]

@@ -147,7 +147,7 @@ class OllamaEmbedder:
         timeout: float = 60.0,
     ):
         self.model = model or os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
-        self.host = (host or os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).rstrip("/")
+        self.host = (host or os.getenv("OLLAMA_HOST") or "http://127.0.0.1:11434").rstrip("/")
         self._client = client
         self._timeout = timeout
 

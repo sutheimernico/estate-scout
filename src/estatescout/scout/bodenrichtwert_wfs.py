@@ -82,9 +82,11 @@ def parse_residential_values(
             if zustand != buildable:
                 continue
         raw = feature.findtext("boris:bodenrichtwert", namespaces=_NS)
+        if raw is None:
+            continue
         try:
             value = float(raw)
-        except (TypeError, ValueError):
+        except ValueError:
             continue
         if value > 0:
             values.append(value)

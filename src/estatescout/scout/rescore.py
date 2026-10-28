@@ -30,6 +30,7 @@ def rescore(
     current: dict[str, dict] = {}
     for listing in store.list():
         result = enrich(listing, bodenrichtwert=bodenrichtwert, region=region)
+        assert listing.id is not None  # listings read from the store always have an id
         store.set_enrichment(listing.id, result)
         current[str(listing.id)] = snapshot(listing, result, score_listing(listing, result))
 

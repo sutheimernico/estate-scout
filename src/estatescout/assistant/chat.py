@@ -32,7 +32,7 @@ class OllamaChat:
         timeout: float = 120.0,
     ):
         self.model = model or os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
-        self.host = (host or os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")).rstrip("/")
+        self.host = (host or os.getenv("OLLAMA_HOST") or "http://127.0.0.1:11434").rstrip("/")
         self._client = client
         self._timeout = timeout
 

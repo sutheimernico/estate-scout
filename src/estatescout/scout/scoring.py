@@ -217,7 +217,9 @@ def score_listing(
     weight_sum = sum(s.weight for s in available)
     weights_used = {s.name: s.weight / weight_sum for s in available} if available else {}
     total = (
-        int(round(sum(s.value * weights_used[s.name] for s in available))) if available else None
+        int(round(sum((s.value or 0) * weights_used[s.name] for s in available)))
+        if available
+        else None
     )
 
     inputs_available, inputs_expected = _count_inputs(monthly_cold_rent, enrichment)

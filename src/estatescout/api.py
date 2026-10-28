@@ -186,7 +186,8 @@ def health() -> dict:
 
 
 class MarketRateOut(BaseModel):
-    annual_rate_percent: float
+    effective_rate_percent: float  # Effektivzins as published by the Bundesbank
+    nominal_rate_percent: float  # estimated Sollzins — what the calculators expect
     as_of: str
     source: str
     origin: str  # bundesbank_live | bundesbank_cache | static_fallback
@@ -198,7 +199,8 @@ def get_market_rate() -> MarketRateOut:
     """Current average mortgage rate, labelled with where the number came from."""
     rate = market_rate()
     return MarketRateOut(
-        annual_rate_percent=rate.annual_rate_percent,
+        effective_rate_percent=rate.effective_rate_percent,
+        nominal_rate_percent=rate.nominal_rate_percent,
         as_of=rate.as_of,
         source=rate.source,
         origin=rate.origin,

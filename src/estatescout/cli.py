@@ -30,19 +30,20 @@ def annuity(
     rate: float = typer.Option(..., help="nominal interest p.a. in %, e.g. 3.6"),
     repayment: float = typer.Option(..., help="anfängliche Tilgung in %, e.g. 2.0"),
     sondertilgung: float = typer.Option(0.0, help="optional extra repayment EUR/year"),
+    zinsbindung: int | None = typer.Option(
+        None, help="fixed-rate period in years; adds the Restschuld at its end"
+    ),
 ) -> None:
     """Annuitätendarlehen: monthly payment, total interest, payoff, remaining debt per year."""
-    _echo(
-        dispatch(
-            "annuity",
-            {
-                "principal": principal,
-                "annual_rate_percent": rate,
-                "initial_repayment_percent": repayment,
-                "annual_sondertilgung": sondertilgung,
-            },
-        )
-    )
+    args = {
+        "principal": principal,
+        "annual_rate_percent": rate,
+        "initial_repayment_percent": repayment,
+        "annual_sondertilgung": sondertilgung,
+    }
+    if zinsbindung is not None:
+        args["zinsbindung_years"] = zinsbindung
+    _echo(dispatch("annuity", args))
 
 
 @finance_app.command()
@@ -127,7 +128,7 @@ def equity_cmd(
     ancillary: float = typer.Option(0.0, help="Kaufnebenkosten in EUR"),
     operating: float = typer.Option(0.0, help="Bewirtschaftungskosten EUR/year"),
 ) -> None:
-    """First-year Eigenkapitalrendite (cash-on-cash) of a financed buy-to-let."""
+    """First-year Cashflow-Rendite vor Steuern (cash-on-cash) of a financed buy-to-let."""
     _echo(
         dispatch(
             "equity_return",

@@ -380,7 +380,7 @@ def test_market_rate_endpoint_labels_its_origin(monkeypatch):
         lambda: MarketRate(3.94, "Deutsche Bundesbank, BBIM1/...", "2026-07", ORIGIN_LIVE),
     )
     body = client.get("/api/market-rate").json()
-    assert body["annual_rate_percent"] == 3.94
+    assert body["effective_rate_percent"] == 3.94
     assert body["as_of"] == "2026-07"
     assert body["origin"] == "bundesbank_live"
     assert body["disclaimer"]

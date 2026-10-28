@@ -146,3 +146,26 @@ def test_dispatch_equity_return_converts_percent():
     )
     assert out["cashflow_before_tax"] == pytest.approx(480.0)
     assert out["cash_on_cash_percent"] == pytest.approx(0.8)
+
+
+def test_annuity_tool_reports_restschuld_after_zinsbindung():
+    out = dispatch(
+        "annuity",
+        {
+            "principal": 300_000,
+            "annual_rate_percent": 3.6,
+            "initial_repayment_percent": 2.0,
+            "zinsbindung_years": 10,
+        },
+    )
+    assert out["zinsbindung_years"] == 10
+    assert 0 < out["restschuld_after_zinsbindung"] < 300_000
+    assert out["restschuld_after_zinsbindung"] == out["remaining_debt_by_year"][9]["remaining_debt"]
+
+
+def test_annuity_tool_without_zinsbindung_has_no_restschuld_fields():
+    out = dispatch(
+        "annuity",
+        {"principal": 300_000, "annual_rate_percent": 3.6, "initial_repayment_percent": 2},
+    )
+    assert "restschuld_after_zinsbindung" not in out

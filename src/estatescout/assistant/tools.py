@@ -42,13 +42,15 @@ class Tool:
 
 
 def _run_annuity(a: dict) -> dict:
+    zb = a.get("zinsbindung_years")
     res = annuity(
         a["principal"],
         a["annual_rate_percent"] / 100,
         a["initial_repayment_percent"] / 100,
         annual_sondertilgung=a.get("annual_sondertilgung", 0.0),
+        zinsbindung_years=None if zb is None else int(zb),
     )
-    return {
+    out = {
         "monthly_payment": _eur(res.monthly_payment),
         "total_interest": _eur(res.total_interest),
         "total_paid": _eur(res.total_paid),
@@ -58,6 +60,11 @@ def _run_annuity(a: dict) -> dict:
             {"year": y.year, "remaining_debt": _eur(y.remaining_debt)} for y in res.yearly_schedule
         ],
     }
+    if res.restschuld_after_zinsbindung is not None and res.interest_during_zinsbindung is not None:
+        out["zinsbindung_years"] = res.zinsbindung_years
+        out["restschuld_after_zinsbindung"] = _eur(res.restschuld_after_zinsbindung)
+        out["interest_during_zinsbindung"] = _eur(res.interest_during_zinsbindung)
+    return out
 
 
 def _run_purchase_costs(a: dict) -> dict:
@@ -144,13 +151,16 @@ def _run_equity_return(a: dict) -> dict:
         "net_operating_income": _eur(res.net_operating_income),
         "cashflow_before_tax": _eur(res.cashflow_before_tax),
         "cash_on_cash_percent": _pct(res.cash_on_cash),
+        "year1_tilgung": _eur(res.year1_tilgung),
+        "return_incl_tilgung_percent": _pct(res.return_incl_tilgung),
     }
 
 
 def _run_market_rate(a: dict) -> dict:
     res = market_rate()
     return {
-        "annual_rate_percent": res.annual_rate_percent,
+        "effective_rate_percent": res.effective_rate_percent,
+        "nominal_rate_percent": res.nominal_rate_percent,
         "as_of": res.as_of,
         "source": res.source,
         "origin": res.origin,  # bundesbank_live | bundesbank_cache | static_fallback
@@ -179,6 +189,10 @@ TOOLS: dict[str, Tool] = {
                 "annual_rate_percent": _p("nominal interest p.a. in %, e.g. 3.6"),
                 "initial_repayment_percent": _p("anfängliche Tilgung in %, e.g. 2.0"),
                 "annual_sondertilgung": _p("optional extra repayment EUR/year"),
+                "zinsbindung_years": _p(
+                    "optional fixed-rate period in years (Zinsbindung, e.g. 10); adds the "
+                    "Restschuld that is still owed when it ends"
+                ),
             },
             ["principal", "annual_rate_percent", "initial_repayment_percent"],
         ),
@@ -254,8 +268,9 @@ TOOLS: dict[str, Tool] = {
     "equity_return": Tool(
         spec=_spec(
             "equity_return",
-            "First-year Eigenkapitalrendite (cash-on-cash) of a financed buy-to-let: cashflow "
-            "after debt service relative to invested equity.",
+            "First-year Cashflow-Rendite vor Steuern (cash-on-cash) of a financed buy-to-let: "
+            "cashflow after debt service (interest + Tilgung) relative to invested equity, plus "
+            "the same figure including the year-1 Tilgung as wealth building. No taxes or AfA.",
             {
                 "purchase_price": _p("property price in EUR"),
                 "monthly_cold_rent": _p("monthly Kaltmiete in EUR"),
@@ -278,9 +293,11 @@ TOOLS: dict[str, Tool] = {
     "market_rate": Tool(
         spec=_spec(
             "market_rate",
-            "Current average effective interest rate for new German housing loans to private "
-            "households (Deutsche Bundesbank). Use it when the user asks what rates are right "
-            "now or has no rate of their own. Always report the returned 'as_of' and 'source', "
+            "Current average EFFECTIVE interest rate for new German housing loans to private "
+            "households (Deutsche Bundesbank) plus the estimated nominal rate (Sollzins). Use it "
+            "when the user asks what rates are right now or has no rate of their own; pass "
+            "'nominal_rate_percent' (not the effective rate) to the loan calculators. Always "
+            "report the returned 'as_of' and 'source', "
             "and say so if 'origin' is 'static_fallback' (then the figure may be stale).",
             {},
             [],

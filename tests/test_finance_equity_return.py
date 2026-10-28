@@ -52,3 +52,19 @@ def test_invalid_inputs_raise():
         equity_return(100_000, 500.0, 200_000, 0.036, 0.02)  # equity > investment
     with pytest.raises(ValueError, match="looks like percent"):
         equity_return(100_000, 500.0, 20_000, 3.6, 0.02)
+
+
+def test_year1_tilgung_is_wealth_built_and_reported_separately():
+    res = equity_return(
+        300_000, 1_500.0, 60_000, 0.036, 0.02, ancillary_costs=30_000, annual_operating_costs=2_400
+    )
+    # loan 270k, initial Tilgung 2 % → a bit above 5_400 in year 1 (monthly compounding of paydown)
+    assert 5_400 < res.year1_tilgung < 5_700
+    assert res.return_incl_tilgung == pytest.approx((480.0 + res.year1_tilgung) / 60_000)
+    # the cash-flow figure itself still treats Tilgung as an outflow
+    assert res.cash_on_cash == pytest.approx(0.008)
+
+
+def test_no_loan_means_no_tilgung():
+    res = equity_return(100_000, 800.0, 100_000, 0.036, 0.02)
+    assert res.year1_tilgung == 0.0

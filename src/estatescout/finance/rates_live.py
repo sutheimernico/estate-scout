@@ -41,12 +41,30 @@ ORIGIN_CACHE = "bundesbank_cache"
 ORIGIN_FALLBACK = "static_fallback"
 
 
+def effective_to_nominal_percent(effective_percent: float, periods_per_year: int = 12) -> float:
+    """Nominal rate (≈ Sollzins) that yields ``effective_percent`` with monthly compounding.
+
+    The Bundesbank series is an *Effektivzins* (PAngV: annual compounding of the monthly
+    nominal rate), while the calculators take the *Sollzins*. For a loan paid monthly,
+    ``effective = (1 + nominal/12)^12 − 1``, so ``nominal = 12 · ((1 + effective)^(1/12) − 1)``
+    (3,94 % effective → 3,87 % nominal). Fees and Disagio are not modelled: it is an
+    estimate for pre-filling, never a quote.
+    """
+    eff = effective_percent / 100
+    return periods_per_year * ((1 + eff) ** (1 / periods_per_year) - 1) * 100
+
+
 @dataclass(frozen=True)
 class MarketRate:
-    annual_rate_percent: float
+    effective_rate_percent: float  # Effektivzins as published — NOT the Sollzins
     source: str  # human-readable provenance, always present
     as_of: str  # the observation period (live) or the config date (fallback)
     origin: str  # ORIGIN_LIVE | ORIGIN_CACHE | ORIGIN_FALLBACK
+
+    @property
+    def nominal_rate_percent(self) -> float:
+        """Estimated Sollzins, the value to enter into the calculators."""
+        return round(effective_to_nominal_percent(self.effective_rate_percent), 2)
 
 
 def _parse_sdmx_csv(text: str) -> tuple[float, str, str]:
@@ -61,7 +79,7 @@ def _parse_sdmx_csv(text: str) -> tuple[float, str, str]:
 def _static_fallback(config: dict | None = None) -> MarketRate:
     block = (config or load_config())["market_rate"]
     return MarketRate(
-        annual_rate_percent=float(block["fallback_annual_rate_percent"]),
+        effective_rate_percent=float(block["fallback_annual_rate_percent"]),
         source=f"static fallback — config/rates.yaml ({block['source']})",
         as_of=str(block["as_of"]),
         origin=ORIGIN_FALLBACK,
@@ -74,7 +92,7 @@ def _read_cache(path: Path, ttl: float) -> MarketRate | None:
         if time.time() - float(payload["fetched_at"]) > ttl:
             return None
         return MarketRate(
-            annual_rate_percent=float(payload["annual_rate_percent"]),
+            effective_rate_percent=float(payload["effective_rate_percent"]),
             source=str(payload["source"]),
             as_of=str(payload["as_of"]),
             origin=ORIGIN_CACHE,
@@ -89,7 +107,7 @@ def _write_cache(path: Path, rate: MarketRate) -> None:
         path.write_text(
             json.dumps(
                 {
-                    "annual_rate_percent": rate.annual_rate_percent,
+                    "effective_rate_percent": rate.effective_rate_percent,
                     "source": rate.source,
                     "as_of": rate.as_of,
                     "fetched_at": time.time(),
@@ -128,7 +146,7 @@ def market_rate(
             http.close()
 
     rate = MarketRate(
-        annual_rate_percent=value,
+        effective_rate_percent=value,
         source=(
             f"Deutsche Bundesbank, {BUNDESBANK_FLOW}/{BUNDESBANK_SERIES}"
             + (f" — {title}" if title else "")

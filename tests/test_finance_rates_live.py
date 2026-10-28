@@ -30,7 +30,7 @@ def test_live_fetch_returns_the_rate_with_its_provenance(tmp_path):
         client=_client(lambda r: httpx.Response(200, text=CSV)),
         cache_path=tmp_path / "cache.json",
     )
-    assert rate.annual_rate_percent == pytest.approx(3.94)
+    assert rate.effective_rate_percent == pytest.approx(3.94)
     assert rate.as_of == "2026-07"
     assert rate.origin == ORIGIN_LIVE
     assert "Bundesbank" in rate.source
@@ -61,7 +61,7 @@ def test_second_call_is_served_from_the_cache(tmp_path):
     second = market_rate(client=_client(handler), cache_path=cache)
     assert calls["n"] == 1
     assert second.origin == ORIGIN_CACHE
-    assert second.annual_rate_percent == pytest.approx(3.94)
+    assert second.effective_rate_percent == pytest.approx(3.94)
 
 
 def test_an_expired_cache_is_refetched(tmp_path):
@@ -69,7 +69,7 @@ def test_an_expired_cache_is_refetched(tmp_path):
     cache.write_text(
         json.dumps(
             {
-                "annual_rate_percent": 1.11,
+                "effective_rate_percent": 1.11,
                 "source": "old",
                 "as_of": "2020-01",
                 "fetched_at": time.time() - 10_000,
@@ -82,7 +82,7 @@ def test_an_expired_cache_is_refetched(tmp_path):
         cache_path=cache,
         ttl_seconds=3_600,
     )
-    assert rate.annual_rate_percent == pytest.approx(3.94)
+    assert rate.effective_rate_percent == pytest.approx(3.94)
     assert rate.origin == ORIGIN_LIVE
 
 
@@ -100,7 +100,7 @@ def test_network_failure_falls_back_to_config_and_says_so(tmp_path):
     rate = market_rate(client=_client(boom), cache_path=tmp_path / "cache.json")
     assert rate.origin == ORIGIN_FALLBACK
     assert "static fallback" in rate.source
-    assert rate.annual_rate_percent > 0
+    assert rate.effective_rate_percent > 0
 
 
 def test_http_error_falls_back(tmp_path):
@@ -134,7 +134,7 @@ def test_live_bundesbank_answers_with_a_plausible_rate(tmp_path):
     """Opt-in (`uv run pytest -m live`): hits the real public Bundesbank API."""
     rate = market_rate(cache_path=tmp_path / "cache.json")
     assert rate.origin == ORIGIN_LIVE
-    assert 0.1 < rate.annual_rate_percent < 15
+    assert 0.1 < rate.effective_rate_percent < 15
 
 
 def test_the_assistant_tool_reports_the_origin(monkeypatch):
@@ -149,8 +149,27 @@ def test_the_assistant_tool_reports_the_origin(monkeypatch):
     )
     out = tools_mod.dispatch("market_rate", {})
     assert out == {
-        "annual_rate_percent": 3.94,
+        "effective_rate_percent": 3.94,
+        "nominal_rate_percent": 3.87,
         "as_of": "2026-07",
         "source": "Deutsche Bundesbank, BBIM1/...",
         "origin": ORIGIN_LIVE,
     }
+
+
+def test_effective_rate_converts_to_a_slightly_lower_nominal_rate():
+    from estatescout.finance.rates_live import effective_to_nominal_percent
+
+    nominal = effective_to_nominal_percent(3.94)
+    assert nominal == pytest.approx(3.8706, abs=1e-3)
+    assert nominal < 3.94
+    # round trip: monthly compounding of the nominal rate gives back the effective rate
+    assert ((1 + nominal / 100 / 12) ** 12 - 1) * 100 == pytest.approx(3.94)
+
+
+def test_market_rate_exposes_both_labels():
+    from estatescout.finance.rates_live import MarketRate
+
+    rate = MarketRate(3.94, "Bundesbank", "2026-07", ORIGIN_LIVE)
+    assert rate.effective_rate_percent == 3.94
+    assert rate.nominal_rate_percent == pytest.approx(3.87)

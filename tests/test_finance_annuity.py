@@ -99,3 +99,30 @@ def test_percent_passed_as_fraction_is_rejected():
         annuity(principal=300_000, annual_rate=3.6, initial_repayment=0.02)
     with pytest.raises(ValueError, match="looks like percent"):
         annuity(principal=300_000, annual_rate=0.036, initial_repayment=2.0)
+
+
+def test_zinsbindung_reports_restschuld_at_the_end_of_the_fixed_period():
+    res = annuity(300_000, 0.036, 0.02, zinsbindung_years=10)
+    assert res.zinsbindung_years == 10
+    # the Restschuld after 10 years is exactly the schedule's year-10 remaining debt
+    assert res.restschuld_after_zinsbindung == pytest.approx(res.yearly_schedule[9].remaining_debt)
+    # closed form: B_n = P(1+i)^n − pmt · ((1+i)^n − 1)/i with monthly i, n = 120
+    i, n = 0.036 / 12, 120
+    pmt = 300_000 * (0.036 + 0.02) / 12
+    expected = 300_000 * (1 + i) ** n - pmt * ((1 + i) ** n - 1) / i
+    assert res.restschuld_after_zinsbindung == pytest.approx(expected, rel=1e-9)
+    assert 0 < res.restschuld_after_zinsbindung < 300_000
+    first_ten = sum(y.interest_paid for y in res.yearly_schedule[:10])
+    assert res.interest_during_zinsbindung == pytest.approx(first_ten)
+
+
+def test_zinsbindung_longer_than_the_loan_leaves_no_restschuld():
+    res = annuity(100_000, 0.03, 0.05, zinsbindung_years=40)
+    assert res.restschuld_after_zinsbindung == 0.0
+
+
+def test_zinsbindung_is_optional_and_validated():
+    assert annuity(300_000, 0.036, 0.02).restschuld_after_zinsbindung is None
+    for bad in (0, -5, 61):
+        with pytest.raises(ValueError, match="zinsbindung_years"):
+            annuity(300_000, 0.036, 0.02, zinsbindung_years=bad)

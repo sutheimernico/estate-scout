@@ -234,3 +234,20 @@ def test_scout_score_unknown_id_exits_nonzero(tmp_path):
     assert (
         runner.invoke(scout_app, ["score", "4242", "--db", str(tmp_path / "cli.db")]).exit_code == 1
     )
+
+
+def test_cli_annuity_with_zinsbindung_prints_the_restschuld():
+    out = _run(
+        [
+            "annuity",
+            "--principal",
+            "300000",
+            "--rate",
+            "3.6",
+            "--repayment",
+            "2.0",
+            "--zinsbindung",
+            "10",
+        ]
+    )
+    assert out["zinsbindung_years"] == 10 and out["restschuld_after_zinsbindung"] > 0

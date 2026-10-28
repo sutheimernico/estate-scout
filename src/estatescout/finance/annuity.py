@@ -48,6 +48,11 @@ class AnnuityResult:
     total_paid: float
     months_to_payoff: int
     yearly_schedule: list[YearRow]
+    # Set only when a Zinsbindung was given: what is still owed when the fixed rate ends and
+    # has to be refinanced (Anschlussfinanzierung) — the central risk of a German mortgage.
+    zinsbindung_years: int | None = None
+    restschuld_after_zinsbindung: float | None = None
+    interest_during_zinsbindung: float | None = None
 
 
 def amortize(
@@ -131,11 +136,17 @@ def annuity(
     *,
     annual_sondertilgung: float = 0.0,
     max_years: int = 60,
+    zinsbindung_years: int | None = None,
 ) -> AnnuityResult:
     """Summarize an Annuitätendarlehen: monthly payment, totals, per-year schedule.
 
-    See :func:`amortize` for the argument semantics.
+    See :func:`amortize` for the argument semantics. With ``zinsbindung_years`` the result also
+    reports the Restschuld at the end of the fixed-rate period (0 if the loan is repaid
+    earlier) and the interest paid until then. The schedule itself keeps the same rate for the
+    whole term — the follow-up rate is unknown, which is exactly why the Restschuld matters.
     """
+    if zinsbindung_years is not None and not (1 <= zinsbindung_years <= max_years):
+        raise ValueError(f"zinsbindung_years must be between 1 and {max_years}")
     rows = amortize(
         principal,
         annual_rate,
@@ -160,7 +171,19 @@ def annuity(
 
     total_interest = sum(r.interest for r in rows)
     total_paid = sum(r.interest + r.principal + r.sondertilgung for r in rows)
+    restschuld: float | None = None
+    interest_fixed: float | None = None
+    if zinsbindung_years is not None:
+        restschuld = (
+            yearly[zinsbindung_years - 1].remaining_debt
+            if zinsbindung_years <= len(yearly)
+            else 0.0
+        )
+        interest_fixed = sum(r.interest for r in rows[: zinsbindung_years * 12])
     return AnnuityResult(
+        zinsbindung_years=zinsbindung_years,
+        restschuld_after_zinsbindung=restschuld,
+        interest_during_zinsbindung=interest_fixed,
         monthly_payment=payment,
         total_interest=total_interest,
         total_paid=total_paid,

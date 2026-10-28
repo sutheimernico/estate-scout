@@ -12,10 +12,28 @@ import {
   scoreListing,
 } from "./api";
 import { eur, num } from "./format";
+import {
+  BUNDESLAENDER,
+  bundeslandName,
+  DEFAULT_BUNDESLAND,
+  EXAMPLE_FEATURE,
+  EXAMPLE_RENT,
+  objectTypeLabel,
+} from "./labels";
 import { ScoreDrilldown } from "./ScoreDrilldown";
 import { useListings } from "./useListings";
 
-const EMPTY_FORM = { price: "", area: "", bundesland: "", ort: "", rooms: "", year: "" };
+const EMPTY_FORM = {
+  price: "",
+  area: "",
+  bundesland: DEFAULT_BUNDESLAND,
+  ort: "",
+  rooms: "",
+  year: "",
+};
+
+// The example object ships with a rent that completes its data coverage; real objects start empty.
+const isExample = (l: Listing) => l.features.includes(EXAMPLE_FEATURE);
 
 function parseRent(raw: string): number | undefined {
   const value = Number(raw.replace(",", "."));
@@ -30,6 +48,7 @@ export function Listings() {
   const [openId, setOpenId] = useState<number | null>(null);
   const [reports, setReports] = useState<Record<number, ScoreReport>>({});
   const [rents, setRents] = useState<Record<number, string>>({});
+  const rentOf = (l: Listing) => rents[l.id] ?? (isExample(l) ? EXAMPLE_RENT : "");
   const [pendingId, setPendingId] = useState<number | null>(null);
 
   async function onSubmit(e: FormEvent) {
@@ -77,12 +96,14 @@ export function Listings() {
     }
   }
 
-  async function onEvaluate(id: number) {
+  async function onEvaluate(listing: Listing) {
+    const id = listing.id;
     setError(null);
     setPendingId(id);
     try {
-      await enrichListing(id);
-      const report = await scoreListing(id, parseRent(rents[id] ?? ""));
+      // the example's reference data is fixed; the server refuses to re-enrich it
+      if (!isExample(listing)) await enrichListing(id);
+      const report = await scoreListing(id, parseRent(rentOf(listing)));
       setReports((r) => ({ ...r, [id]: report }));
       setOpenId(id);
       await refresh();
@@ -93,7 +114,8 @@ export function Listings() {
     }
   }
 
-  async function onToggle(id: number) {
+  async function onToggle(listing: Listing) {
+    const id = listing.id;
     if (openId === id) {
       setOpenId(null);
       return;
@@ -101,11 +123,10 @@ export function Listings() {
     setOpenId(id);
     if (reports[id]) return;
     try {
-      const report = await scoreListing(id, parseRent(rents[id] ?? ""));
+      const report = await scoreListing(id, parseRent(rentOf(listing)));
       setReports((r) => ({ ...r, [id]: report }));
     } catch (err) {
       // 409 = never enriched: not an error, the row simply offers the button instead
-      setReports((r) => ({ ...r }));
       if (!(err instanceof Error) || !err.message.includes("enrich")) {
         setError(err instanceof Error ? err.message : String(err));
       }
@@ -113,7 +134,7 @@ export function Listings() {
   }
 
   // Curried change handler: one factory instead of six inline arrow props.
-  const set = (key: keyof typeof EMPTY_FORM) => (e: ChangeEvent<HTMLInputElement>) =>
+  const set = (key: keyof typeof EMPTY_FORM) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   return (
@@ -126,20 +147,31 @@ export function Listings() {
             value={form.price}
             onChange={set("price")}
             inputMode="decimal"
-            placeholder="300000"
+            placeholder="z. B. 300000"
           />
         </label>
         <label>
           Wohnfläche (m²)
-          <input value={form.area} onChange={set("area")} inputMode="decimal" placeholder="100" />
+          <input
+            value={form.area}
+            onChange={set("area")}
+            inputMode="decimal"
+            placeholder="z. B. 100"
+          />
         </label>
         <label>
           Bundesland
-          <input value={form.bundesland} onChange={set("bundesland")} placeholder="Niedersachsen" />
+          <select value={form.bundesland} onChange={set("bundesland")}>
+            {BUNDESLAENDER.map((b) => (
+              <option key={b.code} value={b.code}>
+                {b.name}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           Ort (optional)
-          <input value={form.ort} onChange={set("ort")} placeholder="Lingen" />
+          <input value={form.ort} onChange={set("ort")} placeholder="z. B. Lingen" />
         </label>
         <label>
           Zimmer (optional)
@@ -170,7 +202,7 @@ export function Listings() {
           <thead>
             <tr>
               <th>Ort</th>
-              <th>BL</th>
+              <th>Bundesland</th>
               <th>Typ</th>
               <th>Preis</th>
               <th>m²</th>
@@ -188,10 +220,10 @@ export function Listings() {
                 open={openId === it.id}
                 pending={pendingId === it.id}
                 report={reports[it.id]}
-                rent={rents[it.id] ?? ""}
+                rent={rentOf(it)}
                 onRentChange={(value) => setRents((r) => ({ ...r, [it.id]: value }))}
-                onToggle={() => void onToggle(it.id)}
-                onEvaluate={() => void onEvaluate(it.id)}
+                onToggle={() => void onToggle(it)}
+                onEvaluate={() => void onEvaluate(it)}
                 onDelete={() => void onDelete(it.id)}
               />
             ))}
@@ -214,12 +246,19 @@ interface RowProps {
   onDelete: () => void;
 }
 
-function ScoreBadge({ listing }: { listing: Listing }) {
-  if (!listing.score || listing.score.total === null) return <span className="badge muted">—</span>;
-  const strength = listing.score.confidence >= 0.75 ? "high" : "low";
+// The freshest report wins over the list response: the list is scored without a rent (the
+// table convention), the report may include the one the user just typed in. Reading only the
+// list left the table at "—" while the drilldown already showed 67/100.
+function ScoreBadge({ listing, report }: { listing: Listing; report?: ScoreReport }) {
+  const score = report ?? listing.score;
+  if (!score || score.total === null) return <span className="badge muted">—</span>;
+  const strength = score.confidence >= 0.75 ? "high" : "low";
   return (
-    <span className={`badge score-${strength}`} title={`Datenlage ${num(listing.score.confidence * 100, 0)} %`}>
-      {listing.score.total}
+    <span
+      className={`badge score-${strength}`}
+      title={`Datenlage ${num(score.confidence * 100, 0)} %`}
+    >
+      {score.total}
     </span>
   );
 }
@@ -239,13 +278,13 @@ function ListingRow({
     <>
       <tr>
         <td>{listing.ort || "—"}</td>
-        <td>{listing.bundesland}</td>
-        <td>{listing.object_type}</td>
+        <td>{bundeslandName(listing.bundesland)}</td>
+        <td>{objectTypeLabel(listing.object_type)}</td>
         <td className="num">{eur(listing.price)}</td>
         <td className="num">{num(listing.living_area_sqm)}</td>
         <td className="num">{eur(listing.price_per_sqm)}</td>
         <td className="num">
-          <ScoreBadge listing={listing} />
+          <ScoreBadge listing={listing} report={report} />
         </td>
         <td>
           <button
@@ -280,13 +319,19 @@ function ListingRow({
                     value={rent}
                     onChange={(e) => onRentChange(e.target.value)}
                     inputMode="decimal"
-                    placeholder="1000"
+                    placeholder="z. B. 1000"
                   />
                 </label>
                 <button type="button" onClick={onEvaluate} disabled={pending}>
                   {pending ? "Bewertet …" : "Anreichern + bewerten"}
                 </button>
               </div>
+              {isExample(listing) && (
+                <p className="empty">
+                  Beispielobjekt mit fest hinterlegten, erfundenen Referenzdaten — es zeigt den Score
+                  bei voller Datenlage (4/4). Mit Kaltmiete ergibt sich der Gesamtscore.
+                </p>
+              )}
               {report ? (
                 <ScoreDrilldown report={report} />
               ) : (

@@ -5,13 +5,16 @@ import { type FormEvent, useState } from "react";
 
 import { finance, toKnownCalc } from "./api";
 import { CalcResultCard } from "./CalcResultCard";
+import { BUNDESLAENDER } from "./labels";
 
 interface Field {
   key: string;
   label: string;
   required?: boolean;
   text?: boolean; // string field (default: number)
-  placeholder?: string;
+  select?: "bundesland"; // rendered as a <select> of the 16 Bundesländer (value = code)
+  // Real, visible starting value (not a placeholder): the example scenario of this calculator.
+  defaultValue?: string;
 }
 
 interface FormSpec {
@@ -25,28 +28,28 @@ const FORMS: FormSpec[] = [
     calc: "annuity",
     title: "Annuitätendarlehen",
     fields: [
-      { key: "principal", label: "Darlehensbetrag (€)", required: true, placeholder: "300000" },
-      { key: "annual_rate_percent", label: "Sollzins (% p.a.)", required: true, placeholder: "3,6" },
+      { key: "principal", label: "Darlehensbetrag (€)", required: true, defaultValue: "300000" },
+      { key: "annual_rate_percent", label: "Sollzins (% p.a.)", required: true, defaultValue: "3,6" },
       {
         key: "initial_repayment_percent",
         label: "Anfängliche Tilgung (%)",
         required: true,
-        placeholder: "2,0",
+        defaultValue: "2,0",
       },
       { key: "annual_sondertilgung", label: "Sondertilgung (€/Jahr, optional)" },
+      { key: "zinsbindung_years", label: "Zinsbindung (Jahre, optional)", defaultValue: "10" },
     ],
   },
   {
     calc: "purchase_costs",
     title: "Kaufnebenkosten",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis (€)", required: true, placeholder: "300000" },
+      { key: "purchase_price", label: "Kaufpreis (€)", required: true, defaultValue: "300000" },
       {
         key: "bundesland",
         label: "Bundesland",
         required: true,
-        text: true,
-        placeholder: "Niedersachsen",
+        text: true, select: "bundesland", defaultValue: "NI",
       },
       { key: "makler_rate_percent", label: "Maklerprovision Käufer (%, optional)" },
     ],
@@ -59,17 +62,17 @@ const FORMS: FormSpec[] = [
         key: "net_monthly_income",
         label: "Haushaltsnetto (€/Monat)",
         required: true,
-        placeholder: "4000",
+        defaultValue: "4000",
       },
-      { key: "equity", label: "Eigenkapital (€)", required: true, placeholder: "60000" },
-      { key: "annual_rate_percent", label: "Sollzins (% p.a.)", required: true, placeholder: "3,6" },
+      { key: "equity", label: "Eigenkapital (€)", required: true, defaultValue: "60000" },
+      { key: "annual_rate_percent", label: "Sollzins (% p.a.)", required: true, defaultValue: "3,6" },
       {
         key: "initial_repayment_percent",
         label: "Anfängliche Tilgung (%)",
         required: true,
-        placeholder: "2,0",
+        defaultValue: "2,0",
       },
-      { key: "bundesland", label: "Bundesland", required: true, text: true, placeholder: "NRW" },
+      { key: "bundesland", label: "Bundesland", required: true, text: true, select: "bundesland", defaultValue: "NI", },
       { key: "existing_obligations", label: "Bestehende Raten (€/Monat, optional)" },
       { key: "running_costs_monthly", label: "Laufende Kosten (€/Monat, optional)" },
     ],
@@ -78,12 +81,12 @@ const FORMS: FormSpec[] = [
     calc: "yield_metrics",
     title: "Mietrendite",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis (€)", required: true, placeholder: "300000" },
+      { key: "purchase_price", label: "Kaufpreis (€)", required: true, defaultValue: "300000" },
       {
         key: "monthly_cold_rent",
         label: "Kaltmiete (€/Monat)",
         required: true,
-        placeholder: "1200",
+        defaultValue: "1200",
       },
       { key: "annual_operating_costs", label: "Bewirtschaftungskosten (€/Jahr, optional)" },
       { key: "ancillary_costs", label: "Kaufnebenkosten (€, optional)" },
@@ -93,34 +96,34 @@ const FORMS: FormSpec[] = [
     calc: "operating_costs",
     title: "Bewirtschaftungskosten",
     fields: [
-      { key: "living_area_sqm", label: "Wohnfläche (m²)", required: true, placeholder: "100" },
+      { key: "living_area_sqm", label: "Wohnfläche (m²)", required: true, defaultValue: "100" },
       {
         key: "monthly_cold_rent",
         label: "Kaltmiete (€/Monat)",
         required: true,
-        placeholder: "1200",
+        defaultValue: "1200",
       },
       { key: "units", label: "Wohneinheiten (optional)" },
     ],
   },
   {
     calc: "equity_return",
-    title: "Eigenkapitalrendite",
+    title: "Cashflow-Rendite vor Steuern",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis (€)", required: true, placeholder: "300000" },
+      { key: "purchase_price", label: "Kaufpreis (€)", required: true, defaultValue: "300000" },
       {
         key: "monthly_cold_rent",
         label: "Kaltmiete (€/Monat)",
         required: true,
-        placeholder: "1500",
+        defaultValue: "1500",
       },
-      { key: "equity", label: "Eigenkapital (€)", required: true, placeholder: "60000" },
-      { key: "annual_rate_percent", label: "Sollzins (% p.a.)", required: true, placeholder: "3,6" },
+      { key: "equity", label: "Eigenkapital (€)", required: true, defaultValue: "60000" },
+      { key: "annual_rate_percent", label: "Sollzins (% p.a.)", required: true, defaultValue: "3,6" },
       {
         key: "initial_repayment_percent",
         label: "Anfängliche Tilgung (%)",
         required: true,
-        placeholder: "2,0",
+        defaultValue: "2,0",
       },
       { key: "ancillary_costs", label: "Kaufnebenkosten (€, optional)" },
       { key: "annual_operating_costs", label: "Bewirtschaftungskosten (€/Jahr, optional)" },
@@ -129,7 +132,9 @@ const FORMS: FormSpec[] = [
 ];
 
 function CalcForm({ spec }: { spec: FormSpec }) {
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(spec.fields.map((f) => [f.key, f.defaultValue ?? ""])),
+  );
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -178,12 +183,25 @@ function CalcForm({ spec }: { spec: FormSpec }) {
       {spec.fields.map((f) => (
         <label key={f.key}>
           {f.label}
-          <input
-            value={values[f.key] ?? ""}
-            onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
-            placeholder={f.placeholder}
-            inputMode={f.text ? undefined : "decimal"}
-          />
+          {f.select === "bundesland" ? (
+            <select
+              value={values[f.key] ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+            >
+              {BUNDESLAENDER.map((b) => (
+                <option key={b.code} value={b.code}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={values[f.key] ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+              placeholder={f.required ? undefined : "optional"}
+              inputMode={f.text ? undefined : "decimal"}
+            />
+          )}
         </label>
       ))}
       <button type="submit" disabled={busy}>
@@ -202,6 +220,9 @@ function CalcForm({ spec }: { spec: FormSpec }) {
 export function CalcForms() {
   return (
     <div className="cards">
+      <p className="empty">
+        Vorbelegt mit Beispielwerten — ersetze sie durch deine eigenen Zahlen.
+      </p>
       {FORMS.map((f) => (
         <CalcForm key={f.calc} spec={f} />
       ))}

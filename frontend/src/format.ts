@@ -7,3 +7,7 @@ export const pct = (n: number) => `${n.toLocaleString("de-DE", { maximumFraction
 
 export const num = (n: number, digits = 1) =>
   n.toLocaleString("de-DE", { maximumFractionDigits: digits });
+
+// Amounts that are computed to the cent (monthly rates) keep their cents.
+export const eurCents = (n: number) =>
+  n.toLocaleString("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 2 });

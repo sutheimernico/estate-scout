@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Listings } from "./Listings";
@@ -80,6 +80,61 @@ describe("Listings", () => {
     stubRoutes([[/\/api\/listings$/, () => json(scored)]]);
     render(<Listings />);
     expect(await screen.findByText("59")).toBeInTheDocument();
+  });
+
+  it("shows Bundesland and object type as labels, never as raw codes", async () => {
+    stubRoutes([[/\/api\/listings$/, () => json(oneListing)]]);
+    render(<Listings />);
+    expect(await screen.findByText("Niedersachsen")).toBeInTheDocument();
+    expect(screen.getByText("Wohnung")).toBeInTheDocument();
+    expect(screen.queryByText("wohnung")).toBeNull();
+    expect(screen.queryByText("NI")).toBeNull();
+  });
+
+  it("offers the Bundesland as a select with all 16 states", async () => {
+    stubRoutes([[/\/api\/listings$/, () => json([])]]);
+    render(<Listings />);
+    await screen.findByText(/Noch keine Objekte gespeichert/);
+    const select = screen.getByLabelText("Bundesland") as HTMLSelectElement;
+    expect(select.options).toHaveLength(16);
+  });
+
+  it("updates the table score after 'Anreichern + bewerten' (no stale dash)", async () => {
+    // the list response stays unscored (no rent) — only the report carries the 59
+    stubRoutes([
+      [/\/enrich$/, () => json({ bodenrichtwert_eur_per_sqm: 2500, region: null, unavailable: {}, enriched_at: "x" })],
+      [/\/score/, () => json(scoreReport)],
+      [/\/api\/listings$/, () => json(oneListing)],
+    ]);
+    render(<Listings />);
+    const row = (await screen.findByText("Lingen")).closest("tr")!;
+    expect(within(row).getByText("—")).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole("button", { name: /Bewertung von Objekt 1/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Anreichern + bewerten" }));
+    await screen.findByText("59/100");
+    expect(within(row).getByText("59")).toBeInTheDocument();
+    expect(within(row).queryByText("—")).toBeNull();
+  });
+
+  it("scores the example object with its rent and never calls enrich", async () => {
+    const example = [{ ...oneListing[0], ort: "Lingen (Beispiel)", features: ["beispiel"] }];
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        calls.push(url);
+        if (/\/score/.test(url)) return json(scoreReport);
+        return json(example);
+      }),
+    );
+    render(<Listings />);
+    fireEvent.click(await screen.findByRole("button", { name: /Bewertung von Objekt 1/ }));
+    expect(await screen.findByText("59/100")).toBeInTheDocument();
+    expect(calls.some((u) => u.includes("monthly_cold_rent=1000"))).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Anreichern + bewerten" }));
+    await waitFor(() => expect(calls.filter((u) => /score/.test(u)).length).toBeGreaterThan(1));
+    expect(calls.some((u) => /enrich/.test(u))).toBe(false);
+    expect(screen.getByText(/Beispielobjekt mit fest hinterlegten/)).toBeInTheDocument();
   });
 
   it("enriches, scores and renders the drilldown", async () => {

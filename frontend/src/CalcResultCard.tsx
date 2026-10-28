@@ -5,7 +5,8 @@ import { type ReactNode } from "react";
 
 import { AmortizationTable } from "./AmortizationTable";
 import { type KnownCalc } from "./api";
-import { eur, num, pct } from "./format";
+import { eur, eurCents, num, pct } from "./format";
+import { bundeslandName } from "./labels";
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -34,7 +35,7 @@ export function CalcResultCard({ calc }: { calc: KnownCalc }) {
     case "purchase_costs": {
       const r = calc.result;
       return (
-        <Card title={`Kaufnebenkosten (${r.bundesland})`}>
+        <Card title={`Kaufnebenkosten (${bundeslandName(r.bundesland)})`}>
           <Row label="Grunderwerbsteuer" value={eur(r.grunderwerbsteuer)} />
           <Row label="Notar" value={eur(r.notary)} />
           <Row label="Grundbuch" value={eur(r.land_registry)} />
@@ -50,7 +51,7 @@ export function CalcResultCard({ calc }: { calc: KnownCalc }) {
       const r = calc.result;
       return (
         <Card title="Leistbarkeit">
-          <Row label="Max. Monatsrate" value={eur(r.max_monthly_payment)} />
+          <Row label="Max. Monatsrate" value={eurCents(r.max_monthly_payment)} />
           <Row label="Max. Darlehen" value={eur(r.max_loan)} />
           <Row label="Max. Kaufpreis" value={eur(r.max_purchase_price)} />
           <Row label="Nebenkostenquote" value={pct(r.ancillary_quota_percent)} />
@@ -83,12 +84,14 @@ export function CalcResultCard({ calc }: { calc: KnownCalc }) {
     case "equity_return": {
       const r = calc.result;
       return (
-        <Card title="Eigenkapitalrendite (Jahr 1)">
+        <Card title="Cashflow-Rendite vor Steuern (Jahr 1)">
           <Row label="Darlehen" value={eur(r.loan)} />
-          <Row label="Kapitaldienst p.a." value={eur(r.annual_debt_service)} />
+          <Row label="Kapitaldienst p.a. (Zins + Tilgung)" value={eur(r.annual_debt_service)} />
           <Row label="Netto-Mietertrag p.a." value={eur(r.net_operating_income)} />
           <Row label="Cashflow vor Steuern" value={eur(r.cashflow_before_tax)} />
-          <Row label="EK-Rendite" value={pct(r.cash_on_cash_percent)} />
+          <Row label="Rendite auf das Eigenkapital" value={pct(r.cash_on_cash_percent)} />
+          <Row label="Tilgung im 1. Jahr (Vermögensaufbau)" value={eur(r.year1_tilgung)} />
+          <Row label="Rendite inkl. Tilgung" value={pct(r.return_incl_tilgung_percent)} />
         </Card>
       );
     }

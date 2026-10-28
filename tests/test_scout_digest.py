@@ -7,8 +7,14 @@ from estatescout.scout.scoring import score_listing
 
 
 def _snap(brw: float, listing_id: int = 1) -> dict:
-    listing = Listing(price=300_000, living_area_sqm=100, bundesland="NI", ort="Lingen",
-                      plz="49808", id=listing_id)
+    listing = Listing(
+        price=300_000,
+        living_area_sqm=100,
+        bundesland="NI",
+        ort="Lingen",
+        plz="49808",
+        id=listing_id,
+    )
     enrichment = Enrichment(
         bodenrichtwert_eur_per_sqm=brw,
         region=RegionSignal(population_trend_pct=0.5, vacancy_rate_pct=3.0),

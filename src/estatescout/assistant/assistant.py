@@ -101,9 +101,7 @@ class Assistant:
     def _context_message(self, question: str) -> tuple[dict | None, list[str]]:
         if self.index is None or self.embedder is None:
             return None, []
-        hits = self.index.retrieve(
-            question, self.embedder, k=self.k, min_score=self.min_score
-        )
+        hits = self.index.retrieve(question, self.embedder, k=self.k, min_score=self.min_score)
         if not hits:
             return None, []
         blocks = [f"[{h.source}] {h.heading}\n{h.text}" for h in hits]

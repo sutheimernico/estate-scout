@@ -58,9 +58,7 @@ def diff_snapshots(previous: dict[str, dict], current: dict[str, dict]) -> list[
         )
         old_total = prev["total"] if prev else None
         if prev is None or old_total != cur["total"] or changed:
-            deltas.append(
-                Delta(listing_id, cur["label"], old_total, cur["total"], changed)
-            )
+            deltas.append(Delta(listing_id, cur["label"], old_total, cur["total"], changed))
     return deltas
 
 

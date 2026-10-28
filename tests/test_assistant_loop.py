@@ -144,8 +144,11 @@ def test_assistant_lists_saved_listings_via_extra_tool():
     store.add(Listing(price=300_000, living_area_sqm=100, bundesland="NI", ort="Lingen"))
     model = FakeChat(
         [
-            {"role": "assistant", "content": "",
-             "tool_calls": [{"function": {"name": "list_listings", "arguments": {}}}]},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [{"function": {"name": "list_listings", "arguments": {}}}],
+            },
             _final("Du hast 1 Objekt gespeichert: Lingen, 300.000 €."),
         ]
     )

@@ -8,8 +8,9 @@ from estatescout.scout.store import ListingStore
 
 def _store() -> ListingStore:
     store = ListingStore()
-    store.add(Listing(price=300_000, living_area_sqm=100, bundesland="NI", ort="Lingen",
-                      plz="49808"))
+    store.add(
+        Listing(price=300_000, living_area_sqm=100, bundesland="NI", ort="Lingen", plz="49808")
+    )
     return store
 
 

@@ -109,8 +109,15 @@ def amortize(
 
         if remaining < _EPS:
             remaining = 0.0
-        rows.append(MonthRow(month=month, interest=interest, principal=principal_part,
-                             sondertilgung=extra, remaining=remaining))
+        rows.append(
+            MonthRow(
+                month=month,
+                interest=interest,
+                principal=principal_part,
+                sondertilgung=extra,
+                remaining=remaining,
+            )
+        )
         if remaining == 0.0:
             return rows
 

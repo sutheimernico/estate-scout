@@ -9,8 +9,13 @@ def test_tool_specs_cover_all_calculators():
     specs = tool_specs()
     names = {s["function"]["name"] for s in specs}
     assert names == {
-        "annuity", "purchase_costs", "affordability", "yield_metrics",
-        "operating_costs", "equity_return", "market_rate",
+        "annuity",
+        "purchase_costs",
+        "affordability",
+        "yield_metrics",
+        "operating_costs",
+        "equity_return",
+        "market_rate",
     }
     for s in specs:
         assert s["type"] == "function"
@@ -48,9 +53,7 @@ def test_dispatch_affordability_worked_example():
 
 
 def test_dispatch_yield():
-    out = dispatch(
-        "yield_metrics", {"purchase_price": 300_000, "monthly_cold_rent": 1_000}
-    )
+    out = dispatch("yield_metrics", {"purchase_price": 300_000, "monthly_cold_rent": 1_000})
     assert out["gross_yield_percent"] == pytest.approx(4.0)
     assert out["kaufpreisfaktor"] == pytest.approx(25.0)
 
@@ -81,8 +84,11 @@ def test_dispatch_rejects_non_numeric_string():
     with pytest.raises(ValueError, match="must be a number"):
         dispatch(
             "annuity",
-            {"principal": "dreihundert", "annual_rate_percent": 3.6,
-             "initial_repayment_percent": 2.0},
+            {
+                "principal": "dreihundert",
+                "annual_rate_percent": 3.6,
+                "initial_repayment_percent": 2.0,
+            },
         )
 
 
@@ -102,8 +108,12 @@ def test_dispatch_rejects_number_for_string():
 def test_dispatch_treats_explicit_null_as_absent():
     out = dispatch(
         "annuity",
-        {"principal": 300_000, "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0,
-         "annual_sondertilgung": None},
+        {
+            "principal": 300_000,
+            "annual_rate_percent": 3.6,
+            "initial_repayment_percent": 2.0,
+            "annual_sondertilgung": None,
+        },
     )
     assert out["monthly_payment"] == pytest.approx(1_400.0)
 
@@ -124,9 +134,15 @@ def test_dispatch_operating_costs():
 def test_dispatch_equity_return_converts_percent():
     out = dispatch(
         "equity_return",
-        {"purchase_price": 300_000, "monthly_cold_rent": 1_500, "equity": 60_000,
-         "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0,
-         "ancillary_costs": 30_000, "annual_operating_costs": 2_400},
+        {
+            "purchase_price": 300_000,
+            "monthly_cold_rent": 1_500,
+            "equity": 60_000,
+            "annual_rate_percent": 3.6,
+            "initial_repayment_percent": 2.0,
+            "ancillary_costs": 30_000,
+            "annual_operating_costs": 2_400,
+        },
     )
     assert out["cashflow_before_tax"] == pytest.approx(480.0)
     assert out["cash_on_cash_percent"] == pytest.approx(0.8)

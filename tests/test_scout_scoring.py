@@ -42,8 +42,11 @@ def test_full_data_worked_example():
     assert report.inputs_available == 4
     assert report.inputs_expected == 4
     assert report.reasons == {}
-    assert report.weights_used == {"yield": pytest.approx(0.4), "price": pytest.approx(0.4),
-                                   "region": pytest.approx(0.2)}
+    assert report.weights_used == {
+        "yield": pytest.approx(0.4),
+        "price": pytest.approx(0.4),
+        "region": pytest.approx(0.2),
+    }
 
 
 def test_partial_data_renormalizes_the_weights():

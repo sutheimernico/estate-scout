@@ -70,9 +70,7 @@ def _trivial(token: str, value: float) -> bool:
     return bare and (value < 10 or 1900 <= value <= 2100)
 
 
-def unverified_numbers(
-    answer: str, tool_calls: list[dict], question: str = ""
-) -> list[str]:
+def unverified_numbers(answer: str, tool_calls: list[dict], question: str = "") -> list[str]:
     """Numbers in ``answer`` that match no tool result, tool argument or number in the question.
 
     A prose number matches a source value when they agree to the precision the prose shows

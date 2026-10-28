@@ -59,9 +59,7 @@ _REQUEST_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 def _escape(text: str) -> str:
     """Escape for an XML text node, and drop the WFS wildcards so a town cannot inject them."""
     cleaned = text.replace("*", " ").replace("?", " ").replace("\\", " ")
-    return (
-        cleaned.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").strip()
-    )
+    return cleaned.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").strip()
 
 
 def parse_residential_values(
@@ -136,8 +134,9 @@ class WfsBodenrichtwert:
         )
         client = self._client or httpx.Client(timeout=self._timeout)
         try:
-            response = client.post(self.url, content=body.encode("utf-8"),
-                                   headers={"Content-Type": "text/xml"})
+            response = client.post(
+                self.url, content=body.encode("utf-8"), headers={"Content-Type": "text/xml"}
+            )
             response.raise_for_status()
             xml_text = response.text
         except httpx.HTTPError:

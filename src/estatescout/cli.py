@@ -13,9 +13,7 @@ from .assistant.tools import dispatch
 from .scout.model import Listing
 from .scout.store import DEFAULT_DB, ListingStore
 
-DISCLAIMER_HINT = (
-    "Hinweis: eigene Heuristik, keine Bewertung und keine Anlageberatung."
-)
+DISCLAIMER_HINT = "Hinweis: eigene Heuristik, keine Bewertung und keine Anlageberatung."
 
 finance_app = typer.Typer(
     help="Deterministic real-estate finance calculators.", no_args_is_help=True
@@ -188,8 +186,9 @@ def ask(question: str) -> None:
     typer.echo(render_response(resp))
 
 
-scout_app = typer.Typer(help="Manage saved property objects (manual intake — no scraping).",
-                        no_args_is_help=True)
+scout_app = typer.Typer(
+    help="Manage saved property objects (manual intake — no scraping).", no_args_is_help=True
+)
 
 
 @scout_app.command("add")

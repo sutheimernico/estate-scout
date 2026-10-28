@@ -89,9 +89,7 @@ def test_sondertilgung_still_repays_exact_principal():
     res = annuity(
         principal=250_000, annual_rate=0.04, initial_repayment=0.025, annual_sondertilgung=5_000
     )
-    total_principal = sum(
-        y.principal_paid + y.sondertilgung_paid for y in res.yearly_schedule
-    )
+    total_principal = sum(y.principal_paid + y.sondertilgung_paid for y in res.yearly_schedule)
     assert total_principal == pytest.approx(250_000, abs=0.01)
     assert res.yearly_schedule[-1].remaining_debt == pytest.approx(0.0, abs=0.01)
 

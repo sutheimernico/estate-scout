@@ -72,9 +72,7 @@ def test_town_wildcards_cannot_be_injected_into_the_filter():
 
 
 def test_unknown_town_gives_no_value_rather_than_a_guess():
-    empty = (
-        '<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" numberReturned="0"/>'
-    )
+    empty = '<wfs:FeatureCollection xmlns:wfs="http://www.opengis.net/wfs/2.0" numberReturned="0"/>'
     provider = WfsBodenrichtwert(client=_client(lambda r: httpx.Response(200, text=empty)))
     assert provider.lookup(_listing("Gibtsnicht")) is None
 

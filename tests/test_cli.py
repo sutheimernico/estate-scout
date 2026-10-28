@@ -30,8 +30,17 @@ def test_cli_costs_by_bundesland():
 def test_cli_afford():
     out = _run(
         [
-            "afford", "--income", "4000", "--equity", "60000",
-            "--rate", "3.6", "--repayment", "2.0", "--bundesland", "NI",
+            "afford",
+            "--income",
+            "4000",
+            "--equity",
+            "60000",
+            "--rate",
+            "3.6",
+            "--repayment",
+            "2.0",
+            "--bundesland",
+            "NI",
         ]
     )
     assert out["max_loan"] == 300_000.0
@@ -52,8 +61,19 @@ def test_scout_add_and_list(tmp_path):
     db = str(tmp_path / "t.db")
     r = runner.invoke(
         scout_app,
-        ["add", "--price", "300000", "--area", "100", "--bundesland", "Niedersachsen",
-         "--ort", "Osnabrück", "--db", db],
+        [
+            "add",
+            "--price",
+            "300000",
+            "--area",
+            "100",
+            "--bundesland",
+            "Niedersachsen",
+            "--ort",
+            "Osnabrück",
+            "--db",
+            db,
+        ],
     )
     assert r.exit_code == 0, r.stdout
     added = json.loads(r.stdout)
@@ -69,8 +89,17 @@ def test_scout_add_and_list(tmp_path):
 def test_scout_add_invalid_bundesland_errors(tmp_path):
     r = runner.invoke(
         scout_app,
-        ["add", "--price", "300000", "--area", "100", "--bundesland", "Atlantis",
-         "--db", str(tmp_path / "t.db")],
+        [
+            "add",
+            "--price",
+            "300000",
+            "--area",
+            "100",
+            "--bundesland",
+            "Atlantis",
+            "--db",
+            str(tmp_path / "t.db"),
+        ],
     )
     assert r.exit_code != 0
 
@@ -103,9 +132,23 @@ def test_cli_opcosts():
 
 def test_cli_equity_return():
     out = _run(
-        ["equity", "--price", "300000", "--rent", "1500", "--equity", "60000",
-         "--rate", "3.6", "--repayment", "2.0", "--ancillary", "30000",
-         "--operating", "2400"]
+        [
+            "equity",
+            "--price",
+            "300000",
+            "--rent",
+            "1500",
+            "--equity",
+            "60000",
+            "--rate",
+            "3.6",
+            "--repayment",
+            "2.0",
+            "--ancillary",
+            "30000",
+            "--operating",
+            "2400",
+        ]
     )
     assert out["cash_on_cash_percent"] == pytest.approx(0.8)
 
@@ -188,6 +231,6 @@ def test_scout_score_requires_enrichment_first(tmp_path):
 
 
 def test_scout_score_unknown_id_exits_nonzero(tmp_path):
-    assert runner.invoke(
-        scout_app, ["score", "4242", "--db", str(tmp_path / "cli.db")]
-    ).exit_code == 1
+    assert (
+        runner.invoke(scout_app, ["score", "4242", "--db", str(tmp_path / "cli.db")]).exit_code == 1
+    )

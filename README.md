@@ -1,19 +1,64 @@
 # estate-scout
 
-A local, free real-estate **knowledge assistant + finance calculators** for the German market
-(Niedersachsen / NRW). Ask it anything about buying residential property and financing it; the
-numbers come from tested code, not from the language model.
+[![CI](https://github.com/sutheimernico/estate-scout/actions/workflows/ci.yml/badge.svg)](https://github.com/sutheimernico/estate-scout/actions/workflows/ci.yml)
 
-**Honest harness — not tax, investment, or financing advice.** No listing scraping. Runs entirely
-on your machine via [Ollama](https://ollama.com); no paid APIs.
+**A local real-estate assistant for the German market whose numbers never come from the language
+model: it picks the calculator, tested Python does the maths, and a code-level guard flags any
+figure in the answer that no calculator produced.**
+
+<!-- hero: docs/media/hero.png is added together with the UI redesign -->
+<!-- ![estate-scout: chat with calculator cards](docs/media/hero.png) -->
+
+Runs entirely on your machine via [Ollama](https://ollama.com) — no paid APIs, no listing scraping.
+Not tax, investment or financing advice.
+
+**One result, end to end.** "300.000 € at 3,6 % Sollzins, 2 % Tilgung, 10 years fixed" →
+**1.400,00 € per month**, **95.907 € interest** and a **Restschuld of 227.907 €** when the
+Zinsbindung ends (full repayment after 28,7 years). The assistant calls the `annuity` tool, the
+UI renders the exact result as a card, and if the model's prose quotes a figure that is not in the
+result (a live run once turned 181,209.86 into "181.210,86") the answer is flagged.
+
+```bash
+uv sync
+cd frontend && npm install && npm run build && cd ..
+uv run uvicorn estatescout.api:app --port 8000     # -> http://localhost:8000
+# chat needs Ollama: ollama pull qwen2.5:7b && ollama pull nomic-embed-text
+# the calculators and the object list work without it
+```
+
+## How this was built
+
+Spec-driven agentic development. I (Nico Sutheimer) wrote the specs and plans — they are in
+[`docs/superpowers/`](docs/superpowers) — and AI coding agents implemented them task by task. I
+reviewed every change and own the verification: the test suites are the gate, not the agent's
+say-so. The gate that every commit has to pass:
+
+| Check | Command |
+| --- | --- |
+| Backend tests (hermetic, ≥ 95 % coverage floor) | `uv run pytest` |
+| Lint, format, types | `uv run ruff check . && uv run ruff format --check . && uv run mypy` |
+| Frontend types and tests | `cd frontend && npx tsc --noEmit && npm test` |
+
+The same commands run in [GitHub Actions](.github/workflows/ci.yml). The design decisions that
+matter (why no scraping, why the Bodenrichtwert comes from a public WFS, why the score is a
+transparent heuristic) are written down in [`docs/adr/`](docs/adr) and
+[`docs/bodenrichtwert-quelle.md`](docs/bodenrichtwert-quelle.md).
 
 ## Why the numbers are trustworthy
 
 A local 7B model cannot be trusted with arithmetic. So it doesn't do any: every number
-(Annuitätendarlehen rate, Kaufnebenkosten, Leistbarkeit, Mietrendite, Bewirtschaftungskosten,
-Eigenkapitalrendite) is computed by tested Python in `finance/`. The assistant understands your
+(Annuitätendarlehen rate and Restschuld after the Zinsbindung, Kaufnebenkosten, Leistbarkeit,
+Mietrendite, Bewirtschaftungskosten, Cashflow-Rendite) is computed by tested Python in `finance/`. The assistant understands your
 question, calls the right calculator, and explains the result. Tax rates and thresholds live in
-versioned config, each tagged with source + date.
+versioned config, each tagged with source + date. Every calculator has a typed request/response
+model (`schemas.py`): FastAPI shows them in `/docs`, and the LLM tool schemas are derived from the
+same models.
+
+Two definitions worth stating plainly: the **Cashflow-Rendite vor Steuern** subtracts the full debt
+service (interest and Tilgung) from the net rent and divides by the equity, and reports the
+year-1 Tilgung separately as wealth built — taxes and AfA are not modelled. And the Bundesbank
+figure below is an *Effektivzins*, so the API returns it together with an estimated *Sollzins*
+(`(1 + eff)^(1/12)` conversion), which is what the loan calculators take.
 
 ## The score
 
@@ -44,8 +89,8 @@ uv run python scripts/scout.py score 1 --rent 1000
 
 ## Live data
 
-`GET /api/market-rate` and the assistant's `market_rate` tool report the current average effective
-interest rate for new German housing loans, straight from the Deutsche Bundesbank SDMX API
+`GET /api/market-rate` and the assistant's `market_rate` tool report the current average **effective**
+interest rate (`effective_rate_percent`, plus the estimated `nominal_rate_percent`) for new German housing loans, straight from the Deutsche Bundesbank SDMX API
 (`BBIM1/M.DE.B.A2C.A.R.A.2250.EUR.N`, keyless, cached 24 h). If the call fails, the static value
 from `config/rates.yaml` is returned **and labelled as a fallback** — a stale number is never
 passed off as today's. The calculators themselves stay pure and offline; the live rate is a
@@ -71,24 +116,25 @@ uv run pytest -m live
 ## Status
 
 Stage 1 (knowledge + finance assistant) and the Stage-2 scoring funnel are built: manual intake →
-enrichment → transparent score → drilldown, in CLI, API and UI. See `PLAN.md` for what is left and
-`docs/superpowers/plans/` for the executed plans. Later stages (per-object exposé evaluation,
+enrichment → transparent score → drilldown, in CLI, API and UI. See `docs/superpowers/plans/` for the executed plans. Later stages (per-object exposé evaluation,
 copilot, dashboard) are sketched but not built.
 
 ## Quickstart (after `uv sync`)
 
 ```bash
 # Deterministic calculators (no LLM needed)
-uv run python scripts/finance.py annuity --principal 280000 --rate 3.6 --repayment 2.0
+uv run python scripts/finance.py annuity --principal 280000 --rate 3.6 --repayment 2.0 \
+  --zinsbindung 10                                                       # + Restschuld after 10 years
 uv run python scripts/finance.py costs --price 350000 --bundesland Niedersachsen
 uv run python scripts/finance.py yield --price 350000 --rent 1200
 uv run python scripts/finance.py opcosts --area 100 --rent 1200          # Bewirtschaftungskosten
 uv run python scripts/finance.py equity --price 300000 --rent 1500 \
-  --equity 60000 --rate 3.6 --repayment 2.0                              # Eigenkapitalrendite
+  --equity 60000 --rate 3.6 --repayment 2.0                              # Cashflow-Rendite vor Steuern
 
 # Saved objects (manual intake — no scraping)
 uv run python scripts/scout.py add --price 300000 --area 100 --bundesland NI --ort Lingen
 uv run python scripts/scout.py list
+uv run python scripts/scout.py seed-example      # one object with full data coverage (illustrative values)
 uv run python scripts/scout.py delete 1
 
 # Ask the assistant (needs Ollama running + a tool-calling model + an embedding model)
@@ -112,7 +158,8 @@ Three tabs:
 
 - **Chat** — ask anything; every calculator the assistant calls is rendered as its own result card,
   with the knowledge sources it cited.
-- **Rechner** — the six calculators as direct forms, no LLM involved (works with Ollama down).
+- **Rechner** — the six calculators as direct forms, no LLM involved (works with Ollama down),
+  pre-filled with visible example values.
 - **Objekte** — your saved objects: intake form, table with €/m² and score badge, a per-object
   drilldown (bar per block, the weight it actually carried, confidence, and an honest list of what
   was missing and why), and an "Anreichern + bewerten" action.
@@ -141,9 +188,10 @@ installed or enabled by anything in this repo; copy them to `~/.config/systemd/u
 
 ```bash
 uv sync
-uv run pytest           # tests + coverage floor (single-file runs: add --no-cov)
-uv run ruff check .     # lint
-cd frontend && npm install && npm test && npm run build
+uv run pytest                  # tests + coverage floor (single-file runs: add --no-cov)
+uv run ruff check . && uv run ruff format --check .
+uv run mypy
+cd frontend && npm install && npx tsc --noEmit && npm test && npm run build
 ```
 
 `uv run pytest` enforces a measured coverage floor (`fail_under` in `pyproject.toml`) and excludes

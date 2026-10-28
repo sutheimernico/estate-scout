@@ -1,8 +1,7 @@
 # ADR-0001: Stage-2 data source for the scouting funnel
 
 **Date:** 2026-07-06
-**Status:** Accepted (autonomous decision recorded per AUTOPILOT; the owner can override the scope of the
-auto-scan gap below).
+**Status:** Accepted (the owner can override the scope of the auto-scan gap below).
 
 ## Context
 
@@ -44,9 +43,9 @@ the user brings in, enriched with public/legal data:
 - What ships: a legal, autonomously-buildable per-object evaluation + enrichment + scoring funnel
   that is genuinely useful for the objects the user is actually considering.
 - What does NOT ship as scraping: the "continuously auto-scan every listing in NI/NRW" ambition. That
-  gap is a **Needs-Owner** decision — accept manual/RSS/official-search-agent intake (the honest
+  gap is the owner's decision — accept manual/RSS/official-search-agent intake (the honest
   default), or pursue a commercial API/partnership (paid, out of scope for a free local tool). The
-  loop will not attempt scraping to close this gap.
+  project will not attempt scraping to close this gap.
 
 ## Alternatives considered
 

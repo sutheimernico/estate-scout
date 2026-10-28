@@ -1,6 +1,6 @@
 """Test-suite guards.
 
-Iron rule from PROJECT.md: no live network in the suite. `config/providers.yaml` ships with the
+House rule: no live network in the suite. `config/providers.yaml` ships with the
 real BORIS-NI WFS enabled, so anything calling `configured_providers()` would reach out. This
 autouse fixture pins the provider config to "nothing configured" for every test; tests that want
 providers build them explicitly (`StaticBodenrichtwert(...)`) or pass their own config dict.

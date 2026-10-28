@@ -351,6 +351,11 @@ def enrich_listing(
     listing = store.get(listing_id)
     if listing is None:
         raise HTTPException(status_code=404, detail=f"listing {listing_id} not found")
+    if listing.is_example:
+        raise HTTPException(
+            status_code=409,
+            detail="Beispielobjekt: die Referenzdaten sind fest und werden nicht neu geholt.",
+        )
     bodenrichtwert, region = providers
     result = enrich(listing, bodenrichtwert=bodenrichtwert, region=region)
     store.set_enrichment(listing_id, result)

@@ -251,3 +251,12 @@ def test_cli_annuity_with_zinsbindung_prints_the_restschuld():
         ]
     )
     assert out["zinsbindung_years"] == 10 and out["restschuld_after_zinsbindung"] > 0
+
+
+def test_cli_seed_example_is_idempotent(tmp_path):
+    db = str(tmp_path / "x.db")
+    for _ in range(2):
+        result = runner.invoke(scout_app, ["seed-example", "--db", db])
+        assert result.exit_code == 0, result.stdout
+    listed = runner.invoke(scout_app, ["list", "--db", db])
+    assert listed.stdout.count("Lingen (Beispiel)") == 1

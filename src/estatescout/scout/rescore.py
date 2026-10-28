@@ -29,9 +29,13 @@ def rescore(
 
     current: dict[str, dict] = {}
     for listing in store.list():
-        result = enrich(listing, bodenrichtwert=bodenrichtwert, region=region)
         assert listing.id is not None  # listings read from the store always have an id
-        store.set_enrichment(listing.id, result)
+        stored = store.get_enrichment(listing.id)
+        if listing.is_example and stored is not None:
+            result = stored.enrichment  # fixed illustrative data — never overwritten
+        else:
+            result = enrich(listing, bodenrichtwert=bodenrichtwert, region=region)
+            store.set_enrichment(listing.id, result)
         current[str(listing.id)] = snapshot(listing, result, score_listing(listing, result))
 
     digest_dir.mkdir(parents=True, exist_ok=True)

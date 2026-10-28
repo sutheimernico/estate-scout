@@ -238,6 +238,21 @@ def add_listing(
     )
 
 
+@scout_app.command("seed-example")
+def seed_example_cmd(db: str = typer.Option(str(DEFAULT_DB), help="SQLite path")) -> None:
+    """Add one example object with complete data coverage (illustrative values, labelled)."""
+    from .scout.example import seed_example
+
+    store = ListingStore(db)
+    try:
+        saved = seed_example(store)
+    finally:
+        store.close()
+    typer.echo(
+        f"Beispielobjekt {saved.id} ({saved.ort}) vorhanden. Kaltmiete 1.000 € → 4/4 Datenlage."
+    )
+
+
 @scout_app.command("list")
 def list_listings(db: str = typer.Option(str(DEFAULT_DB), help="SQLite path")) -> None:
     """List saved property objects."""

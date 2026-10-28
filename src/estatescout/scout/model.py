@@ -8,6 +8,10 @@ from dataclasses import dataclass
 
 from ..finance.config import normalize_bundesland
 
+# Marks the bundled example object: its reference data is fixed and illustrative, so the
+# enrichment providers must never overwrite it (see ``scout.example``).
+EXAMPLE_FEATURE = "beispiel"
+
 
 @dataclass(frozen=True)
 class Listing:
@@ -32,6 +36,10 @@ class Listing:
             raise ValueError("year_built out of range")
         # normalize + validate the Bundesland (raises on unknown)
         object.__setattr__(self, "bundesland", normalize_bundesland(self.bundesland))
+
+    @property
+    def is_example(self) -> bool:
+        return EXAMPLE_FEATURE in self.features
 
     @property
     def price_per_sqm(self) -> float:

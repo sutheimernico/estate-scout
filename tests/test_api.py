@@ -422,3 +422,51 @@ def test_ask_forwards_unexpected_ollama_errors_as_502():
     r = _ask_with_model_error(OllamaFailed("Ollama meldet Fehler 500: boom"))
     assert r.status_code == 502
     assert "boom" in r.json()["detail"]
+
+
+CALCULATORS = [
+    "annuity",
+    "purchase_costs",
+    "affordability",
+    "yield_metrics",
+    "operating_costs",
+    "equity_return",
+]
+
+
+@pytest.mark.parametrize("calc", CALCULATORS)
+def test_openapi_documents_a_typed_request_and_response_per_calculator(calc):
+    spec = client.get("/openapi.json").json()
+    op = spec["paths"][f"/api/finance/{calc}"]["post"]
+    request_ref = op["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+    response_ref = op["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
+    request_schema = spec["components"]["schemas"][request_ref.rsplit("/", 1)[1]]
+    assert request_schema["properties"], "request model must describe its fields"
+    assert response_ref.rsplit("/", 1)[1].startswith("FinanceResponse_")
+
+
+def test_finance_validation_error_names_the_field_in_a_400():
+    r = client.post(
+        "/api/finance/annuity",
+        json={"principal": "abc", "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0},
+    )
+    assert r.status_code == 400
+    assert "principal" in r.json()["detail"]
+
+
+def test_finance_annuity_with_zinsbindung_is_typed_end_to_end():
+    body = {
+        "principal": 300_000,
+        "annual_rate_percent": 3.6,
+        "initial_repayment_percent": 2.0,
+        "zinsbindung_years": 10,
+    }
+    result = client.post("/api/finance/annuity", json=body).json()["result"]
+    assert result["zinsbindung_years"] == 10
+    assert 0 < result["restschuld_after_zinsbindung"] < 300_000
+
+
+def test_finance_without_zinsbindung_returns_nulls_not_zero():
+    body = {"principal": 300_000, "annual_rate_percent": 3.6, "initial_repayment_percent": 2.0}
+    result = client.post("/api/finance/annuity", json=body).json()["result"]
+    assert result["restschuld_after_zinsbindung"] is None

@@ -7,9 +7,11 @@ tool-calling assistant. The assistant is provided via a dependency so tests can 
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Generic, TypeVar
 
-from fastapi import Body, Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -19,6 +21,20 @@ from .assistant.factory import build_assistant
 from .assistant.tools import dispatch
 from .errors import OllamaFailed, OllamaModelMissing, OllamaTimeout, OllamaUnavailable
 from .finance.rates_live import market_rate
+from .schemas import (
+    AffordabilityIn,
+    AffordabilityOut,
+    AnnuityIn,
+    AnnuityOut,
+    EquityReturnIn,
+    EquityReturnOut,
+    OperatingCostsIn,
+    OperatingCostsOut,
+    PurchaseCostsIn,
+    PurchaseCostsOut,
+    YieldIn,
+    YieldOut,
+)
 from .scout.enrich import (
     BodenrichtwertProvider,
     Enrichment,
@@ -34,6 +50,8 @@ from .scout.store import DEFAULT_DB, ListingStore, StoredEnrichment
 
 app = FastAPI(title="estate-scout", description="Local real-estate knowledge & finance assistant.")
 
+
+T = TypeVar("T", bound=BaseModel)
 
 # Each Ollama failure needs a different fix from the user, so each gets its own status; the
 # German detail text names the model / the command. 503 keeps its legacy meaning (unreachable).
@@ -53,8 +71,10 @@ async def _ollama_error(_: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(status_code=_OLLAMA_STATUS[type(exc)], content={"detail": str(exc)})
 
 
-class FinanceResponse(BaseModel):
-    result: dict
+class FinanceResponse(BaseModel, Generic[T]):
+    """Envelope of every calculator response: the typed result plus the honesty disclaimer."""
+
+    result: T
     disclaimer: str = DISCLAIMER
 
 
@@ -207,13 +227,59 @@ def get_market_rate() -> MarketRateOut:
     )
 
 
-@app.post("/api/finance/{calc}", response_model=FinanceResponse)
-def finance(calc: str, args: Annotated[dict, Body()]) -> FinanceResponse:
+def _calculate(name: str, args: BaseModel) -> dict:
+    """Run a calculator on validated input. Domain errors (ValueError) become a 400."""
     try:
-        result = dispatch(calc, args)
+        return dispatch(name, args.model_dump(exclude_none=True))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
-    return FinanceResponse(result=result)
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Calculator input errors answer 400 with a readable text (other routes keep FastAPI's 422)."""
+    if not request.url.path.startswith("/api/finance/"):
+        return await request_validation_exception_handler(request, exc)
+    problems = "; ".join(
+        f"{'.'.join(str(p) for p in e['loc'][1:]) or 'body'}: {e['msg']}" for e in exc.errors()
+    )
+    return JSONResponse(status_code=400, content={"detail": problems})
+
+
+@app.post("/api/finance/annuity", response_model=FinanceResponse[AnnuityOut])
+def finance_annuity(body: AnnuityIn) -> FinanceResponse[AnnuityOut]:
+    return FinanceResponse(result=AnnuityOut(**_calculate("annuity", body)))
+
+
+@app.post("/api/finance/purchase_costs", response_model=FinanceResponse[PurchaseCostsOut])
+def finance_purchase_costs(body: PurchaseCostsIn) -> FinanceResponse[PurchaseCostsOut]:
+    return FinanceResponse(result=PurchaseCostsOut(**_calculate("purchase_costs", body)))
+
+
+@app.post("/api/finance/affordability", response_model=FinanceResponse[AffordabilityOut])
+def finance_affordability(body: AffordabilityIn) -> FinanceResponse[AffordabilityOut]:
+    return FinanceResponse(result=AffordabilityOut(**_calculate("affordability", body)))
+
+
+@app.post("/api/finance/yield_metrics", response_model=FinanceResponse[YieldOut])
+def finance_yield(body: YieldIn) -> FinanceResponse[YieldOut]:
+    return FinanceResponse(result=YieldOut(**_calculate("yield_metrics", body)))
+
+
+@app.post("/api/finance/operating_costs", response_model=FinanceResponse[OperatingCostsOut])
+def finance_operating_costs(body: OperatingCostsIn) -> FinanceResponse[OperatingCostsOut]:
+    return FinanceResponse(result=OperatingCostsOut(**_calculate("operating_costs", body)))
+
+
+@app.post("/api/finance/equity_return", response_model=FinanceResponse[EquityReturnOut])
+def finance_equity_return(body: EquityReturnIn) -> FinanceResponse[EquityReturnOut]:
+    return FinanceResponse(result=EquityReturnOut(**_calculate("equity_return", body)))
+
+
+@app.post("/api/finance/{calc}", include_in_schema=False)
+def finance_unknown(calc: str) -> None:
+    """Anything else under /api/finance/ is not a calculator (listing tools are not exposed)."""
+    raise HTTPException(status_code=400, detail=f"unknown calculator '{calc}'")
 
 
 @app.post("/api/ask", response_model=AskResponse)

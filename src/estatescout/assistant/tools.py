@@ -10,6 +10,8 @@ only chooses the tool and its arguments, then explains the returned numbers.
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pydantic import BaseModel
+
 from estatescout.finance.affordability import affordability
 from estatescout.finance.annuity import annuity
 from estatescout.finance.equity_return import equity_return
@@ -17,6 +19,14 @@ from estatescout.finance.operating_costs import operating_costs
 from estatescout.finance.purchase_costs import purchase_costs
 from estatescout.finance.rates_live import market_rate
 from estatescout.finance.yield_metrics import yield_metrics
+from estatescout.schemas import (
+    AffordabilityIn,
+    AnnuityIn,
+    EquityReturnIn,
+    OperatingCostsIn,
+    PurchaseCostsIn,
+    YieldIn,
+)
 from estatescout.scout.scoring import score_listing
 from estatescout.scout.scoring import to_dict as score_to_dict
 from estatescout.scout.store import ListingStore
@@ -167,6 +177,22 @@ def _run_market_rate(a: dict) -> dict:
     }
 
 
+def _model_params(model: type[BaseModel]) -> tuple[dict, list[str]]:
+    """(properties, required) for a tool spec, derived from a Pydantic input model.
+
+    ``model_json_schema()`` wraps optional fields in ``anyOf: [T, null]`` and adds titles and
+    defaults; the flat ``{type, description}`` form is what small local models handle best.
+    """
+    schema = model.model_json_schema()
+    props: dict = {}
+    for name, prop in schema["properties"].items():
+        typ = prop.get("type") or next(
+            (a["type"] for a in prop.get("anyOf", []) if a.get("type") != "null"), "number"
+        )
+        props[name] = {"type": typ, "description": prop.get("description", "")}
+    return props, list(schema.get("required", []))
+
+
 def _spec(name: str, description: str, properties: dict, required: list[str]) -> dict:
     return {
         "type": "function",
@@ -183,18 +209,9 @@ TOOLS: dict[str, Tool] = {
         spec=_spec(
             "annuity",
             "Compute a German Annuitätendarlehen: constant monthly payment, total interest, "
-            "payoff duration and the remaining debt per year.",
-            {
-                "principal": _p("loan amount in EUR"),
-                "annual_rate_percent": _p("nominal interest p.a. in %, e.g. 3.6"),
-                "initial_repayment_percent": _p("anfängliche Tilgung in %, e.g. 2.0"),
-                "annual_sondertilgung": _p("optional extra repayment EUR/year"),
-                "zinsbindung_years": _p(
-                    "optional fixed-rate period in years (Zinsbindung, e.g. 10); adds the "
-                    "Restschuld that is still owed when it ends"
-                ),
-            },
-            ["principal", "annual_rate_percent", "initial_repayment_percent"],
+            "payoff duration and the remaining debt per year. With zinsbindung_years it also "
+            "reports the Restschuld when the fixed-rate period ends.",
+            *_model_params(AnnuityIn),
         ),
         run=_run_annuity,
     ),
@@ -203,12 +220,7 @@ TOOLS: dict[str, Tool] = {
             "purchase_costs",
             "Break down German Kaufnebenkosten (Grunderwerbsteuer per Bundesland, notary, "
             "Grundbuch, Makler) and the minimum equity needed.",
-            {
-                "purchase_price": _p("property price in EUR"),
-                "bundesland": _p("e.g. 'Niedersachsen' or 'NRW'", "string"),
-                "makler_rate_percent": _p("buyer Makler share in %; omit for default, 0 for none"),
-            },
-            ["purchase_price", "bundesland"],
+            *_model_params(PurchaseCostsIn),
         ),
         run=_run_purchase_costs,
     ),
@@ -217,22 +229,7 @@ TOOLS: dict[str, Tool] = {
             "affordability",
             "Maximum affordable purchase price from net monthly income, equity, interest and "
             "repayment, accounting for ancillary costs per Bundesland.",
-            {
-                "net_monthly_income": _p("net monthly household income EUR"),
-                "equity": _p("available equity in EUR"),
-                "annual_rate_percent": _p("nominal interest p.a. in %"),
-                "initial_repayment_percent": _p("anfängliche Tilgung in %"),
-                "bundesland": _p("e.g. 'Niedersachsen' or 'NRW'", "string"),
-                "existing_obligations": _p("other monthly loan payments EUR"),
-                "running_costs_monthly": _p("estimated monthly running costs EUR"),
-            },
-            [
-                "net_monthly_income",
-                "equity",
-                "annual_rate_percent",
-                "initial_repayment_percent",
-                "bundesland",
-            ],
+            *_model_params(AffordabilityIn),
         ),
         run=_run_affordability,
     ),
@@ -241,13 +238,7 @@ TOOLS: dict[str, Tool] = {
             "yield_metrics",
             "Rental yield of a buy-to-let: gross/net yield and Kaufpreisfaktor "
             "(price-to-annual-rent multiplier).",
-            {
-                "purchase_price": _p("property price in EUR"),
-                "monthly_cold_rent": _p("monthly Kaltmiete in EUR"),
-                "annual_operating_costs": _p("non-allocable running costs EUR/year"),
-                "ancillary_costs": _p("Kaufnebenkosten in EUR"),
-            },
-            ["purchase_price", "monthly_cold_rent"],
+            *_model_params(YieldIn),
         ),
         run=_run_yield,
     ),
@@ -256,12 +247,7 @@ TOOLS: dict[str, Tool] = {
             "operating_costs",
             "Estimate a landlord's annual Bewirtschaftungskosten (Instandhaltung, Verwaltung, "
             "Mietausfallwagnis) from config-anchored practice values.",
-            {
-                "living_area_sqm": _p("living area in m²"),
-                "monthly_cold_rent": _p("monthly Kaltmiete in EUR"),
-                "units": _p("number of residential units, default 1"),
-            },
-            ["living_area_sqm", "monthly_cold_rent"],
+            *_model_params(OperatingCostsIn),
         ),
         run=_run_operating_costs,
     ),
@@ -271,22 +257,7 @@ TOOLS: dict[str, Tool] = {
             "First-year Cashflow-Rendite vor Steuern (cash-on-cash) of a financed buy-to-let: "
             "cashflow after debt service (interest + Tilgung) relative to invested equity, plus "
             "the same figure including the year-1 Tilgung as wealth building. No taxes or AfA.",
-            {
-                "purchase_price": _p("property price in EUR"),
-                "monthly_cold_rent": _p("monthly Kaltmiete in EUR"),
-                "equity": _p("invested equity in EUR"),
-                "annual_rate_percent": _p("nominal interest p.a. in %, e.g. 3.6"),
-                "initial_repayment_percent": _p("anfängliche Tilgung in %, e.g. 2.0"),
-                "ancillary_costs": _p("Kaufnebenkosten in EUR"),
-                "annual_operating_costs": _p("Bewirtschaftungskosten EUR/year"),
-            },
-            [
-                "purchase_price",
-                "monthly_cold_rent",
-                "equity",
-                "annual_rate_percent",
-                "initial_repayment_percent",
-            ],
+            *_model_params(EquityReturnIn),
         ),
         run=_run_equity_return,
     ),
@@ -324,7 +295,7 @@ def _clean_args(name: str, tool: Tool, args: dict) -> dict:
         if value is None:
             continue  # explicit null == absent; required-check below reports it
         expected = props.get(key, {}).get("type")
-        if expected == "number":
+        if expected in ("number", "integer"):
             if isinstance(value, bool):
                 raise ValueError(f"tool '{name}' argument '{key}' must be a number, got {value!r}")
             if not isinstance(value, int | float):

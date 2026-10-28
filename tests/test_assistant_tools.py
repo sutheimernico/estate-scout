@@ -169,3 +169,15 @@ def test_annuity_tool_without_zinsbindung_has_no_restschuld_fields():
         {"principal": 300_000, "annual_rate_percent": 3.6, "initial_repayment_percent": 2},
     )
     assert "restschuld_after_zinsbindung" not in out
+
+
+def test_tool_specs_are_derived_from_the_api_input_models():
+    from estatescout.schemas import AnnuityIn
+
+    params = TOOLS["annuity"].spec["function"]["parameters"]
+    assert set(params["properties"]) == set(AnnuityIn.model_fields)
+    assert params["required"] == ["principal", "annual_rate_percent", "initial_repayment_percent"]
+    assert params["properties"]["zinsbindung_years"]["type"] == "integer"
+    # optional fields are flattened: no anyOf/null wrapper for the model to trip over
+    assert all("anyOf" not in p for p in params["properties"].values())
+    assert params["properties"]["principal"]["description"]

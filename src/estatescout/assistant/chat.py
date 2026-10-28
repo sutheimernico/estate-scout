@@ -12,6 +12,7 @@ import httpx
 # The `as`-alias re-export keeps `from estatescout.assistant.chat import OllamaUnavailable`
 # working for existing callers (and tells ruff the import is intentional, not unused).
 from estatescout.errors import OllamaUnavailable as OllamaUnavailable
+from estatescout.ollama_http import post_json
 
 
 @runtime_checkable
@@ -29,12 +30,12 @@ class OllamaChat:
         model: str | None = None,
         host: str | None = None,
         client: httpx.Client | None = None,
-        timeout: float = 120.0,
+        timeout: float | None = None,
     ):
-        self.model = model or os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+        self.model = model or os.getenv("OLLAMA_MODEL") or "qwen2.5:7b"
         self.host = (host or os.getenv("OLLAMA_HOST") or "http://127.0.0.1:11434").rstrip("/")
         self._client = client
-        self._timeout = timeout
+        self._timeout = timeout or float(os.getenv("OLLAMA_TIMEOUT") or 180)
 
     def chat(self, messages: list[dict], tools: list[dict] | None = None) -> dict:
         client = self._client or httpx.Client(timeout=self._timeout)
@@ -42,12 +43,16 @@ class OllamaChat:
             payload: dict = {"model": self.model, "messages": messages, "stream": False}
             if tools:
                 payload["tools"] = tools
-            try:
-                resp = client.post(f"{self.host}/api/chat", json=payload)
-            except httpx.HTTPError as e:  # ConnectError, timeout, etc.
-                raise OllamaUnavailable(f"Ollama not reachable at {self.host}: {e}") from e
-            resp.raise_for_status()
-            return resp.json()["message"]
+            body = post_json(
+                client,
+                f"{self.host}/api/chat",
+                payload,
+                model=self.model,
+                host=self.host,
+                timeout=self._timeout,
+            )
+            message: dict = body["message"]
+            return message
         finally:
             if self._client is None:
                 client.close()

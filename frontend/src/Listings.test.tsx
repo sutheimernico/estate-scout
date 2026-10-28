@@ -97,8 +97,8 @@ describe("Listings", () => {
 
   it("surfaces the German Ollama hint when the backend answers 503", async () => {
     stubRoutes([
-      [/\/enrich$/, () => json({ detail: "down" }, 503)],
-      [/\/score/, () => json({ detail: "down" }, 503)],
+      [/\/enrich$/, () => json({}, 503)],
+      [/\/score/, () => json({}, 503)],
       [/\/api\/listings$/, () => json(oneListing)],
     ]);
     render(<Listings />);

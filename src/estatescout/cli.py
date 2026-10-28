@@ -168,18 +168,21 @@ def render_response(resp) -> str:
 
 def ask(question: str) -> None:
     """Ask a real-estate question; the assistant uses RAG for knowledge and tools for numbers."""
-    from .assistant.chat import OllamaUnavailable
     from .assistant.factory import build_assistant
+    from .errors import OllamaFailed, OllamaModelMissing, OllamaTimeout, OllamaUnavailable
 
     store = ListingStore(DEFAULT_DB)
     try:
         resp = build_assistant(store).ask(question)
-    except OllamaUnavailable:
+    except OllamaUnavailable as err:
         typer.echo(
-            "Ollama ist nicht erreichbar. Starte 'ollama serve' und ziehe ein Modell "
-            "(z.B. 'ollama pull qwen2.5:7b' + 'ollama pull nomic-embed-text').\n"
+            f"{err}\nZiehe bei Bedarf die Modelle: 'ollama pull qwen2.5:7b' und "
+            "'ollama pull nomic-embed-text'.\n"
             "Die Rechner funktionieren ohne LLM: 'uv run python scripts/finance.py --help'."
         )
+        raise typer.Exit(code=1) from None
+    except (OllamaModelMissing, OllamaTimeout, OllamaFailed) as err:
+        typer.echo(str(err))
         raise typer.Exit(code=1) from None
     finally:
         store.close()

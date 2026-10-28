@@ -62,3 +62,25 @@ def test_ollama_embedder_maps_connect_error_to_unavailable():
     client = httpx.Client(transport=httpx.MockTransport(raise_connect))
     with pytest.raises(OllamaUnavailable):
         OllamaEmbedder(client=client).embed(["hallo"])
+
+
+def test_ollama_embedder_missing_model_is_a_named_error_not_a_bare_500():
+    from estatescout.errors import OllamaModelMissing
+
+    def handler(request):
+        return httpx.Response(404, json={"error": 'model "nomic-embed-text" not found'})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    with pytest.raises(OllamaModelMissing, match="ollama pull nomic-embed-text"):
+        OllamaEmbedder(model="nomic-embed-text", client=client).embed(["hallo"])
+
+
+def test_ollama_embedder_timeout_maps_to_timeout_error():
+    from estatescout.errors import OllamaTimeout
+
+    def handler(request):
+        raise httpx.ReadTimeout("slow", request=request)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    with pytest.raises(OllamaTimeout):
+        OllamaEmbedder(client=client).embed(["hallo"])

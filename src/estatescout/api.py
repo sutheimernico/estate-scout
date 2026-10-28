@@ -9,14 +9,15 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Body, Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .assistant.assistant import DISCLAIMER, Assistant
-from .assistant.chat import OllamaUnavailable
 from .assistant.factory import build_assistant
 from .assistant.tools import dispatch
+from .errors import OllamaFailed, OllamaModelMissing, OllamaTimeout, OllamaUnavailable
 from .finance.rates_live import market_rate
 from .scout.enrich import (
     BodenrichtwertProvider,
@@ -32,6 +33,24 @@ from .scout.scoring import to_dict as score_to_dict
 from .scout.store import DEFAULT_DB, ListingStore, StoredEnrichment
 
 app = FastAPI(title="estate-scout", description="Local real-estate knowledge & finance assistant.")
+
+
+# Each Ollama failure needs a different fix from the user, so each gets its own status; the
+# German detail text names the model / the command. 503 keeps its legacy meaning (unreachable).
+_OLLAMA_STATUS: dict[type[Exception], int] = {
+    OllamaUnavailable: 503,
+    OllamaModelMissing: 424,
+    OllamaTimeout: 504,
+    OllamaFailed: 502,
+}
+
+
+@app.exception_handler(OllamaUnavailable)
+@app.exception_handler(OllamaModelMissing)
+@app.exception_handler(OllamaTimeout)
+@app.exception_handler(OllamaFailed)
+async def _ollama_error(_: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(status_code=_OLLAMA_STATUS[type(exc)], content={"detail": str(exc)})
 
 
 class FinanceResponse(BaseModel):
@@ -152,9 +171,9 @@ def get_assistant() -> Iterator[Assistant]:
     store = ListingStore(DEFAULT_DB)
     try:
         assistant = build_assistant(store)
-    except OllamaUnavailable as e:
+    except Exception:
         store.close()
-        raise HTTPException(status_code=503, detail=str(e)) from None
+        raise
     try:
         yield assistant
     finally:
@@ -197,10 +216,7 @@ def finance(calc: str, args: Annotated[dict, Body()]) -> FinanceResponse:
 
 @app.post("/api/ask", response_model=AskResponse)
 def ask(req: AskRequest, assistant: Annotated[Assistant, Depends(get_assistant)]) -> AskResponse:
-    try:
-        resp = assistant.ask(req.question)
-    except OllamaUnavailable as e:
-        raise HTTPException(status_code=503, detail=str(e)) from None
+    resp = assistant.ask(req.question)
     return AskResponse(
         answer=resp.answer,
         tool_calls=resp.tool_calls,

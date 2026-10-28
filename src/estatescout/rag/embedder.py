@@ -12,7 +12,7 @@ from typing import Protocol, runtime_checkable
 
 import httpx
 
-from estatescout.errors import OllamaUnavailable
+from estatescout.ollama_http import post_json
 
 _TOKEN = re.compile(r"\w+", re.UNICODE)
 
@@ -146,7 +146,7 @@ class OllamaEmbedder:
         client: httpx.Client | None = None,
         timeout: float = 60.0,
     ):
-        self.model = model or os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+        self.model = model or os.getenv("OLLAMA_EMBED_MODEL") or "nomic-embed-text"
         self.host = (host or os.getenv("OLLAMA_HOST") or "http://127.0.0.1:11434").rstrip("/")
         self._client = client
         self._timeout = timeout
@@ -154,18 +154,17 @@ class OllamaEmbedder:
     def embed(self, texts: list[str]) -> list[list[float]]:
         client = self._client or httpx.Client(timeout=self._timeout)
         try:
-            out: list[list[float]] = []
-            for text in texts:
-                try:
-                    resp = client.post(
-                        f"{self.host}/api/embeddings",
-                        json={"model": self.model, "prompt": text},
-                    )
-                except httpx.HTTPError as err:  # ConnectError, timeout, etc.
-                    raise OllamaUnavailable(f"Ollama not reachable at {self.host}: {err}") from err
-                resp.raise_for_status()
-                out.append(resp.json()["embedding"])
-            return out
+            return [
+                post_json(
+                    client,
+                    f"{self.host}/api/embeddings",
+                    {"model": self.model, "prompt": text},
+                    model=self.model,
+                    host=self.host,
+                    timeout=self._timeout,
+                )["embedding"]
+                for text in texts
+            ]
         finally:
             if self._client is None:
                 client.close()

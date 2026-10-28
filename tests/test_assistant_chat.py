@@ -43,3 +43,47 @@ def test_ollama_chat_maps_connection_error_to_unavailable():
     model = OllamaChat(host="http://h:11434", client=client)
     with pytest.raises(OllamaUnavailable):
         model.chat([{"role": "user", "content": "q"}])
+
+
+def _chat_with(handler) -> OllamaChat:
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    return OllamaChat(model="qwen2.5:7b", host="http://h:11434", client=client, timeout=7)
+
+
+def test_ollama_chat_unreachable_message_names_the_host():
+    def handler(request):
+        raise httpx.ConnectError("refused", request=request)
+
+    with pytest.raises(OllamaUnavailable, match="http://h:11434"):
+        _chat_with(handler).chat([{"role": "user", "content": "q"}])
+
+
+def test_ollama_chat_timeout_is_not_reported_as_unreachable():
+    from estatescout.errors import OllamaTimeout
+
+    def handler(request):
+        raise httpx.ReadTimeout("slow", request=request)
+
+    with pytest.raises(OllamaTimeout, match="zu langsam") as info:
+        _chat_with(handler).chat([{"role": "user", "content": "q"}])
+    assert not isinstance(info.value, OllamaUnavailable)
+
+
+def test_ollama_chat_missing_model_names_model_and_pull_command():
+    from estatescout.errors import OllamaModelMissing
+
+    def handler(request):
+        return httpx.Response(404, json={"error": 'model "qwen2.5:7b" not found, try pulling it'})
+
+    with pytest.raises(OllamaModelMissing, match="ollama pull qwen2.5:7b"):
+        _chat_with(handler).chat([{"role": "user", "content": "q"}])
+
+
+def test_ollama_chat_other_error_status_carries_ollama_text():
+    from estatescout.errors import OllamaFailed
+
+    def handler(request):
+        return httpx.Response(500, json={"error": "out of memory"})
+
+    with pytest.raises(OllamaFailed, match="out of memory"):
+        _chat_with(handler).chat([{"role": "user", "content": "q"}])

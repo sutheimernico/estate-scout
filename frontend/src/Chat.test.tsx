@@ -69,12 +69,26 @@ describe("Chat", () => {
   });
 
   it("shows the German Ollama hint on 503", async () => {
-    stubFetch({ detail: "down" }, 503);
+    stubFetch({}, 503);
     render(<Chat />);
     submitQuestion("hallo?");
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(/Ollama ist nicht erreichbar/),
     );
+  });
+
+  it("shows the backend's actionable text for a missing model and a timeout", async () => {
+    stubFetch({ detail: "Das Modell „bge-m3“ fehlt in Ollama. Installiere es mit: ollama pull bge-m3" }, 424);
+    render(<Chat />);
+    submitQuestion("hallo?");
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/ollama pull bge-m3/));
+  });
+
+  it("shows the slow-model text on a 504", async () => {
+    stubFetch({ detail: "Das Modell „qwen2.5:7b“ antwortet zu langsam" }, 504);
+    render(<Chat />);
+    submitQuestion("hallo?");
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/antwortet zu langsam/));
   });
 
   it("shows a thinking indicator while waiting", async () => {

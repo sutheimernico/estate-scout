@@ -384,3 +384,41 @@ def test_market_rate_endpoint_labels_its_origin(monkeypatch):
     assert body["as_of"] == "2026-07"
     assert body["origin"] == "bundesbank_live"
     assert body["disclaimer"]
+
+
+def _ask_with_model_error(error: Exception):
+    class BrokenModel:
+        def chat(self, messages, tools=None):
+            raise error
+
+    app.dependency_overrides[get_assistant] = lambda: Assistant(BrokenModel())
+    try:
+        return client.post("/api/ask", json={"question": "hallo"})
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_ask_names_the_missing_model_and_the_pull_command():
+    from estatescout.errors import OllamaModelMissing
+
+    r = _ask_with_model_error(OllamaModelMissing("bge-m3"))
+    assert r.status_code == 424
+    assert "bge-m3" in r.json()["detail"]
+    assert "ollama pull bge-m3" in r.json()["detail"]
+
+
+def test_ask_reports_a_timeout_as_slow_model_not_as_unreachable():
+    from estatescout.errors import OllamaTimeout
+
+    r = _ask_with_model_error(OllamaTimeout("qwen2.5:7b", 180))
+    assert r.status_code == 504
+    assert "zu langsam" in r.json()["detail"]
+    assert "nicht erreichbar" not in r.json()["detail"]
+
+
+def test_ask_forwards_unexpected_ollama_errors_as_502():
+    from estatescout.errors import OllamaFailed
+
+    r = _ask_with_model_error(OllamaFailed("Ollama meldet Fehler 500: boom"))
+    assert r.status_code == 502
+    assert "boom" in r.json()["detail"]

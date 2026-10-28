@@ -156,9 +156,6 @@ export interface NewListing {
 }
 
 async function errorMessage(res: Response): Promise<string> {
-  if (res.status === 503) {
-    return "Ollama ist nicht erreichbar. Starte den lokalen Server (ollama serve) und ziehe ein Modell.";
-  }
   try {
     const body: unknown = await res.json();
     if (
@@ -170,6 +167,9 @@ async function errorMessage(res: Response): Promise<string> {
     }
   } catch {
     // non-JSON error body — fall through to the generic message
+  }
+  if (res.status === 503) {
+    return "Ollama ist nicht erreichbar. Starte den lokalen Server (ollama serve) und ziehe ein Modell.";
   }
   return `Fehler ${res.status}`;
 }

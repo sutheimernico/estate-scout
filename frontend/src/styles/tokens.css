@@ -1,0 +1,29 @@
+/* Zeichenblatt design tokens. See docs/design/redesign-2026-10.md. */
+:root {
+  color-scheme: light;
+
+  --paper: #e7ebe6; /* Pauspapier */
+  --sheet: #f6f7f3; /* Zeichenblatt */
+  --sheet-2: #eef1ec; /* inset wells on a sheet */
+  --ink: #142029; /* Tusche */
+  --ink-2: #4a5a63;
+  --rule: #c5ccc5;
+  --rule-strong: #9aa59f;
+  --red: #c0301c; /* Katasterrot */
+  --red-wash: #f3dcd6;
+  --green: #3e6b4f; /* Flurgrün */
+  --green-wash: #dbe7dd;
+  --ochre: #8a5e08;
+  --ochre-wash: #f0e3c4;
+
+  --font-text: "Barlow", system-ui, sans-serif;
+  --font-num: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --font-cmd: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --gutter: clamp(16px, 3.2vw, 40px);
+  --radius: 4px; /* drawing sheets have corners, not pills */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --t-fast: 150ms;
+  --t-med: 260ms;
+  --t-slow: 400ms;
+}

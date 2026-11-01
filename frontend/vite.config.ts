@@ -8,6 +8,6 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   build: { outDir: "dist" },
-  server: { proxy: { "/api": "http://127.0.0.1:8000" } },
+  server: { proxy: { "/api": `http://127.0.0.1:${process.env.API_PORT ?? 8000}` } },
   test: { environment: "jsdom", globals: true, setupFiles: "./src/setupTests.ts" },
 });

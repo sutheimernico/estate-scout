@@ -215,6 +215,17 @@ export interface NewListing {
   source_url?: string;
 }
 
+// Carries the HTTP status (0 = server unreachable) so the UI can map it to a helpful state
+// instead of parsing message text.
+export class ApiError extends Error {
+  readonly status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function errorMessage(res: Response): Promise<string> {
   try {
     const body: unknown = await res.json();
@@ -240,9 +251,12 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     res = await fetch(url, init);
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err; // caller cancelled
-    throw new Error("API nicht erreichbar — läuft der Server (uv run uvicorn estatescout.api:app)?");
+    throw new ApiError(
+      "API nicht erreichbar — läuft der Server (uv run uvicorn estatescout.api:app)?",
+      0,
+    );
   }
-  if (!res.ok) throw new Error(await errorMessage(res));
+  if (!res.ok) throw new ApiError(await errorMessage(res), res.status);
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
@@ -259,8 +273,9 @@ export function ask(question: string, signal?: AbortSignal): Promise<AskResponse
 export function finance(
   calc: string,
   args: Record<string, unknown>,
+  signal?: AbortSignal,
 ): Promise<{ result: Record<string, unknown>; disclaimer: string }> {
-  return request(`/api/finance/${calc}`, asJson(args));
+  return request(`/api/finance/${calc}`, { ...asJson(args), signal });
 }
 
 export function listListings(): Promise<Listing[]> {

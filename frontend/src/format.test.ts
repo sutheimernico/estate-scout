@@ -1,0 +1,23 @@
+import { describe, expect, it } from "vitest";
+
+import { bindUnits, eur, eurCents, num, pct } from "./format";
+
+const nbsp = (s: string) => s.replace(/\s/g, " "); // Intl uses (narrow) no-break spaces
+
+describe("de-DE formatting", () => {
+  it("uses dots for thousands and commas for decimals", () => {
+    expect(nbsp(eur(300000))).toBe("300.000 €");
+    expect(nbsp(eurCents(1399.94))).toBe("1.399,94 €");
+    expect(num(28.7)).toBe("28,7");
+    expect(pct(3.6)).toBe("3,6 %");
+  });
+});
+
+describe("bindUnits", () => {
+  it("glues numbers to their unit with a no-break space", () => {
+    expect(bindUnits("bei 300.000 € und 3,6 % für 10 Jahre")).toBe("bei 300.000 € und 3,6 % für 10 Jahre");
+  });
+  it("leaves other text alone", () => {
+    expect(bindUnits("Zinsbindung in Euro")).toBe("Zinsbindung in Euro");
+  });
+});

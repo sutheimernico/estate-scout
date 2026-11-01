@@ -61,18 +61,63 @@ function stubRoutes(routes: Array<[RegExp, () => Response]>) {
   );
 }
 
+describe("Listings capture and delete", () => {
+  it("validates the capture form with German messages and saves German number input", async () => {
+    const bodies: unknown[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        if (init?.method === "POST") {
+          bodies.push(JSON.parse(String(init.body)));
+          return json({ ...oneListing[0] }, 201);
+        }
+        return json([]);
+      }),
+    );
+    render(<Listings />);
+    await screen.findByText("Noch keine Objekte gespeichert");
+    fireEvent.click(screen.getByRole("button", { name: /erfassen/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Objekt speichern" }));
+    expect(await screen.findByText(/Kaufpreis: bitte eine Zahl/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Kaufpreis/), { target: { value: "300.000" } });
+    fireEvent.change(screen.getByLabelText(/Wohnfläche/), { target: { value: "100,5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Objekt speichern" }));
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    expect(bodies[0]).toMatchObject({ price: 300000, living_area_sqm: 100.5, object_type: "wohnung" });
+  });
+
+  it("asks before deleting and deletes only after confirmation", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        calls.push(`${init?.method ?? "GET"} ${url}`);
+        if (/\/score/.test(url)) return json({ detail: "enrich first" }, 409);
+        if (init?.method === "DELETE") return new Response(null, { status: 204 });
+        return json(oneListing);
+      }),
+    );
+    render(<Listings />);
+    fireEvent.click(await screen.findByRole("button", { name: /Bewertung von Objekt 1/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "Löschen" }));
+    expect(calls.some((c) => c.startsWith("DELETE"))).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Ja, löschen" }));
+    await waitFor(() => expect(calls.some((c) => c.startsWith("DELETE"))).toBe(true));
+  });
+});
+
 describe("Listings", () => {
-  it("renders fetched listings in the table", async () => {
+  it("renders fetched listings as tiles", async () => {
     stubRoutes([[/\/api\/listings$/, () => json(oneListing)]]);
     render(<Listings />);
     expect(await screen.findByText("Lingen")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Objekt 1 löschen" })).toBeInTheDocument();
+    expect(screen.getByText("300.000 €")).toBeInTheDocument();
   });
 
   it("shows the empty state when there are no listings", async () => {
     stubRoutes([[/\/api\/listings$/, () => json([])]]);
     render(<Listings />);
-    expect(await screen.findByText(/Noch keine Objekte gespeichert/)).toBeInTheDocument();
+    expect(await screen.findByText("Noch keine Objekte gespeichert")).toBeInTheDocument();
   });
 
   it("shows the score badge once a listing is scored", async () => {
@@ -80,6 +125,7 @@ describe("Listings", () => {
     stubRoutes([[/\/api\/listings$/, () => json(scored)]]);
     render(<Listings />);
     expect(await screen.findByText("59")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Datenlage 4 von 4" })).toBeInTheDocument();
   });
 
   it("shows Bundesland and object type as labels, never as raw codes", async () => {
@@ -89,12 +135,14 @@ describe("Listings", () => {
     expect(screen.getByText("Wohnung")).toBeInTheDocument();
     expect(screen.queryByText("wohnung")).toBeNull();
     expect(screen.queryByText("NI")).toBeNull();
+    expect(screen.queryByText("grundstueck")).toBeNull();
   });
 
   it("offers the Bundesland as a select with all 16 states", async () => {
     stubRoutes([[/\/api\/listings$/, () => json([])]]);
     render(<Listings />);
-    await screen.findByText(/Noch keine Objekte gespeichert/);
+    await screen.findByText("Noch keine Objekte gespeichert");
+    fireEvent.click(screen.getByRole("button", { name: /erfassen/ }));
     const select = screen.getByLabelText("Bundesland") as HTMLSelectElement;
     expect(select.options).toHaveLength(16);
   });
@@ -107,13 +155,13 @@ describe("Listings", () => {
       [/\/api\/listings$/, () => json(oneListing)],
     ]);
     render(<Listings />);
-    const row = (await screen.findByText("Lingen")).closest("tr")!;
-    expect(within(row).getByText("—")).toBeInTheDocument();
+    const tile = (await screen.findByText("Lingen")).closest("li")!;
+    expect(within(tile).getByText("—")).toBeInTheDocument();
     fireEvent.click(await screen.findByRole("button", { name: /Bewertung von Objekt 1/ }));
     fireEvent.click(await screen.findByRole("button", { name: "Anreichern + bewerten" }));
     await screen.findByText("59/100");
-    expect(within(row).getByText("59")).toBeInTheDocument();
-    expect(within(row).queryByText("—")).toBeNull();
+    expect(within(tile).getByText("59")).toBeInTheDocument();
+    expect(within(tile).queryByText("—")).toBeNull();
   });
 
   it("scores the example object with its rent and never calls enrich", async () => {
@@ -162,6 +210,8 @@ describe("Listings", () => {
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(/Ollama ist nicht erreichbar/),
     );
+    // the error shows inside the open drawer, not behind its scrim
+    expect(screen.getByRole("dialog").contains(screen.getByRole("alert"))).toBe(true);
   });
 
   it("treats a 409 (never enriched) as an offer to enrich, not an error", async () => {

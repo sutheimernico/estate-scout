@@ -6,8 +6,10 @@
 model: it picks the calculator, tested Python does the maths, and a code-level guard flags any
 figure in the answer that no calculator produced.**
 
-<!-- hero: docs/media/hero.png is added together with the UI redesign -->
-<!-- ![estate-scout: chat with calculator cards](docs/media/hero.png) -->
+![estate-scout Rechner: live annuity result with the Restschuld curve and the Zinsbindung dimensioned](docs/media/hero.png)
+
+<sub>The Rechner, recalculating while you type. Screenshots are taken from the running app; the
+chat and object views are in [docs/media](docs/media).</sub>
 
 Runs entirely on your machine via [Ollama](https://ollama.com) — no paid APIs, no listing scraping.
 Not tax, investment or financing advice.

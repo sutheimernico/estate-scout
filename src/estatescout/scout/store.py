@@ -89,7 +89,9 @@ class ListingStore:
         # A fresh clone has no data/ dir (it is gitignored); create it instead of crashing.
         if str(path) != ":memory:":
             Path(path).parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(path))
+        # FastAPI resolves the per-request store in one worker thread and runs the endpoint in
+        # another; the connection is never used concurrently, so crossing threads is safe.
+        self._conn = sqlite3.connect(str(path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._conn.execute(_CREATE)
         _migrate(self._conn)

@@ -99,3 +99,22 @@ def test_migrates_a_legacy_v0_database(tmp_path):
     assert store.set_enrichment(listing_id, _enrichment()) is True
     assert store.get_enrichment(listing_id).enrichment.bodenrichtwert_eur_per_sqm == 420.0
     store.close()
+
+
+def test_store_on_disk_can_be_used_from_another_thread(tmp_path):
+    # FastAPI opens the per-request store and runs the endpoint in different worker threads
+    import threading
+
+    store = ListingStore(tmp_path / "listings.db")
+    errors: list[BaseException] = []
+
+    def read() -> None:
+        try:
+            store.enrichment_map()
+        except BaseException as exc:  # noqa: BLE001 - the test reports whatever went wrong
+            errors.append(exc)
+
+    thread = threading.Thread(target=read)
+    thread.start()
+    thread.join()
+    assert errors == []

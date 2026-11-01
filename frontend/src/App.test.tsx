@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AmortizationTable } from "./AmortizationTable";
 import { App } from "./App";
-import { CalcResultCard } from "./CalcResultCard";
+import { CalcResult } from "./CalcResult";
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -23,7 +23,7 @@ afterEach(() => {
 // empty state keeps that async update inside act() instead of leaking after the test.
 async function renderApp() {
   render(<App />);
-  await screen.findByText(/Noch keine Objekte gespeichert/);
+  await screen.findByText("Noch keine Objekte gespeichert");
 }
 
 describe("App", () => {
@@ -35,13 +35,14 @@ describe("App", () => {
 
   it("shows an empty-state prompt before any message", async () => {
     await renderApp();
-    expect(screen.getByText(/Frag mich etwas zu Kauf/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Der Assistent erklärt. Der Code rechnet." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Monatsrate berechnen/ })).toBeInTheDocument();
   });
 });
 
 describe("AmortizationTable", () => {
-  it("formats the summary and schedule numbers", () => {
-    render(
+  it("lists the remaining debt per year in de-DE and marks the end of the Zinsbindung", () => {
+    const { container } = render(
       <AmortizationTable
         result={{
           monthly_payment: 1400,
@@ -49,41 +50,26 @@ describe("AmortizationTable", () => {
           total_paid: 481209.86,
           months_to_payoff: 344,
           years_to_payoff: 28.7,
-          remaining_debt_by_year: [{ year: 1, remaining_debt: 293900 }],
-          zinsbindung_years: 10,
-          restschuld_after_zinsbindung: 215432.1,
+          remaining_debt_by_year: [
+            { year: 1, remaining_debt: 293900 },
+            { year: 2, remaining_debt: 287700.5 },
+          ],
+          zinsbindung_years: 2,
+          restschuld_after_zinsbindung: 287700.5,
           interest_during_zinsbindung: 98765.4,
         }}
       />,
     );
-    expect(screen.getByText("Annuitätendarlehen")).toBeInTheDocument();
-    expect(screen.getByText("1.400,00 €")).toBeInTheDocument(); // computed rate keeps its cents
-    expect(screen.getByText("28,7 Jahre")).toBeInTheDocument(); // de-DE decimal comma
-    expect(screen.getByText("Restschuld nach 10 Jahren Zinsbindung")).toBeInTheDocument();
-    expect(screen.getByText("215.432 €")).toBeInTheDocument();
-  });
-
-  it("omits the Zinsbindung rows when none was requested", () => {
-    render(
-      <AmortizationTable
-        result={{
-          monthly_payment: 1400,
-          total_interest: 1,
-          total_paid: 2,
-          months_to_payoff: 12,
-          years_to_payoff: 1,
-          remaining_debt_by_year: [{ year: 1, remaining_debt: 0 }],
-        }}
-      />,
-    );
-    expect(screen.queryByText(/Zinsbindung/)).toBeNull();
+    expect(screen.getByText("293.900 €")).toBeInTheDocument();
+    expect(screen.getByText("287.701 €")).toBeInTheDocument();
+    expect(container.querySelector("tr.mark")).toHaveTextContent("287.701 €");
   });
 });
 
-describe("CalcResultCard", () => {
+describe("CalcResult", () => {
   it("renders a purchase-costs breakdown", () => {
     render(
-      <CalcResultCard
+      <CalcResult
         calc={{
           kind: "purchase_costs",
           result: {
@@ -100,13 +86,16 @@ describe("CalcResultCard", () => {
         }}
       />,
     );
-    expect(screen.getByText("Kaufnebenkosten (Nordrhein-Westfalen)")).toBeInTheDocument();
-    expect(screen.getByText(/19\.500/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Kaufnebenkosten" })).toBeInTheDocument();
+    expect(screen.getByText("Nordrhein-Westfalen")).toBeInTheDocument();
+    // legend of the split bar and the facts list both carry the figure
+    expect(screen.getAllByText("Grunderwerbsteuer").length).toBe(2);
+    expect(screen.getAllByText("19.500 €").length).toBe(2);
   });
 
   it("renders an equity-return card", () => {
     render(
-      <CalcResultCard
+      <CalcResult
         calc={{
           kind: "equity_return",
           result: {
@@ -121,7 +110,7 @@ describe("CalcResultCard", () => {
         }}
       />,
     );
-    expect(screen.getByText("Cashflow-Rendite vor Steuern (Jahr 1)")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cashflow-Rendite vor Steuern" })).toBeInTheDocument();
     expect(screen.getByText("0,8 %")).toBeInTheDocument();
     expect(screen.getByText("Rendite inkl. Tilgung")).toBeInTheDocument();
   });

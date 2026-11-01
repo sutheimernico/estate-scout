@@ -50,7 +50,8 @@ describe("Chat", () => {
     render(<Chat />);
     submitQuestion("Was zahle ich monatlich?");
     expect(await screen.findByText("Deine Monatsrate liegt bei 1.400 €.")).toBeInTheDocument();
-    expect(screen.getByText("Annuitätendarlehen")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Annuitätendarlehen" })).toBeInTheDocument();
+    expect(screen.getByText(/Zahl stammt aus Werkzeug/)).toHaveTextContent("annuity");
   });
 
   it("warns when the answer quotes a number no tool produced", async () => {
@@ -75,6 +76,8 @@ describe("Chat", () => {
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(/Ollama ist nicht erreichbar/),
     );
+    expect(screen.getByText("ollama serve")).toBeInTheDocument(); // the fix, copyable
+    expect(screen.getByRole("button", { name: "Nochmal fragen" })).toBeInTheDocument();
   });
 
   it("shows the backend's actionable text for a missing model and a timeout", async () => {
@@ -99,14 +102,42 @@ describe("Chat", () => {
     );
     render(<Chat />);
     submitQuestion("dauert das?");
-    expect(await screen.findByText(/denkt nach/)).toBeInTheDocument();
+    expect(await screen.findByText(/Das Modell rechnet und liest nach/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Abbrechen" })).toBeInTheDocument();
     resolve(
       new Response(JSON.stringify(askResponse), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),
     );
-    await waitFor(() => expect(screen.queryByText(/denkt nach/)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(/Das Modell rechnet und liest nach/)).not.toBeInTheDocument());
+  });
+});
+
+describe("Chat extras", () => {
+  it("starts a conversation from a starter question", async () => {
+    stubFetch(askResponse);
+    render(<Chat />);
+    fireEvent.click(screen.getByRole("button", { name: /Kaufnebenkosten/ }));
+    expect(await screen.findByText("Deine Monatsrate liegt bei 1.400 €.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Der Assistent erklärt/ })).toBeNull();
+  });
+
+  it("lists every tool call in the Rechenspur", async () => {
+    stubFetch(askResponse);
+    render(<Chat />);
+    submitQuestion("Was zahle ich monatlich?");
+    const trace = await screen.findByRole("complementary", { name: "Rechenspur" });
+    expect(trace).toHaveTextContent("Annuitätendarlehen");
+    expect(trace).toHaveTextContent("300.000");
+  });
+
+  it("names the note a source came from, not its file path", async () => {
+    stubFetch({ ...askResponse, sources: ["03-finanzierung.md"] });
+    render(<Chat />);
+    submitQuestion("Was zahle ich monatlich?");
+    expect(await screen.findByText("Finanzierung")).toBeInTheDocument();
+    expect(screen.queryByText(/03-finanzierung/)).toBeNull();
   });
 });
 
@@ -120,7 +151,7 @@ describe("ToolTrace in the chat", () => {
     expect(summary.closest("details")).not.toHaveAttribute("open");
     fireEvent.click(summary);
     expect(summary.closest("details")).toHaveAttribute("open");
-    expect(screen.getByText("annuity")).toBeInTheDocument();
+    expect(screen.getAllByText("annuity").length).toBeGreaterThan(0);
     expect(screen.getByText(/"monthly_payment":1400/)).toBeInTheDocument();
   });
 });

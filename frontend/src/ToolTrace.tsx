@@ -2,6 +2,7 @@
 // arguments it passed and the exact result it got back. Collapsed by default.
 
 import { type ToolCall } from "./api";
+import { toolTitle } from "./chatView";
 
 export function ToolTrace({ calls }: { calls: ToolCall[] }) {
   if (calls.length === 0) return null;
@@ -11,7 +12,9 @@ export function ToolTrace({ calls }: { calls: ToolCall[] }) {
       <summary>Werkzeuge ({calls.length})</summary>
       {calls.map((call, i) => (
         <div className="tool-call" key={`${call.name}-${i}`}>
-          <code className="tool-name">{call.name}</code>
+          <p className="tool-head">
+            {toolTitle(call.name)} <code className="tool-name">{call.name}</code>
+          </p>
           <div className="tool-io">
             <span>Eingaben</span>
             <code>{JSON.stringify(call.args)}</code>

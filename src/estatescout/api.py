@@ -43,6 +43,7 @@ from .scout.enrich import (
     enrich,
 )
 from .scout.enrich import to_dict as enrichment_to_dict
+from .scout.example import EXAMPLE_RENT
 from .scout.model import Listing
 from .scout.scoring import ScoreReport, score_listing
 from .scout.scoring import to_dict as score_to_dict
@@ -161,7 +162,9 @@ def _score_of(listing: Listing, stored: StoredEnrichment | None, rent: float | N
 
 
 def _to_out(listing: Listing, stored: StoredEnrichment | None = None) -> ListingOut:
-    report = _score_of(listing, stored, None)
+    # The example ships with the rent that completes its data coverage, so its tile and its
+    # detail view show the same score; real objects are listed without a rent (never a guess).
+    report = _score_of(listing, stored, EXAMPLE_RENT if listing.is_example else None)
     return ListingOut(
         id=listing.id or 0,
         price=listing.price,

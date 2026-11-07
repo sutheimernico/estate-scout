@@ -71,3 +71,26 @@ def test_enrich_endpoint_refuses_the_example(tmp_path):
         app.dependency_overrides.clear()
     assert r.status_code == 409
     assert "Beispielobjekt" in r.json()["detail"]
+
+
+def test_list_score_of_the_example_matches_its_detail_score(tmp_path):
+    db = str(tmp_path / "api.db")
+    seeded = ListingStore(db)
+    listing = seed_example(seeded)
+    stored = seeded.get_enrichment(listing.id)
+    expected = score_listing(listing, stored.enrichment, monthly_cold_rent=EXAMPLE_RENT)
+    seeded.close()
+
+    def per_request_store():
+        store = ListingStore(db)
+        try:
+            yield store
+        finally:
+            store.close()
+
+    app.dependency_overrides[get_store] = per_request_store
+    try:
+        rows = TestClient(app).get("/api/listings").json()
+    finally:
+        app.dependency_overrides.clear()
+    assert rows[0]["score"] == {"total": expected.total, "confidence": 1.0}

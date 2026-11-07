@@ -111,7 +111,7 @@ function Workbench({
         <p className="inputs-note">
           {spec.note ?? "Vorbelegt mit einem Beispielfall."} Das Ergebnis rechnet beim Tippen mit.
         </p>
-        {spec.assumption && <p className="inputs-note assumption">{spec.assumption}</p>}
+        {spec.assumption && <p className="inputs-note assumption">{spec.assumption(values)}</p>}
         <div className="inputs-grid">
           {spec.fields.map((f) => (
             <FieldInput

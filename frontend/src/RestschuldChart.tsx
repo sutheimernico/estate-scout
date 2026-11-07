@@ -49,10 +49,10 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
   }
 
   const hovered = hover != null ? points[hover] : null;
-  const calloutRight = showZb && x(zb!) + (narrow ? 140 : 190) < width - m.r;
+  const calloutRight = showZb && x(zb!) + (narrow ? 140 : 190) + 6 < width - m.r;
   // keep the callout text off the gridlines: they would run through its letters
   const calloutY = showZb
-    ? clearOfGrid(y(zbDebt!) + (calloutRight ? -38 : 26), yTicks.map(y), 16, 28)
+    ? clearOfGrid(y(zbDebt!) + (calloutRight ? -46 : 26), yTicks.map(y), 16, 28)
     : 0;
 
   return (
@@ -117,7 +117,7 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
           <g className="zb-mark">
             <line x1={x(zb!)} x2={x(zb!)} y1={m.t} y2={baseY} />
             <circle cx={x(zb!)} cy={y(zbDebt!)} r={5.5} />
-            <g transform={`translate(${calloutRight ? x(zb!) + 12 : x(zb!) - 12} ${calloutY})`}>
+            <g transform={`translate(${calloutRight ? x(zb!) + 16 : x(zb!) - 12} ${calloutY})`}>
               <text textAnchor={calloutRight ? "start" : "end"} className="callout-label">
                 {narrow ? `Restschuld nach ${zb} J.` : `Restschuld nach ${zb} Jahren`}
               </text>

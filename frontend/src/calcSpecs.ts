@@ -1,7 +1,11 @@
 // The six calculators as data: which fields, which defaults, which units. The Rechner renders
 // whatever is listed here; the numbers themselves always come from /api/finance/{calc}.
 
+import { eur } from "./format";
 import { parseDecimal } from "./parse";
+
+// Same cap as config/rates.yaml (max_rate_to_net_income); shown to the user, computed by the backend.
+const RATE_CAP = 0.35;
 
 export interface Field {
   key: string;
@@ -22,7 +26,7 @@ export interface CalcSpec {
   title: string;
   blurb: string; // one line under the title in the navigation
   note?: string; // what the prefilled values stand for, when that needs saying
-  assumption?: string; // the rule the calculator applies that the user cannot change here
+  assumption?: (values: Record<string, string>) => string; // the rule applied that the user cannot change here, worked out for the current inputs
   fields: Field[];
 }
 
@@ -77,8 +81,14 @@ export const SPECS: CalcSpec[] = [
     calc: "affordability",
     title: "Leistbarkeit",
     blurb: "Was liegt im Budget?",
-    assumption:
-      "Annahme: Die Rate darf 35 % des Haushaltsnetto betragen (im Beispiel 1.400 € bei 4.000 € netto). Die Kaufnebenkosten sind eingerechnet, einschließlich 3,57 % Maklerprovision.",
+    assumption: (values) => {
+      const income = parseDecimal(values.net_monthly_income ?? "");
+      const rule =
+        income !== null && income > 0
+          ? `Die Rate darf 35 % des Haushaltsnetto betragen (bei ${eur(income)} netto also ${eur(income * RATE_CAP)} im Monat).`
+          : "Die Rate darf 35 % des Haushaltsnetto betragen.";
+      return `Annahme: ${rule} Die Kaufnebenkosten sind eingerechnet, einschließlich 3,57 % Maklerprovision.`;
+    },
     fields: [
       {
         key: "net_monthly_income", positive: true,

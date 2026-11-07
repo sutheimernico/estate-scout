@@ -44,7 +44,7 @@ function RecordedCatch() {
           io.disconnect();
         }
       },
-      { threshold: 0.6 },
+      { threshold: 0.3 },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -52,7 +52,7 @@ function RecordedCatch() {
   return (
     <figure className={seen ? "catch seen" : "catch"} ref={ref}>
       <figcaption>
-        <h3>Das Modell hat sich verschrieben. Die Prüfung hat es gemerkt.</h3>
+        <h3>Das Modell verschreibt sich. Die Prüfung erkennt es.</h3>
       </figcaption>
       <dl className="catch-ledger">
         <div>

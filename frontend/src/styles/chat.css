@@ -107,8 +107,8 @@
   animation: rise var(--t-slow) var(--ease) 500ms both;
 }
 /* hold the timed parts until the card is on screen (class .seen set by IntersectionObserver) */
-.catch:not(.seen),
-.catch:not(.seen) * {
+.catch:not(.seen) .catch-wrong dd span::after,
+.catch:not(.seen) .catch-verdict {
   animation-play-state: paused;
 }
 .catch h3 {

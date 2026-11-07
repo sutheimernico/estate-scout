@@ -49,4 +49,12 @@ describe("buildArgs", () => {
     expect(!sonder.ok && sonder.errors.annual_sondertilgung).toMatch(/nicht negativ/);
     expect(buildArgs(annuity, { ...defaultValues(annuity), annual_rate_percent: "0" }).ok).toBe(true);
   });
+
+  it("works the Leistbarkeit assumption out from the current income", () => {
+    const spec = SPECS.find((s) => s.calc === "affordability")!;
+    const text = (income: string) => spec.assumption!({ net_monthly_income: income }).replace(/\s/g, " ");
+    expect(text("4.000")).toContain("bei 4.000 € netto also 1.400 € im Monat");
+    expect(text("5.200")).toContain("1.820 € im Monat");
+    expect(text("abc")).not.toMatch(/netto also/);
+  });
 });

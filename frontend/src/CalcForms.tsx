@@ -7,6 +7,7 @@ import { useState } from "react";
 import { buildArgs, type CalcSpec, defaultValues, type Field, SPECS } from "./calcSpecs";
 import { CalcResult } from "./CalcResult";
 import { FieldShell } from "./FieldShell";
+import { formatInput } from "./format";
 import { BUNDESLAENDER } from "./labels";
 import { useLiveCalc } from "./useLiveCalc";
 
@@ -42,7 +43,8 @@ function FieldInput({
             id={id}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={field.required ? undefined : "optional"}
+            onBlur={field.text ? undefined : (e) => onChange(formatInput(e.target.value))}
+            placeholder={field.placeholder}
             inputMode={field.text ? undefined : "decimal"}
             aria-invalid={error ? true : undefined}
             autoComplete="off"
@@ -72,7 +74,7 @@ function Workbench({
     <>
       <form className="inputs sheet" onSubmit={(e) => e.preventDefault()} aria-label={spec.title}>
         <h3>{spec.title}</h3>
-        <p className="inputs-note">Vorbelegt mit Beispielwerten. Das Ergebnis rechnet beim Tippen mit.</p>
+        <p className="inputs-note">Vorbelegt mit einem Beispielfall, Nebenkosten und Bewirtschaftung wie in den Rechnern gleichen Namens. Das Ergebnis rechnet beim Tippen mit.</p>
         <div className="inputs-grid">
           {spec.fields.map((f) => (
             <FieldInput

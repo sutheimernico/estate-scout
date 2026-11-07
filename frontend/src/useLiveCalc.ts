@@ -24,7 +24,8 @@ export function useLiveCalc(spec: CalcSpec, built: BuiltArgs): LiveState {
 
   useEffect(() => {
     if (!built.ok || key === null) {
-      setState((s) => ({ ...s, loading: false }));
+      // An unusable input must not leave the previous figures standing as if they still applied.
+      setState((s) => ({ ...s, calc: null, args: null, loading: false, error: null }));
       return;
     }
     const args = built.args;

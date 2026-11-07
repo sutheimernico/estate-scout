@@ -72,10 +72,10 @@ describe("CalcForms", () => {
   it("starts with visible example values, not placeholders", () => {
     stubFetch();
     render(<CalcForms />);
-    expect(screen.getByLabelText(/Darlehensbetrag/)).toHaveValue("300000");
+    expect(screen.getByLabelText(/Darlehensbetrag/)).toHaveValue("300.000");
     expect(screen.getByLabelText(/Sollzins/)).toHaveValue("3,6");
     // optional empty fields carry a hint, not something that looks like a value
-    expect(screen.getByLabelText(/Sondertilgung/)).toHaveAttribute("placeholder", "optional");
+    expect(screen.getByLabelText(/Sondertilgung/)).toHaveAttribute("placeholder", "keine");
   });
 
   it("sends the Zinsbindung to the API without any submit click", async () => {
@@ -94,10 +94,10 @@ describe("CalcForms", () => {
   it("keeps what was typed when switching calculators and back", () => {
     stubFetch();
     render(<CalcForms />);
-    fireEvent.change(screen.getByLabelText(/Darlehensbetrag/), { target: { value: "250000" } });
+    fireEvent.change(screen.getByLabelText(/Darlehensbetrag/), { target: { value: "250.000" } });
     pick(/Mietrendite/);
     pick(/Annuitätendarlehen/);
-    expect(screen.getByLabelText(/Darlehensbetrag/)).toHaveValue("250000");
+    expect(screen.getByLabelText(/Darlehensbetrag/)).toHaveValue("250.000");
   });
 
   it("rejects a non-numeric value with a German error and does not call the API for it", async () => {
@@ -109,5 +109,32 @@ describe("CalcForms", () => {
     const callsAfterInvalid = fetchMock.mock.calls.length;
     await new Promise((r) => setTimeout(r, 450)); // past the debounce
     expect(fetchMock.mock.calls.length).toBe(callsAfterInvalid);
+  });
+
+  it("tidies a raw number into de-DE when the field loses focus", () => {
+    stubFetch();
+    render(<CalcForms />);
+    const field = screen.getByLabelText(/Darlehensbetrag/);
+    fireEvent.change(field, { target: { value: "250000" } });
+    fireEvent.blur(field);
+    expect(field).toHaveValue("250.000");
+  });
+
+  it("drops the previous result as soon as an input becomes invalid", async () => {
+    stubFetch({ annual_cold_rent: 14400, gross_yield_percent: 4.8, net_yield_percent: 3.9, kaufpreisfaktor: 20.8 });
+    render(<CalcForms />);
+    pick(/Mietrendite/);
+    expect(await screen.findByRole("heading", { name: "Mietrendite", level: 4 })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Kaufpreis/), { target: { value: "abc" } });
+    await waitFor(() => expect(screen.queryByRole("heading", { name: "Mietrendite", level: 4 })).toBeNull());
+    expect(screen.getByText(/Korrigiere die markierten Felder/)).toBeInTheDocument();
+  });
+
+  it("prefills realistic running costs so the net yield is below the gross yield", () => {
+    stubFetch();
+    render(<CalcForms />);
+    pick(/Mietrendite/);
+    expect(screen.getByLabelText(/Bewirtschaftungskosten/)).toHaveValue("1.838");
+    expect(screen.getByLabelText(/Kaufnebenkosten/)).toHaveValue("31.710");
   });
 });

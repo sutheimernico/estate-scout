@@ -2,7 +2,8 @@
 // Number("300.000") would silently read 300, which for a loan amount is a wrong-by-1000 answer.
 
 export function parseDecimal(raw: string): number | null {
-  const s = raw.trim().replace(/[\s €%]/g, "");
+  // a trailing comma ("3,") is a decimal being typed, not an error
+  const s = raw.trim().replace(/[\s €%]/g, "").replace(/,$/, "");
   if (s === "") return null;
   let normalized: string;
   if (s.includes(",")) {

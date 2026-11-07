@@ -11,6 +11,7 @@ describe("parseDecimal", () => {
     ["3.6", 3.6],
     [" 2,0 % ", 2],
     ["1.200.000", 1200000],
+    ["3,", 3],
   ])("reads %s as %d", (raw, expected) => {
     expect(parseDecimal(raw)).toBe(expected);
   });

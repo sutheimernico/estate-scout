@@ -12,6 +12,8 @@ export interface Field {
   select?: "bundesland"; // rendered as a <select> of the 16 Bundesländer (value = code)
   // Real, visible starting value (not a placeholder): the example scenario of this calculator.
   defaultValue?: string;
+  // Words for an empty optional field ("keine"); never something that could pass for a value.
+  placeholder?: string;
 }
 
 export interface CalcSpec {
@@ -50,10 +52,10 @@ export const SPECS: CalcSpec[] = [
     title: "Annuitätendarlehen",
     blurb: "Rate, Zinsen, Restschuld",
     fields: [
-      { key: "principal", label: "Darlehensbetrag", unit: "€", required: true, defaultValue: "300000" },
+      { key: "principal", label: "Darlehensbetrag", unit: "€", required: true, defaultValue: "300.000" },
       SOLLZINS,
       TILGUNG,
-      { key: "annual_sondertilgung", label: "Sondertilgung", unit: "€ / Jahr" },
+      { key: "annual_sondertilgung", label: "Sondertilgung", unit: "€ / Jahr", placeholder: "keine" },
       { key: "zinsbindung_years", label: "Zinsbindung", unit: "Jahre", defaultValue: "10" },
     ],
   },
@@ -62,9 +64,9 @@ export const SPECS: CalcSpec[] = [
     title: "Kaufnebenkosten",
     blurb: "Steuer, Notar, Makler",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300000" },
+      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       BUNDESLAND,
-      { key: "makler_rate_percent", label: "Maklerprovision Käufer", unit: "%" },
+      { key: "makler_rate_percent", label: "Maklerprovision Käufer", unit: "%", defaultValue: "3,57" },
     ],
   },
   {
@@ -77,14 +79,14 @@ export const SPECS: CalcSpec[] = [
         label: "Haushaltsnetto",
         unit: "€ / Monat",
         required: true,
-        defaultValue: "4000",
+        defaultValue: "4.000",
       },
-      { key: "equity", label: "Eigenkapital", unit: "€", required: true, defaultValue: "60000" },
+      { key: "equity", label: "Eigenkapital", unit: "€", required: true, defaultValue: "60.000" },
       SOLLZINS,
       TILGUNG,
       BUNDESLAND,
-      { key: "existing_obligations", label: "Bestehende Raten", unit: "€ / Monat" },
-      { key: "running_costs_monthly", label: "Laufende Kosten", unit: "€ / Monat" },
+      { key: "existing_obligations", label: "Bestehende Raten", unit: "€ / Monat", placeholder: "keine" },
+      { key: "running_costs_monthly", label: "Laufende Kosten", unit: "€ / Monat", placeholder: "keine" },
     ],
   },
   {
@@ -92,16 +94,16 @@ export const SPECS: CalcSpec[] = [
     title: "Mietrendite",
     blurb: "Brutto, netto, Faktor",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300000" },
+      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       {
         key: "monthly_cold_rent",
         label: "Kaltmiete",
         unit: "€ / Monat",
         required: true,
-        defaultValue: "1200",
+        defaultValue: "1.200",
       },
-      { key: "annual_operating_costs", label: "Bewirtschaftungskosten", unit: "€ / Jahr" },
-      { key: "ancillary_costs", label: "Kaufnebenkosten", unit: "€" },
+      { key: "annual_operating_costs", label: "Bewirtschaftungskosten", unit: "€ / Jahr", defaultValue: "1.838" },
+      { key: "ancillary_costs", label: "Kaufnebenkosten", unit: "€", defaultValue: "31.710" },
     ],
   },
   {
@@ -115,9 +117,9 @@ export const SPECS: CalcSpec[] = [
         label: "Kaltmiete",
         unit: "€ / Monat",
         required: true,
-        defaultValue: "1200",
+        defaultValue: "1.200",
       },
-      { key: "units", label: "Wohneinheiten" },
+      { key: "units", label: "Wohneinheiten", defaultValue: "1" },
     ],
   },
   {
@@ -125,19 +127,19 @@ export const SPECS: CalcSpec[] = [
     title: "Cashflow-Rendite vor Steuern",
     blurb: "Rendite auf das Eigenkapital",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300000" },
+      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       {
         key: "monthly_cold_rent",
         label: "Kaltmiete",
         unit: "€ / Monat",
         required: true,
-        defaultValue: "1500",
+        defaultValue: "1.500",
       },
-      { key: "equity", label: "Eigenkapital", unit: "€", required: true, defaultValue: "60000" },
+      { key: "equity", label: "Eigenkapital", unit: "€", required: true, defaultValue: "60.000" },
       SOLLZINS,
       TILGUNG,
-      { key: "ancillary_costs", label: "Kaufnebenkosten", unit: "€" },
-      { key: "annual_operating_costs", label: "Bewirtschaftungskosten", unit: "€ / Jahr" },
+      { key: "ancillary_costs", label: "Kaufnebenkosten", unit: "€", defaultValue: "31.710" },
+      { key: "annual_operating_costs", label: "Bewirtschaftungskosten", unit: "€ / Jahr", defaultValue: "1.910" },
     ],
   },
 ];

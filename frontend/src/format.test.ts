@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bindUnits, eur, eurCents, num, pct } from "./format";
+import { bindUnits, eur, eurCents, formatInput, num, pct } from "./format";
 
 const nbsp = (s: string) => s.replace(/\s/g, " "); // Intl uses (narrow) no-break spaces
 
@@ -19,5 +19,22 @@ describe("bindUnits", () => {
   });
   it("leaves other text alone", () => {
     expect(bindUnits("Zinsbindung in Euro")).toBe("Zinsbindung in Euro");
+  });
+});
+
+describe("formatInput", () => {
+  it.each([
+    ["300000", "300.000"],
+    ["300.000", "300.000"],
+    ["1234,5", "1.234,5"],
+    ["2,0", "2,0"],
+    ["3,60", "3,60"],
+    ["3,6 %", "3,6"],
+    ["0", "0"],
+  ])("tidies %s to %s", (raw, expected) => {
+    expect(formatInput(raw)).toBe(expected);
+  });
+  it.each(["", "abc", "1,2,3"])("leaves %j untouched", (raw) => {
+    expect(formatInput(raw)).toBe(raw);
   });
 });

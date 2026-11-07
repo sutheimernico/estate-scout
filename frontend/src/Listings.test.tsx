@@ -165,7 +165,14 @@ describe("Listings", () => {
   });
 
   it("scores the example object with its rent and never calls enrich", async () => {
-    const example = [{ ...oneListing[0], ort: "Lingen (Beispiel)", features: ["beispiel"] }];
+    const example = [
+      {
+        ...oneListing[0],
+        ort: "Lingen (Beispiel)",
+        features: ["beispiel"],
+        enrichment: { bodenrichtwert_eur_per_sqm: 280, region: null, unavailable: {}, enriched_at: "x" },
+      },
+    ];
     const calls: string[] = [];
     vi.stubGlobal(
       "fetch",

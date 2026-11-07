@@ -111,7 +111,7 @@ describe("CalcResult", () => {
       />,
     );
     expect(screen.getByRole("heading", { name: "Cashflow-Rendite vor Steuern" })).toBeInTheDocument();
-    expect(screen.getByText("0,8 %")).toBeInTheDocument();
+    expect(screen.getByText("0,80 %")).toBeInTheDocument();
     expect(screen.getByText("Rendite inkl. Tilgung")).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bindUnits, eur, eurCents, formatInput, num, pct } from "./format";
+import { bindUnits, duration, eur, eurCents, formatInput, num, pct } from "./format";
 
 const nbsp = (s: string) => s.replace(/\s/g, " "); // Intl uses (narrow) no-break spaces
 
@@ -9,7 +9,8 @@ describe("de-DE formatting", () => {
     expect(nbsp(eur(300000))).toBe("300.000 €");
     expect(nbsp(eurCents(1399.94))).toBe("1.399,94 €");
     expect(num(28.7)).toBe("28,7");
-    expect(pct(3.6)).toBe("3,6 %");
+    expect(pct(3.6)).toBe("3,60 %");
+    expect(pct(10.57)).toBe("10,57 %");
   });
 });
 
@@ -36,5 +37,15 @@ describe("formatInput", () => {
   });
   it.each(["", "abc", "1,2,3"])("leaves %j untouched", (raw) => {
     expect(formatInput(raw)).toBe(raw);
+  });
+});
+
+describe("duration", () => {
+  it("speaks years and months", () => {
+    expect(duration(28.7)).toBe("28 Jahre, 8 Monate");
+    expect(duration(28.7, true)).toBe("28 Jahren, 8 Monaten");
+    expect(duration(10)).toBe("10 Jahre");
+    expect(duration(1.09, true)).toBe("1 Jahr, 1 Monat");
+    expect(duration(0.5)).toBe("6 Monate");
   });
 });

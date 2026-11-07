@@ -5,7 +5,9 @@ import { parseDecimal } from "./parse";
 export const eur = (n: number) =>
   n.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
-export const pct = (n: number) => `${n.toLocaleString("de-DE", { maximumFractionDigits: 2 })} %`;
+// Percentages always carry two decimals, so "3,60 %" and "10,57 %" line up in one column.
+export const pct = (n: number) =>
+  `${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`;
 
 export const num = (n: number, digits = 1) =>
   n.toLocaleString("de-DE", { maximumFractionDigits: digits });
@@ -27,4 +29,15 @@ export function formatInput(raw: string): string {
   const typed = comma >= 0 ? raw.trim().replace(/[^\d]+$/, "").length - comma - 1 : 0;
   const digits = Math.min(Math.max(typed, 0), 2);
   return n.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 2) });
+}
+
+// 28.7 years as words a person says: "28 Jahre, 8 Monate" (dative for "nach …": "28 Jahren, 8 Monaten").
+export function duration(years: number, dative = false): string {
+  const total = Math.round(years * 12);
+  const y = Math.floor(total / 12);
+  const m = total % 12;
+  const yUnit = dative ? (y === 1 ? "Jahr" : "Jahren") : y === 1 ? "Jahr" : "Jahre";
+  const mUnit = dative ? (m === 1 ? "Monat" : "Monaten") : m === 1 ? "Monat" : "Monate";
+  if (y === 0) return `${m} ${mUnit}`;
+  return m === 0 ? `${y} ${yUnit}` : `${y} ${yUnit}, ${m} ${mUnit}`;
 }

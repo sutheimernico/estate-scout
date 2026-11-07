@@ -3,7 +3,7 @@
 // All values come from the backend result; nothing is computed here except choosing which to show.
 
 import { type KnownCalc } from "./api";
-import { eur, eurCents, num, pct } from "./format";
+import { duration, eur, eurCents, num, pct } from "./format";
 import { bundeslandName } from "./labels";
 
 export interface Hero {
@@ -74,7 +74,7 @@ export function factsOf(calc: KnownCalc): Fact[] {
       const facts: Fact[] = [
         { label: "Zinskosten gesamt", value: eur(r.total_interest) },
         { label: "Gesamt gezahlt", value: eur(r.total_paid) },
-        { label: "Volltilgung nach", value: `${num(r.years_to_payoff)} Jahre` },
+        { label: "Volltilgung nach", value: duration(r.years_to_payoff, true) },
       ];
       if (r.zinsbindung_years != null && r.restschuld_after_zinsbindung != null) {
         facts.push({
@@ -164,11 +164,16 @@ export function segmentsOf(calc: KnownCalc): Segment[] | null {
         { label: "Makler", value: r.makler, tone: "red" },
       ];
     }
-    case "affordability":
+    case "affordability": {
+      const r = calc.result;
+      // budget = loan + equity = purchase price + ancillary costs, so the costs are what remains
+      const ancillary = Math.max(0, r.max_loan + r.equity - r.max_purchase_price);
       return [
-        { label: "Darlehen", value: calc.result.max_loan, tone: "ink" },
-        { label: "Eigenkapital", value: calc.result.equity, tone: "green" },
+        { label: "Darlehen", value: r.max_loan, tone: "ink" },
+        { label: "Eigenkapital im Kaufpreis", value: Math.max(0, r.equity - ancillary), tone: "green" },
+        { label: "Kaufnebenkosten", value: ancillary, tone: "ochre" },
       ];
+    }
     case "operating_costs": {
       const r = calc.result;
       return [

@@ -59,6 +59,22 @@ describe("segments", () => {
     const segs = segmentsOf(annuity)!;
     expect(segs[0].value + segs[1].value).toBeCloseTo(481209.86, 2);
   });
+  it("splits the Leistbarkeit budget into loan, equity and ancillary costs that sum to loan + equity", () => {
+    const calc: KnownCalc = {
+      kind: "affordability",
+      result: {
+        max_monthly_payment: 1400,
+        max_loan: 300000,
+        max_purchase_price: 325585.6,
+        ancillary_quota_percent: 10.57,
+        equity: 60000,
+      },
+    };
+    const segs = segmentsOf(calc)!;
+    expect(segs.map((s) => s.label)).toEqual(["Darlehen", "Eigenkapital im Kaufpreis", "Kaufnebenkosten"]);
+    expect(segs.reduce((a, s) => a + s.value, 0)).toBeCloseTo(360000, 2);
+    expect(segs[2].value).toBeCloseTo(34414.4, 1);
+  });
   it("shares add up to 100 and ignore negative parts", () => {
     const shares = segmentShares([
       { label: "a", value: 30, tone: "ink" },

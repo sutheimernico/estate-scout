@@ -3,7 +3,7 @@
 // Every number comes from the backend's scoring engine — nothing is computed here.
 
 import { type ScoreReport, type SubScore } from "./api";
-import { num, pct } from "./format";
+import { num } from "./format";
 
 const BLOCK_LABELS: Record<string, string> = {
   yield: "Rendite",
@@ -40,7 +40,7 @@ function Bar({ sub, weight }: { sub: SubScore; weight: number | undefined }) {
       <span className="num score-value">
         {sub.value === null ? "n. v." : `${sub.value}/100`}
       </span>
-      <span className="num score-weight">{weight === undefined ? "—" : pct(weight * 100)}</span>
+      <span className="num score-weight">{weight === undefined ? "—" : `${Math.round(weight * 100)} %`}</span>
     </div>
   );
 }

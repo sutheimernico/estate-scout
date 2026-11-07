@@ -8,7 +8,7 @@ import { BarScale, SplitBar } from "./Bars";
 import { factsOf, heroOf, segmentsOf, titleOf, yieldScaleMax } from "./calcView";
 import { CountUp } from "./CountUp";
 import { DimLine } from "./DimLine";
-import { eur, num, pct } from "./format";
+import { duration, eur, pct } from "./format";
 import { RestschuldChart } from "./RestschuldChart";
 
 function Picture({ calc, args, compact }: { calc: KnownCalc; args?: Record<string, unknown>; compact?: boolean }) {
@@ -100,7 +100,7 @@ export function CalcResult({
       {calc.kind === "annuity" && (
         <details className="plan">
           <summary>
-            Tilgungsplan nach Jahren <span className="tag">{num(calc.result.years_to_payoff)} Jahre</span>
+            Tilgungsplan nach Jahren <span className="tag">{duration(calc.result.years_to_payoff)}</span>
           </summary>
           <AmortizationTable result={calc.result} />
         </details>

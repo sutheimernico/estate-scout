@@ -236,6 +236,12 @@ def score_listing(
         if available
         else None
     )
+    if listing.object_type == LAND:
+        # A plot has no yield and no price block, so a "total" would be the location signal
+        # alone relabelled as an overall score. The location block stays visible in the
+        # sub-scores; the total stays empty.
+        total = None
+        weights_used = {}
 
     inputs_available, inputs_expected = _count_inputs(listing, monthly_cold_rent, enrichment)
     return ScoreReport(

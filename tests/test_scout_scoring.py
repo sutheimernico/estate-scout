@@ -208,11 +208,13 @@ def test_a_plot_gets_no_yield_or_price_score():
     assert (report.inputs_available, report.inputs_expected) == (0, 2)
 
 
-def test_a_plot_is_still_scored_on_its_region_signal():
+def test_a_plot_keeps_its_region_block_but_gets_no_total():
+    # The location signal alone must not be presented as an overall score.
     plot = Listing(
         price=215_000, living_area_sqm=780, bundesland="NI", plz="49808", object_type="grundstueck"
     )
     report = score_listing(plot, _full_enrichment())
-    assert report.weights_used == {"region": 1.0}
-    assert report.total == _sub(report, "region").value
+    assert _sub(report, "region").value is not None
+    assert report.total is None
+    assert report.weights_used == {}
     assert (report.inputs_available, report.inputs_expected) == (2, 2)

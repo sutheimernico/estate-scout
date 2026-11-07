@@ -108,7 +108,10 @@ function Workbench({
     <>
       <form className="inputs sheet" onSubmit={(e) => e.preventDefault()} aria-label={spec.title}>
         <h3>{spec.title}</h3>
-        <p className="inputs-note">Vorbelegt mit einem Beispielfall, Nebenkosten und Bewirtschaftung wie in den Rechnern gleichen Namens. Das Ergebnis rechnet beim Tippen mit.</p>
+        <p className="inputs-note">
+          {spec.note ?? "Vorbelegt mit einem Beispielfall."} Das Ergebnis rechnet beim Tippen mit.
+        </p>
+        {spec.assumption && <p className="inputs-note assumption">{spec.assumption}</p>}
         <div className="inputs-grid">
           {spec.fields.map((f) => (
             <FieldInput

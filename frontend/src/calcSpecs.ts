@@ -21,6 +21,8 @@ export interface CalcSpec {
   calc: string;
   title: string;
   blurb: string; // one line under the title in the navigation
+  note?: string; // what the prefilled values stand for, when that needs saying
+  assumption?: string; // the rule the calculator applies that the user cannot change here
   fields: Field[];
 }
 
@@ -75,6 +77,8 @@ export const SPECS: CalcSpec[] = [
     calc: "affordability",
     title: "Leistbarkeit",
     blurb: "Was liegt im Budget?",
+    assumption:
+      "Annahme: Die Rate darf 35 % des Haushaltsnetto betragen (bei 4.000 € netto also 1.400 € im Monat). Die Kaufnebenkosten sind eingerechnet, einschließlich 3,57 % Maklerprovision.",
     fields: [
       {
         key: "net_monthly_income", positive: true,
@@ -95,6 +99,7 @@ export const SPECS: CalcSpec[] = [
     calc: "yield_metrics",
     title: "Mietrendite",
     blurb: "Brutto, netto, Faktor",
+    note: "Vorbelegt mit einem Beispielfall; Kaufnebenkosten und Bewirtschaftung stammen aus den gleichnamigen Rechnern.",
     fields: [
       { key: "purchase_price", positive: true, label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       {
@@ -128,6 +133,7 @@ export const SPECS: CalcSpec[] = [
     calc: "equity_return",
     title: "Cashflow-Rendite vor Steuern",
     blurb: "Rendite auf das Eigenkapital",
+    note: "Vorbelegt mit einem Beispielfall; Kaufnebenkosten und Bewirtschaftung stammen aus den gleichnamigen Rechnern.",
     fields: [
       { key: "purchase_price", positive: true, label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       {

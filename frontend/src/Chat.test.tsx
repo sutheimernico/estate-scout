@@ -174,5 +174,6 @@ describe("ToolTrace in the chat", () => {
     expect(screen.getByText("181.210,86 EUR")).toBeInTheDocument();
     expect(screen.getByText(/Nicht belegt/)).toBeInTheDocument();
     expect(screen.getByText(/Aufgezeichneter Lauf, qwen2.5:7b, lokal, 20.09.2026/)).toBeInTheDocument();
+    expect(screen.getByText(/Die Prüfung wurde\s+danach gebaut/)).toBeInTheDocument();
   });
 });

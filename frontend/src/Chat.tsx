@@ -30,8 +30,27 @@ function useElapsed(active: boolean): number {
 // Proof instead of a promise: one recorded case where the model garbled a figure and the code caught it.
 function RecordedCatch() {
   const c = RECORDED_CATCH;
+  const ref = useRef<HTMLElement>(null);
+  // The strike-through and the verdict are timed animations: they start when the card is
+  // actually on screen, not while it still sits under the composer on a short viewport.
+  const [seen, setSeen] = useState(() => typeof IntersectionObserver === "undefined");
+  useEffect(() => {
+    const el = ref.current;
+    if (seen || !el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSeen(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [seen]);
   return (
-    <figure className="catch">
+    <figure className={seen ? "catch seen" : "catch"} ref={ref}>
       <figcaption>
         <h3>Das Modell hat sich verschrieben. Die Prüfung hat es gemerkt.</h3>
       </figcaption>
@@ -54,8 +73,8 @@ function RecordedCatch() {
         </div>
       </dl>
       <p className="catch-src">
-        Aufgezeichneter Lauf, {c.model}, {c.recorded}. Frage: {bindUnits(c.question)} Die Prüfung markiert
-        solche Zahlen, ohne die Antwort umzuschreiben.
+        Aufgezeichneter Lauf, {c.model}, {c.recorded}. Frage: {bindUnits(c.question)} Die Prüfung wurde
+        danach gebaut; ein Testfall fängt genau diese Zahl. Sie markiert, ohne die Antwort umzuschreiben.
       </p>
     </figure>
   );

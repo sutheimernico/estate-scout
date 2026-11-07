@@ -106,6 +106,11 @@
   border-radius: var(--radius);
   animation: rise var(--t-slow) var(--ease) 500ms both;
 }
+/* hold the timed parts until the card is on screen (class .seen set by IntersectionObserver) */
+.catch:not(.seen),
+.catch:not(.seen) * {
+  animation-play-state: paused;
+}
 .catch h3 {
   font-family: var(--font-num);
   font-weight: 700;
@@ -169,7 +174,7 @@
 .catch-src {
   margin-top: 10px;
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
 }
 
@@ -188,7 +193,7 @@
 .hd-red,
 .hd-curve {
   stroke-dasharray: 1;
-  animation: draw-stroke 900ms var(--ease) var(--d, 0ms) both;
+  animation: draw-stroke 450ms var(--ease) var(--d, 0ms) both;
 }
 .hd-ink {
   stroke: var(--ink);
@@ -217,7 +222,7 @@
   fill: var(--ink-2);
   font-family: var(--font-text);
   font-size: 16px;
-  animation: fade-in 500ms var(--ease) 900ms both;
+  animation: fade-in 400ms var(--ease) 500ms both;
 }
 .house-drawing .hd-red-text {
   fill: var(--red);
@@ -274,7 +279,7 @@
   border-top: 1px solid var(--rule);
   background: var(--sheet-2);
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: 14px;
 }
 .stamp code {
   color: var(--ink);
@@ -344,7 +349,7 @@
 }
 .tool-io code {
   overflow-wrap: anywhere;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 .tool-note {
   margin-top: 10px;
@@ -520,7 +525,7 @@
 .trace-note {
   margin-top: 8px;
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 @media (max-width: 1099px) {
@@ -566,6 +571,15 @@
   .intro-figure .house-drawing {
     max-width: 360px;
     margin-left: auto;
+  }
+}
+@media (max-width: 1180px) {
+  /* one column: a half-width starter wraps its title and makes the rows uneven */
+  .starters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .starter-q {
+    -webkit-line-clamp: 3;
   }
 }
 @media (max-width: 900px) {

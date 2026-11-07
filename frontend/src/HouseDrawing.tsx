@@ -2,7 +2,7 @@
 // would do it (equity | loan along the footing), next to the Restschuld curve with its
 // Zinsbindung marked. Illustration only: it carries no numbers. Strokes draw themselves in.
 
-const D = (i: number) => ({ ["--d" as string]: `${i * 90}ms` });
+const D = (i: number) => ({ ["--d" as string]: `${i * 45}ms` });
 
 function Tick({ x, y }: { x: number; y: number }) {
   return <path className="hd-ink" d={`M${x - 5} ${y + 5}L${x + 5} ${y - 5}`} pathLength={1} />;
@@ -42,7 +42,7 @@ export function HouseDrawing() {
         <path className="hd-red" d="M452 78V250M446 84L458 72M446 256L458 244" pathLength={1} style={D(6)} />
         <circle className="hd-dot" cx="452" cy="132" r="4.5" style={D(7)} />
         <text x="466" y="124">Restschuld</text>
-        <text x="442" y="232" textAnchor="end" className="hd-red-text">Zinsbindung</text>
+        <text x="440" y="238" className="hd-red-text" transform="rotate(-90 440 238)">Zinsbindung</text>
         <text x="392" y="56">Tilgungsverlauf</text>
       </g>
     </svg>

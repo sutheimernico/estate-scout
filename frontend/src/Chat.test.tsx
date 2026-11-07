@@ -102,7 +102,7 @@ describe("Chat", () => {
     );
     render(<Chat />);
     submitQuestion("dauert das?");
-    expect(await screen.findByText(/Das Modell rechnet und liest nach/)).toBeInTheDocument();
+    expect(await screen.findByText(/Das Modell liest die Wissensbasis/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Abbrechen" })).toBeInTheDocument();
     resolve(
       new Response(JSON.stringify(askResponse), {
@@ -110,7 +110,7 @@ describe("Chat", () => {
         headers: { "Content-Type": "application/json" },
       }),
     );
-    await waitFor(() => expect(screen.queryByText(/Das Modell rechnet und liest nach/)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(/Das Modell liest die Wissensbasis/)).not.toBeInTheDocument());
   });
 });
 
@@ -165,5 +165,14 @@ describe("ToolTrace in the chat", () => {
     fireEvent.click(screen.getByRole("button", { name: "Fragen" }));
     await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
     delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+  });
+
+  it("shows the recorded number-guard catch on the intro, with the garbled figure and the verdict", () => {
+    stubFetch(askResponse);
+    render(<Chat />);
+    expect(screen.getByText("181.209,86 €")).toBeInTheDocument();
+    expect(screen.getByText("181.210,86 EUR")).toBeInTheDocument();
+    expect(screen.getByText(/Nicht belegt/)).toBeInTheDocument();
+    expect(screen.getByText(/Aufgezeichneter Lauf, qwen2.5:7b, lokal, 20.09.2026/)).toBeInTheDocument();
   });
 });

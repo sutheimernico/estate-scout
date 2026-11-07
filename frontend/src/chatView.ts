@@ -77,6 +77,19 @@ export interface Starter {
   question: string;
 }
 
+// A real run, kept verbatim: local qwen2.5:7b, 2026-09-20 (docs/superpowers/plans/2026-07-07-
+// stage1-hardening-and-ux.md, "Live verification"). The tool returned total_interest 181209.86;
+// the model wrote it as "181.210,86 EUR". The number guard (pytest: test_assistant_number_check)
+// flags exactly that string. Nothing here is invented or rounded.
+export const RECORDED_CATCH = {
+  question: "Was zahle ich monatlich für 300.000 Euro Darlehen bei 3,6 % Zins und 2 % Tilgung?",
+  toolLabel: "Zinskosten gesamt",
+  toolValue: "181.209,86 €",
+  modelValue: "181.210,86 EUR",
+  model: "qwen2.5:7b, lokal",
+  recorded: "20.09.2026",
+} as const;
+
 export const STARTERS: Starter[] = [
   {
     label: "Monatsrate berechnen",

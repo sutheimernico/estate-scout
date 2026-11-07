@@ -3,7 +3,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ask, type AskResponse, toKnownCalc } from "./api";
 import { CalcResult } from "./CalcResult";
 import { CopyCommand } from "./CopyCommand";
-import { formatElapsed, type Problem, problemFrom, sourceLabel, STARTERS, traceOf } from "./chatView";
+import { formatElapsed, type Problem, problemFrom, RECORDED_CATCH, sourceLabel, STARTERS, traceOf } from "./chatView";
 import { bindUnits } from "./format";
 import { HouseDrawing } from "./HouseDrawing";
 import { ToolTrace } from "./ToolTrace";
@@ -25,6 +25,40 @@ function useElapsed(active: boolean): number {
     return () => clearInterval(timer);
   }, [active]);
   return seconds;
+}
+
+// Proof instead of a promise: one recorded case where the model garbled a figure and the code caught it.
+function RecordedCatch() {
+  const c = RECORDED_CATCH;
+  return (
+    <figure className="catch">
+      <figcaption>
+        <h3>Das Modell hat sich verschrieben. Die Prüfung hat es gemerkt.</h3>
+      </figcaption>
+      <dl className="catch-ledger">
+        <div>
+          <dt>Python rechnete ({c.toolLabel})</dt>
+          <dd className="num">{c.toolValue}</dd>
+        </div>
+        <div className="catch-wrong">
+          <dt>Das Modell schrieb</dt>
+          <dd className="num">
+            <span>{c.modelValue}</span>
+          </dd>
+        </div>
+        <div className="catch-verdict">
+          <dt>Zahlen-Prüfung</dt>
+          <dd>
+            Nicht belegt: <span className="num">181.210,86</span> stammt aus keinem Rechenergebnis.
+          </dd>
+        </div>
+      </dl>
+      <p className="catch-src">
+        Aufgezeichneter Lauf, {c.model}, {c.recorded}. Frage: {bindUnits(c.question)} Die Prüfung markiert
+        solche Zahlen, ohne die Antwort umzuschreiben.
+      </p>
+    </figure>
+  );
 }
 
 function Intro({ onPick }: { onPick: (q: string) => void }) {
@@ -49,7 +83,10 @@ function Intro({ onPick }: { onPick: (q: string) => void }) {
           ))}
         </ul>
       </div>
-      <HouseDrawing />
+      <div className="intro-figure">
+        <HouseDrawing />
+        <RecordedCatch />
+      </div>
     </section>
   );
 }
@@ -61,8 +98,9 @@ function Waiting({ question, seconds, onCancel }: { question: string; seconds: n
       <div className="wait">
         <span className="wait-rule" aria-hidden="true" />
         <p>
-          Das Modell rechnet und liest nach <span className="num">{formatElapsed(seconds)}</span>
-          {seconds > 20 && <span className="wait-hint"> Auf der CPU dauert der erste Aufruf oft über eine Minute.</span>}
+          Das Modell liest die Wissensbasis und ruft die Rechner auf. Laufzeit{" "}
+          <span className="num">{formatElapsed(seconds)}</span>
+          {seconds > 20 && <span className="wait-hint"> Auf der CPU dauert die erste Antwort oft über eine Minute.</span>}
         </p>
         <button type="button" className="btn ghost sm" onClick={onCancel}>
           Abbrechen

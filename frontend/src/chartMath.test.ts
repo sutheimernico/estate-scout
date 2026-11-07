@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { areaPath, linearScale, linePath, nearestIndex, niceTicks, yearTicks } from "./chartMath";
+import { areaPath, clearOfGrid, linearScale, linePath, nearestIndex, niceTicks, withPayoff, yearTicks } from "./chartMath";
 
 describe("niceTicks", () => {
   it("covers the maximum with round steps starting at zero", () => {
@@ -43,5 +43,26 @@ describe("hover and axis helpers", () => {
       expect(t[0]).toBe(0);
       expect(t.length).toBeLessThanOrEqual(9);
     }
+  });
+});
+
+describe("withPayoff", () => {
+  it("ends the curve at the real payoff with an exact zero", () => {
+    const pts = [
+      { year: 0, remaining_debt: 300 },
+      { year: 28, remaining_debt: 10 },
+      { year: 29, remaining_debt: 0 },
+    ];
+    expect(withPayoff(pts, 28.7)).toEqual([pts[0], pts[1], { year: 28.7, remaining_debt: 0 }]);
+    expect(withPayoff(pts, undefined)).toBe(pts);
+  });
+});
+
+describe("clearOfGrid", () => {
+  it("keeps a callout that no gridline touches and moves one that sits on a line", () => {
+    expect(clearOfGrid(100, [10, 300])).toBe(100);
+    const moved = clearOfGrid(100, [100, 200]);
+    expect(moved).not.toBe(100);
+    expect([100, 200].every((g) => g < moved - 16 || g > moved + 28)).toBe(true);
   });
 });

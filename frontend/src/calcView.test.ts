@@ -54,6 +54,18 @@ describe("heroOf / factsOf", () => {
   });
 });
 
+describe("annuity facts", () => {
+  it("says so when the loan is repaid before the Zinsbindung ends, and keeps the cents", () => {
+    const early: KnownCalc = {
+      kind: "annuity",
+      result: { ...(annuity as { result: object }).result, zinsbindung_years: 40, restschuld_after_zinsbindung: 0, interest_during_zinsbindung: 181209.86 } as never,
+    };
+    const facts = factsOf(early);
+    expect(facts.find((f) => f.label.startsWith("Restschuld nach 40"))?.value).toMatch(/schon vorher getilgt/);
+    expect(facts.find((f) => f.label === "Zinskosten gesamt")?.value.replace(/\s/g, " ")).toBe("181.209,86 €");
+  });
+});
+
 describe("segments", () => {
   it("splits the annuity into loan and interest that add up to the total paid", () => {
     const segs = segmentsOf(annuity)!;

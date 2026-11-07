@@ -2,16 +2,17 @@
 // (transform only) and always carry their numbers as text, so colour is never the only signal.
 
 import { type Segment, segmentShares } from "./calcView";
-import { eur } from "./format";
+import { eur, eurCents } from "./format";
 
-export function SplitBar({ segments }: { segments: Segment[] }) {
+export function SplitBar({ segments, cents = false }: { segments: Segment[]; cents?: boolean }) {
   const shares = segmentShares(segments);
+  const money = cents ? eurCents : eur;
   return (
     <div className="split">
       <div
         className="split-bar"
         role="img"
-        aria-label={segments.map((s) => `${s.label} ${eur(s.value)}`).join(", ")}
+        aria-label={segments.map((s) => `${s.label} ${money(s.value)}`).join(", ")}
         style={{ gridTemplateColumns: shares.map((s) => `${s}fr`).join(" ") }}
       >
         {segments.map((s, i) => (
@@ -23,7 +24,7 @@ export function SplitBar({ segments }: { segments: Segment[] }) {
           <li key={s.label}>
             <i className={`swatch tone-${s.tone}`} aria-hidden="true" />
             <span>{s.label}</span>
-            <strong className="num">{eur(s.value)}</strong>
+            <strong className="num">{money(s.value)}</strong>
           </li>
         ))}
       </ul>

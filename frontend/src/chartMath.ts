@@ -53,3 +53,25 @@ export function yearTicks(maxYear: number, target = 6): number[] {
   for (let y = 0; y <= maxYear; y += step) ticks.push(y);
   return ticks;
 }
+
+// The curve ends where the loan is really repaid (e.g. after 28.7 years), not at the next whole
+// year's point: later points are cut and an exact zero is added at `payoffYears`.
+export function withPayoff<T extends { year: number; remaining_debt: number }>(
+  points: T[],
+  payoffYears: number | undefined,
+): { year: number; remaining_debt: number }[] {
+  if (payoffYears === undefined || !(payoffYears > 0)) return points;
+  const kept = points.filter((p) => p.year < payoffYears);
+  return [...kept, { year: payoffYears, remaining_debt: 0 }];
+}
+
+// Moves a two-line callout (label above value) up or down until no gridline crosses its text.
+export function clearOfGrid(y0: number, gridYs: number[], above = 16, below = 28): number {
+  for (let step = 0; step <= 60; step += 4) {
+    for (const dy of step === 0 ? [0] : [-step, step]) {
+      const y = y0 + dy;
+      if (gridYs.every((g) => g < y - above || g > y + below)) return y;
+    }
+  }
+  return y0;
+}

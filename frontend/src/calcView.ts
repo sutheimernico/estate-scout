@@ -72,18 +72,21 @@ export function factsOf(calc: KnownCalc): Fact[] {
     case "annuity": {
       const r = calc.result;
       const facts: Fact[] = [
-        { label: "Zinskosten gesamt", value: eur(r.total_interest) },
-        { label: "Gesamt gezahlt", value: eur(r.total_paid) },
+        { label: "Zinskosten gesamt", value: eurCents(r.total_interest) },
+        { label: "Gesamt gezahlt", value: eurCents(r.total_paid) },
         { label: "Volltilgung nach", value: duration(r.years_to_payoff, true) },
       ];
       if (r.zinsbindung_years != null && r.restschuld_after_zinsbindung != null) {
         facts.push({
           label: `Restschuld nach ${r.zinsbindung_years} Jahren Zinsbindung`,
-          value: eur(r.restschuld_after_zinsbindung),
+          value:
+            r.restschuld_after_zinsbindung === 0
+              ? "0,00 €, schon vorher getilgt"
+              : eurCents(r.restschuld_after_zinsbindung),
         });
       }
       if (r.zinsbindung_years != null && r.interest_during_zinsbindung != null) {
-        facts.push({ label: "Zinsen in der Zinsbindung", value: eur(r.interest_during_zinsbindung) });
+        facts.push({ label: "Zinsen in der Zinsbindung", value: eurCents(r.interest_during_zinsbindung) });
       }
       return facts;
     }

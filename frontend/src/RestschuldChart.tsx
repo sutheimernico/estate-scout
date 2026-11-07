@@ -3,8 +3,8 @@
 
 import { useRef, useState } from "react";
 
-import { areaPath, linearScale, linePath, nearestIndex, niceTicks, yearTicks } from "./chartMath";
-import { eur } from "./format";
+import { areaPath, clearOfGrid, linearScale, linePath, nearestIndex, niceTicks, withPayoff, yearTicks } from "./chartMath";
+import { eurCents, eur, num } from "./format";
 import { useWidth } from "./useWidth";
 
 interface Props {
@@ -12,10 +12,11 @@ interface Props {
   principal?: number; // the loan amount: the curve starts there at year 0
   zinsbindungYears?: number | null;
   restschuld?: number | null;
+  payoffYears?: number; // exact repayment time; the curve ends there
   compact?: boolean;
 }
 
-export function RestschuldChart({ series, principal, zinsbindungYears, restschuld, compact }: Props) {
+export function RestschuldChart({ series, principal, zinsbindungYears, restschuld, payoffYears, compact }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const width = useWidth(wrap);
   const [hover, setHover] = useState<number | null>(null);
@@ -24,7 +25,7 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
   const height = compact || narrow ? 220 : 300;
   const m = { l: narrow ? 56 : 68, r: 16, t: zinsbindungYears ? 40 : 16, b: 30 };
 
-  const points = principal != null ? [{ year: 0, remaining_debt: principal }, ...series] : series;
+  const points = withPayoff(principal != null ? [{ year: 0, remaining_debt: principal }, ...series] : series, payoffYears);
   if (points.length < 2) return null;
   const maxYear = points[points.length - 1].year;
   const minYear = points[0].year;
@@ -48,15 +49,19 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
   }
 
   const hovered = hover != null ? points[hover] : null;
-  const calloutRight = showZb && x(zb!) + (narrow ? 150 : 168) < width - m.r;
+  const calloutRight = showZb && x(zb!) + (narrow ? 170 : 190) < width - m.r;
+  // keep the callout text off the gridlines: they would run through its letters
+  const calloutY = showZb
+    ? clearOfGrid(y(zbDebt!) + (calloutRight ? -38 : 26), yTicks.map(y), 16, 28)
+    : 0;
 
   return (
     <div className="chart" ref={wrap}>
       <div className="chart-readout" aria-live="off">
         {hovered ? (
           <>
-            <span>Jahr {hovered.year}</span>
-            <strong className="num">Restschuld {eur(hovered.remaining_debt)}</strong>
+            <span>Jahr {num(hovered.year)}</span>
+            <strong className="num">Restschuld {eurCents(hovered.remaining_debt)}</strong>
           </>
         ) : (
           <>
@@ -70,7 +75,7 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
         height={height}
         role="img"
         aria-label={`Restschuld über ${maxYear} Jahre, von ${eur(points[0].remaining_debt)} auf ${eur(points[points.length - 1].remaining_debt)}${
-          showZb ? `; nach ${zb} Jahren Zinsbindung ${eur(zbDebt!)}` : ""
+          showZb ? `; nach ${zb} Jahren Zinsbindung ${eurCents(zbDebt!)}` : ""
         }. Werte stehen im Tilgungsplan darunter.`}
         onPointerMove={onMove}
         onPointerLeave={() => setHover(null)}
@@ -111,12 +116,12 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
           <g className="zb-mark">
             <line x1={x(zb!)} x2={x(zb!)} y1={m.t} y2={baseY} />
             <circle cx={x(zb!)} cy={y(zbDebt!)} r={5.5} />
-            <g transform={`translate(${calloutRight ? x(zb!) + 12 : x(zb!) - 12} ${y(zbDebt!) + (calloutRight ? -38 : 26)})`}>
+            <g transform={`translate(${calloutRight ? x(zb!) + 12 : x(zb!) - 12} ${calloutY})`}>
               <text textAnchor={calloutRight ? "start" : "end"} className="callout-label">
                 {narrow ? `Restschuld nach ${zb} J.` : `Restschuld nach ${zb} Jahren`}
               </text>
               <text textAnchor={calloutRight ? "start" : "end"} y={20} className="callout-value">
-                {eur(zbDebt!)}
+                {eurCents(zbDebt!)}
               </text>
             </g>
           </g>

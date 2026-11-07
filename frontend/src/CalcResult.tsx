@@ -22,9 +22,10 @@ function Picture({ calc, args, compact }: { calc: KnownCalc; args?: Record<strin
           principal={principal}
           zinsbindungYears={r.zinsbindung_years}
           restschuld={r.restschuld_after_zinsbindung}
+          payoffYears={r.years_to_payoff}
           compact={compact}
         />
-        <SplitBar segments={segmentsOf(calc)!} />
+        <SplitBar segments={segmentsOf(calc)!} cents />
       </>
     );
   }
@@ -78,7 +79,8 @@ export function CalcResult({
   return (
     <section className={compact ? "result compact" : "result"} aria-label={title}>
       <header className="result-head">
-        <h4>{title}</h4>
+        {/* the calculator's name already stands in the navigation and above the form */}
+        <h4 className={compact ? undefined : "sr-only"}>{title}</h4>
         {context && <span className="tag">{context}</span>}
       </header>
       <div className="hero">

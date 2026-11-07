@@ -137,4 +137,23 @@ describe("CalcForms", () => {
     expect(screen.getByLabelText(/Bewirtschaftungskosten/)).toHaveValue("1.838");
     expect(screen.getByLabelText(/Kaufnebenkosten/)).toHaveValue("31.710");
   });
+
+  it("shows a German error and no old figures when the API rejects the input", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ detail: "principal must be > 0" }), { status: 400 })),
+    );
+    render(<CalcForms />);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/Eingabe abgelehnt/);
+    expect(screen.queryByText(/must be/)).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Annuitätendarlehen", level: 4 })).toBeNull();
+  });
+
+  it("flags zero Tilgung on the field instead of calling the API", () => {
+    const fetchMock = stubFetch({});
+    render(<CalcForms />);
+    fireEvent.change(screen.getByLabelText(/Anfängliche Tilgung/), { target: { value: "0" } });
+    expect(screen.getByRole("alert")).toHaveTextContent(/größer 0/);
+    expect(fetchMock.mock.calls.every(([, init]) => JSON.parse((init as RequestInit).body as string).initial_repayment_percent !== 0)).toBe(true);
+  });
 });

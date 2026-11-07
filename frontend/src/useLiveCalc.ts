@@ -41,8 +41,10 @@ export function useLiveCalc(spec: CalcSpec, built: BuiltArgs): LiveState {
         )
         .catch((err: unknown) => {
           if (err instanceof DOMException && err.name === "AbortError") return;
-          setState((s) => ({
-            ...s,
+          // a failed request must not leave the last figures standing next to its error
+          setState(() => ({
+            calc: null,
+            args: null,
             loading: false,
             error: err instanceof ApiError || err instanceof Error ? err.message : String(err),
           }));

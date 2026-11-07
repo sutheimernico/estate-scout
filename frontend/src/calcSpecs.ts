@@ -9,6 +9,7 @@ export interface Field {
   unit?: string; // shown inside the input ("€", "%", "Jahre")
   required?: boolean;
   text?: boolean; // string field (default: number)
+  positive?: boolean; // must be greater than 0 (other numbers only have to be >= 0)
   select?: "bundesland"; // rendered as a <select> of the 16 Bundesländer (value = code)
   // Real, visible starting value (not a placeholder): the example scenario of this calculator.
   defaultValue?: string;
@@ -33,6 +34,7 @@ const SOLLZINS: Field = {
 const TILGUNG: Field = {
   key: "initial_repayment_percent",
   label: "Anfängliche Tilgung",
+  positive: true,
   unit: "%",
   required: true,
   defaultValue: "2,0",
@@ -52,11 +54,11 @@ export const SPECS: CalcSpec[] = [
     title: "Annuitätendarlehen",
     blurb: "Rate, Zinsen, Restschuld",
     fields: [
-      { key: "principal", label: "Darlehensbetrag", unit: "€", required: true, defaultValue: "300.000" },
+      { key: "principal", positive: true, label: "Darlehensbetrag", unit: "€", required: true, defaultValue: "300.000" },
       SOLLZINS,
       TILGUNG,
       { key: "annual_sondertilgung", label: "Sondertilgung", unit: "€ / Jahr", placeholder: "keine" },
-      { key: "zinsbindung_years", label: "Zinsbindung", unit: "Jahre", defaultValue: "10" },
+      { key: "zinsbindung_years", positive: true, label: "Zinsbindung", unit: "Jahre", defaultValue: "10" },
     ],
   },
   {
@@ -64,7 +66,7 @@ export const SPECS: CalcSpec[] = [
     title: "Kaufnebenkosten",
     blurb: "Steuer, Notar, Makler",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
+      { key: "purchase_price", positive: true, label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       BUNDESLAND,
       { key: "makler_rate_percent", label: "Maklerprovision Käufer", unit: "%", defaultValue: "3,57" },
     ],
@@ -75,7 +77,7 @@ export const SPECS: CalcSpec[] = [
     blurb: "Was liegt im Budget?",
     fields: [
       {
-        key: "net_monthly_income",
+        key: "net_monthly_income", positive: true,
         label: "Haushaltsnetto",
         unit: "€ / Monat",
         required: true,
@@ -94,9 +96,9 @@ export const SPECS: CalcSpec[] = [
     title: "Mietrendite",
     blurb: "Brutto, netto, Faktor",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
+      { key: "purchase_price", positive: true, label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       {
-        key: "monthly_cold_rent",
+        key: "monthly_cold_rent", positive: true,
         label: "Kaltmiete",
         unit: "€ / Monat",
         required: true,
@@ -111,15 +113,15 @@ export const SPECS: CalcSpec[] = [
     title: "Bewirtschaftungskosten",
     blurb: "Was die Miete kostet",
     fields: [
-      { key: "living_area_sqm", label: "Wohnfläche", unit: "m²", required: true, defaultValue: "100" },
+      { key: "living_area_sqm", positive: true, label: "Wohnfläche", unit: "m²", required: true, defaultValue: "100" },
       {
-        key: "monthly_cold_rent",
+        key: "monthly_cold_rent", positive: true,
         label: "Kaltmiete",
         unit: "€ / Monat",
         required: true,
         defaultValue: "1.200",
       },
-      { key: "units", label: "Wohneinheiten", defaultValue: "1" },
+      { key: "units", positive: true, label: "Wohneinheiten", defaultValue: "1" },
     ],
   },
   {
@@ -127,9 +129,9 @@ export const SPECS: CalcSpec[] = [
     title: "Cashflow-Rendite vor Steuern",
     blurb: "Rendite auf das Eigenkapital",
     fields: [
-      { key: "purchase_price", label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
+      { key: "purchase_price", positive: true, label: "Kaufpreis", unit: "€", required: true, defaultValue: "300.000" },
       {
-        key: "monthly_cold_rent",
+        key: "monthly_cold_rent", positive: true,
         label: "Kaltmiete",
         unit: "€ / Monat",
         required: true,
@@ -170,6 +172,8 @@ export function buildArgs(spec: CalcSpec, values: Record<string, string>): Built
     }
     const n = parseDecimal(raw);
     if (n === null) errors[f.key] = `${f.label}: keine gültige Zahl.`;
+    else if (f.positive && n <= 0) errors[f.key] = `${f.label}: bitte eine Zahl größer 0 eintragen.`;
+    else if (n < 0) errors[f.key] = `${f.label}: darf nicht negativ sein.`;
     else args[f.key] = n;
   }
   if (missing || Object.keys(errors).length > 0) return { ok: false, missing, errors };

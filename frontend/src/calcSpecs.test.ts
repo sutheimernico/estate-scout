@@ -39,4 +39,14 @@ describe("buildArgs", () => {
     const built = buildArgs(spec, defaultValues(spec));
     expect(built.ok && built.args.bundesland).toBe("NI");
   });
+
+  it("rejects zero where the calculator needs a positive number, and any negative amount", () => {
+    const zero = buildArgs(annuity, { ...defaultValues(annuity), initial_repayment_percent: "0" });
+    expect(!zero.ok && zero.errors.initial_repayment_percent).toMatch(/größer 0/);
+    const negative = buildArgs(annuity, { ...defaultValues(annuity), principal: "-5000" });
+    expect(!negative.ok && negative.errors.principal).toMatch(/größer 0/);
+    const sonder = buildArgs(annuity, { ...defaultValues(annuity), annual_sondertilgung: "-1" });
+    expect(!sonder.ok && sonder.errors.annual_sondertilgung).toMatch(/nicht negativ/);
+    expect(buildArgs(annuity, { ...defaultValues(annuity), annual_rate_percent: "0" }).ok).toBe(true);
+  });
 });

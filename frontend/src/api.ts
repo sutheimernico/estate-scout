@@ -226,23 +226,41 @@ export class ApiError extends Error {
   }
 }
 
+// Backend details are written for developers and the model (many are English). Only text that
+// is already German reaches the screen; everything else becomes a German sentence per status.
+const GERMAN_DETAIL = /[äöüÄÖÜß]|^(Beispielobjekt|Das Modell|Ollama (ist|meldet)|Fehler)\b/;
+
+export function germanError(status: number, detail?: string): string {
+  if (detail && GERMAN_DETAIL.test(detail)) return detail;
+  switch (status) {
+    case 400:
+    case 422:
+      return "Der Rechner hat die Eingabe abgelehnt. Bitte die Werte prüfen.";
+    case 404:
+      return "Nicht gefunden. Vielleicht wurde das Objekt schon gelöscht.";
+    case 409:
+      return "Dafür fehlt ein Zwischenschritt: das Objekt zuerst anreichern.";
+    case 424:
+      return "Das Modell fehlt in Ollama. Installiere es mit ollama pull.";
+    case 503:
+      return "Ollama ist nicht erreichbar. Starte den lokalen Server (ollama serve) und ziehe ein Modell.";
+    case 504:
+      return "Das Modell antwortet zu langsam.";
+    default:
+      return `Fehler ${status}`;
+  }
+}
+
 async function errorMessage(res: Response): Promise<string> {
+  let detail: string | undefined;
   try {
     const body: unknown = await res.json();
-    if (
-      body !== null &&
-      typeof body === "object" &&
-      typeof (body as { detail?: unknown }).detail === "string"
-    ) {
-      return (body as { detail: string }).detail;
-    }
+    const d = body !== null && typeof body === "object" ? (body as { detail?: unknown }).detail : undefined;
+    if (typeof d === "string") detail = d;
   } catch {
-    // non-JSON error body — fall through to the generic message
+    // non-JSON error body — the status alone picks the message
   }
-  if (res.status === 503) {
-    return "Ollama ist nicht erreichbar. Starte den lokalen Server (ollama serve) und ziehe ein Modell.";
-  }
-  return `Fehler ${res.status}`;
+  return germanError(res.status, detail);
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {

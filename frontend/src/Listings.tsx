@@ -4,6 +4,7 @@
 import { type FormEvent, useState } from "react";
 
 import {
+  ApiError,
   createListing,
   deleteListing,
   enrichListing,
@@ -347,7 +348,7 @@ export function Listings() {
       setReports((r) => ({ ...r, [id]: report }));
     } catch (err) {
       // 409 = never enriched: not an error, the drawer simply offers the button instead
-      if (!(err instanceof Error) || !err.message.includes("enrich")) setError(message(err));
+      if (!(err instanceof ApiError && err.status === 409)) setError(message(err));
     }
   }
 

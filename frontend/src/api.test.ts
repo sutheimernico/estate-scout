@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toKnownCalc } from "./api";
+import { germanError, toKnownCalc } from "./api";
 
 describe("toKnownCalc", () => {
   it("narrows a well-formed result without any cast", () => {
@@ -22,5 +22,15 @@ describe("toKnownCalc", () => {
   it("returns null for failed tool calls and unknown tools", () => {
     expect(toKnownCalc("annuity", { error: "missing" })).toBeNull();
     expect(toKnownCalc("nope", {})).toBeNull();
+  });
+});
+
+describe("germanError", () => {
+  it("keeps German backend text and never shows English details", () => {
+    expect(germanError(409, "Beispielobjekt: die Referenzdaten sind fest.")).toMatch(/^Beispielobjekt/);
+    expect(germanError(400, "initial_repayment must be > 0")).toMatch(/Eingabe abgelehnt/);
+    expect(germanError(404, "listing 5 not found")).toMatch(/Nicht gefunden/);
+    expect(germanError(503, "Ollama not reachable at http://x")).not.toMatch(/reachable/);
+    expect(germanError(503, "Ollama ist nicht erreichbar unter x")).toMatch(/nicht erreichbar unter/);
   });
 });

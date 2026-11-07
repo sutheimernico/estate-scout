@@ -350,12 +350,16 @@
   font-size: 17px;
 }
 
-.scale-row {
+/* One grid for every row, axis included: the bar tracks and the axis track share the same
+   column, so a tick sits exactly under the end of the bar that carries its value. */
+.scale {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
-  padding: 6px 0;
+  gap: 12px 14px;
+}
+.scale-row {
+  display: contents;
 }
 .scale-label {
   color: var(--ink-2);
@@ -559,7 +563,7 @@
   .hero-num {
     font-size: clamp(52px, 17vw, 88px);
   }
-  .scale-row {
+  .scale {
     grid-template-columns: 86px minmax(0, 1fr) auto;
     gap: 10px;
   }

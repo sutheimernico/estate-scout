@@ -46,7 +46,8 @@ function Bar({ sub, weight }: { sub: SubScore; weight: number | undefined }) {
   );
 }
 
-export function ScoreDrilldown({ report }: { report: ScoreReport }) {
+// `showCoverage` is off for plots: full data coverage next to "Kein Score" would read as a result.
+export function ScoreDrilldown({ report, showCoverage = true }: { report: ScoreReport; showCoverage?: boolean }) {
   const missing = report.subscores.filter((s) => s.value === null);
   return (
     <div className="score-panel">
@@ -54,10 +55,12 @@ export function ScoreDrilldown({ report }: { report: ScoreReport }) {
         <span className="score-total">
           {report.total === null ? "Kein Score" : `${report.total}/100`}
         </span>
-        <span className="score-confidence">
-          Datenlage {report.inputs_available}/{report.inputs_expected} (
-          {num(report.confidence * 100, 0)} %)
-        </span>
+        {showCoverage && (
+          <span className="score-confidence">
+            Datenlage {report.inputs_available}/{report.inputs_expected} (
+            {num(report.confidence * 100, 0)} %)
+          </span>
+        )}
       </div>
 
       {report.subscores.map((s) => (

@@ -231,4 +231,13 @@ describe("Listings", () => {
     expect(await screen.findByText(/Noch keine Bewertung/)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+
+  it("shows no data-coverage pips on a plot tile, which never gets a score", async () => {
+    const plot = [{ ...oneListing[0], object_type: "grundstueck" }];
+    vi.stubGlobal("fetch", vi.fn(async () => json(plot)));
+    render(<Listings />);
+    const tile = (await screen.findByRole("button", { name: /Bewertung von Objekt 1/ })).closest("li")!;
+    expect(within(tile).queryByText("Datenlage")).toBeNull();
+    expect(within(tile).getByText(/keinen Score/)).toBeInTheDocument();
+  });
 });

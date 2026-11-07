@@ -215,7 +215,7 @@ function Detail({ listing, report, rent, pending, onRentChange, onEvaluate, onDe
         </p>
       )}
       {report ? (
-        <ScoreDrilldown report={report} />
+        <ScoreDrilldown report={report} showCoverage={!land} />
       ) : (
         <p className="detail-note">
           {land
@@ -273,10 +273,12 @@ function Tile({ listing, report, index, onOpen }: { listing: Listing; report?: S
         {extra && <span className="tile-extra">{extra}</span>}
         <span className="tile-score">
           <ScoreScale total={score?.total ?? null} />
-          <span className="tile-coverage">
-            <CoveragePips confidence={score?.confidence ?? 0} />
-            <span>Datenlage</span>
-          </span>
+          {listing.object_type !== "grundstueck" && (
+            <span className="tile-coverage">
+              <CoveragePips confidence={score?.confidence ?? 0} />
+              <span>Datenlage</span>
+            </span>
+          )}
           <span className="tile-note">{note ?? "\u00a0"}</span>
         </span>
       </button>

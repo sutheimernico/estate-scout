@@ -12,6 +12,10 @@ figure in the answer that no calculator produced.**
 chat and object views are in [docs/media](docs/media). `objekte.png` shows the bundled example
 object (tagged "Beispiel", with fixed illustrative reference data); `chat.png` is a real local run.</sub>
 
+![estate-scout chat: a local model answers, the calculator card and the Rechenspur show the numbers](docs/media/chat.png)
+
+<sub>The prose in the chat is raw qwen2.5:7b output, so its German can be clumsy. Every number comes from the Python calculators and is checked against their results.</sub>
+
 Runs entirely on your machine via [Ollama](https://ollama.com) — no paid APIs, no listing scraping.
 Not tax, investment or financing advice.
 

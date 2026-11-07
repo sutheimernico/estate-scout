@@ -413,6 +413,10 @@
   cursor: pointer;
   list-style: none;
 }
+.plan summary .tag {
+  margin-left: auto;
+  white-space: nowrap;
+}
 .plan summary::-webkit-details-marker {
   display: none;
 }

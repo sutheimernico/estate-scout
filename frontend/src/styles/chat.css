@@ -564,11 +564,16 @@
   .intro {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* phone order: drawing, statement and starters, then the recorded catch as the proof */
   .intro-figure {
-    order: -1;
+    display: contents;
   }
-  .house-drawing {
+  .intro-figure .house-drawing {
+    order: -1;
     max-width: 460px;
+  }
+  .intro-figure .catch {
+    order: 1;
   }
   .intro h2 {
     font-size: 33px;

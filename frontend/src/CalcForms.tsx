@@ -2,10 +2,13 @@
 // Direct and deterministic against /api/finance/{calc} — no LLM involved.
 // German decimal commas and thousands dots are accepted ("3,6", "300.000").
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { type KnownCalc } from "./api";
 import { buildArgs, type CalcSpec, defaultValues, type Field, SPECS } from "./calcSpecs";
+import { heroOf } from "./calcView";
 import { CalcResult } from "./CalcResult";
+import { CountUp } from "./CountUp";
 import { FieldShell } from "./FieldShell";
 import { formatInput } from "./format";
 import { BUNDESLAENDER } from "./labels";
@@ -55,6 +58,36 @@ function FieldInput({
   );
 }
 
+// Phone layout: the result sits below the whole form, so a figure that follows the thumb keeps
+// the effect of every keystroke in sight. Opaque on purpose (never see-through over text), and
+// it steps aside while the real result is on screen.
+function ResultStrip({ calc, target }: { calc: KnownCalc; target: React.RefObject<HTMLElement> }) {
+  const [away, setAway] = useState(false);
+  useEffect(() => {
+    const el = target.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setAway(!entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [target]);
+  const hero = heroOf(calc);
+  return (
+    <button
+      type="button"
+      className={away ? "result-strip on" : "result-strip"}
+      tabIndex={away ? 0 : -1}
+      aria-hidden={away ? undefined : true}
+      onClick={() => target.current?.scrollIntoView?.({ behavior: "smooth", block: "start" })}
+    >
+      <span className="result-strip-label">{hero.label}</span>
+      <span className="result-strip-num num">
+        <CountUp value={hero.value} format={hero.format} duration={300} />
+      </span>
+      <span className="result-strip-go" aria-hidden="true">Ergebnis</span>
+    </button>
+  );
+}
+
 function Workbench({
   spec,
   values,
@@ -69,6 +102,7 @@ function Workbench({
   const errors = built.ok ? {} : built.errors;
   const incomplete = !built.ok;
   const hasErrors = !built.ok && Object.keys(built.errors).length > 0;
+  const outputRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
@@ -88,7 +122,7 @@ function Workbench({
         </div>
       </form>
 
-      <div className={live.loading ? "output loading" : "output"} aria-live="polite">
+      <div ref={outputRef} className={live.loading ? "output loading" : "output"} aria-live="polite">
         {live.error && (
           <div className="notice error" role="alert">
             {live.error}
@@ -108,6 +142,7 @@ function Workbench({
         )}
         {!live.calc && !incomplete && !live.error && <div className="output-skeleton" aria-hidden="true" />}
       </div>
+      {live.calc && <ResultStrip calc={live.calc} target={outputRef} />}
     </>
   );
 }

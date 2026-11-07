@@ -448,6 +448,11 @@
   font-weight: 700;
 }
 
+/* ---------- result strip (phone only) ---------- */
+.result-strip {
+  display: none;
+}
+
 /* ---------- breakpoints ---------- */
 @media (max-width: 1180px) {
   .rechner {
@@ -456,8 +461,8 @@
   .calc-nav {
     grid-column: 1 / -1;
     position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
   .calc-nav-item {
@@ -478,6 +483,7 @@
   }
   .calc-nav-title {
     font-size: 17px;
+    line-height: 1.15;
   }
   .calc-nav-blurb {
     display: none;
@@ -487,6 +493,60 @@
   .rechner {
     grid-template-columns: minmax(0, 1fr);
     gap: 18px;
+    padding-bottom: 64px; /* room for the result strip */
+  }
+  .calc-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .calc-nav-item {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+  }
+  .result-strip {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+    border: 0;
+    border-top: 3px solid var(--red);
+    background: var(--ink);
+    color: var(--sheet);
+    text-align: left;
+    cursor: pointer;
+    transform: translateY(110%);
+    visibility: hidden;
+    transition:
+      transform var(--t-med) var(--ease),
+      visibility 0s linear var(--t-med);
+  }
+  .result-strip.on {
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .result-strip-label {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--rule);
+  }
+  .result-strip-num {
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .result-strip-go {
+    font-size: 13px;
+    color: var(--rule);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .inputs-grid {
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));

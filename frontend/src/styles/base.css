@@ -160,11 +160,14 @@ code {
   animation: pane-in var(--t-med) var(--ease) backwards;
 }
 
+.pane.revisit * {
+  animation: none !important;
+}
 .disclaimer {
   padding: 14px 0 24px;
   border-top: 1px solid var(--rule-strong);
   color: var(--ink-2);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* ---------- primitives ---------- */
@@ -286,7 +289,7 @@ code {
 .field-error {
   margin-top: 4px;
   color: var(--red);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .tag {
@@ -296,7 +299,7 @@ code {
   padding: 2px 8px;
   border: 1px solid var(--rule-strong);
   border-radius: 2px;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
   color: var(--ink-2);
 }

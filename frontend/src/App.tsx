@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useLayoutEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { CalcForms } from "./CalcForms";
 import { Chat } from "./Chat";
@@ -30,6 +30,10 @@ function BrandMark() {
 
 export function App() {
   const [tab, setTab] = useState<TabId>("chat");
+  // Tabs that were shown and left once: coming back must not replay their entrance animations
+  // (hiding a pane with display:none restarts every CSS animation inside it).
+  const [seen, setSeen] = useState<ReadonlySet<TabId>>(new Set());
+  useEffect(() => () => setSeen((s) => new Set(s).add(tab)), [tab]);
   const navRef = useRef<HTMLDivElement>(null);
   const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
 
@@ -92,13 +96,13 @@ export function App() {
       </header>
 
       {/* Panes stay mounted (hidden, not unmounted) so each tab keeps its state. */}
-      <div className="pane" role="tabpanel" id="pane-chat" aria-labelledby="tab-chat" hidden={tab !== "chat"}>
+      <div className={seen.has("chat") ? "pane revisit" : "pane"} role="tabpanel" id="pane-chat" aria-labelledby="tab-chat" hidden={tab !== "chat"}>
         <Chat />
       </div>
-      <div className="pane" role="tabpanel" id="pane-rechner" aria-labelledby="tab-rechner" hidden={tab !== "rechner"}>
+      <div className={seen.has("rechner") ? "pane revisit" : "pane"} role="tabpanel" id="pane-rechner" aria-labelledby="tab-rechner" hidden={tab !== "rechner"}>
         <CalcForms />
       </div>
-      <div className="pane" role="tabpanel" id="pane-objekte" aria-labelledby="tab-objekte" hidden={tab !== "objekte"}>
+      <div className={seen.has("objekte") ? "pane revisit" : "pane"} role="tabpanel" id="pane-objekte" aria-labelledby="tab-objekte" hidden={tab !== "objekte"}>
         <Listings />
       </div>
 

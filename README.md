@@ -9,8 +9,8 @@ figure in the answer that no calculator produced.**
 ![estate-scout Rechner: live annuity result with the Restschuld curve and the Zinsbindung dimensioned](docs/media/hero.png)
 
 <sub>The Rechner, recalculating while you type. Screenshots are taken from the running app; the
-chat and object views are in [docs/media](docs/media). The objects in `objekte.png` are sample
-entries typed in for the screenshot.</sub>
+chat and object views are in [docs/media](docs/media). `objekte.png` shows the bundled example
+object (tagged "Beispiel", with fixed illustrative reference data); `chat.png` is a real local run.</sub>
 
 Runs entirely on your machine via [Ollama](https://ollama.com) — no paid APIs, no listing scraping.
 Not tax, investment or financing advice.

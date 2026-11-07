@@ -66,6 +66,7 @@
   line-height: 1.15;
 }
 .inputs-note {
+  hyphens: manual;
   margin-top: 6px;
   color: var(--ink-2);
   font-size: 14px;
@@ -468,7 +469,7 @@
   .calc-nav-item {
     border: 1px solid var(--rule-strong);
     border-radius: var(--radius);
-    padding: 8px 14px;
+    padding: 6px 14px;
   }
   .calc-nav-item[aria-current="true"] {
     background: var(--ink);

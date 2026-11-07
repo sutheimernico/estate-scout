@@ -20,7 +20,7 @@ export function countUpValue(from: number, to: number, elapsed: number, duration
 }
 
 // Returns the number to display right now; animates from the previously shown value to `target`.
-export function useCountUp(target: number, duration = 700): number {
+export function useCountUp(target: number, duration = 400): number {
   const [value, setValue] = useState(() => (motionAllowed() ? 0 : target));
   const shown = useRef(value);
   shown.current = value;

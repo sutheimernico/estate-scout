@@ -83,3 +83,12 @@ export function roomsAndYear(l: Pick<Listing, "rooms" | "year_built">): string {
   if (l.year_built !== null) parts.push(`Baujahr ${l.year_built}`);
   return parts.join(" · ");
 }
+
+// One honest line under a tile's score: why there is no score, or why it is only provisional.
+export function scoreNote(listing: Pick<Listing, "enrichment">, score: { total: number | null; confidence: number } | null): string | null {
+  if (score === null || (score.total === null && listing.enrichment === null)) return "Öffnen, um das Objekt zu bewerten.";
+  if (score.total === null) return "Für diese Lage liegen keine Referenzdaten vor.";
+  const n = coveragePips(score.confidence);
+  if (n < 2) return `Vorläufig: erst ${n} von 4 Datenquellen.`;
+  return null;
+}

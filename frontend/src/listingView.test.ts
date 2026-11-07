@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { coveragePips, effectiveScore, type ListingForm, parseListingForm, parseRent, roomsAndYear, scoreTone } from "./listingView";
+import { coveragePips, effectiveScore, type ListingForm, parseListingForm, parseRent, roomsAndYear, scoreNote, scoreTone } from "./listingView";
 
 const form: ListingForm = {
   price: "300.000",
@@ -76,5 +76,23 @@ describe("roomsAndYear", () => {
     expect(roomsAndYear({ rooms: 3, year_built: 1995 })).toBe("3 Zimmer · Baujahr 1995");
     expect(roomsAndYear({ rooms: null, year_built: 1995 })).toBe("Baujahr 1995");
     expect(roomsAndYear({ rooms: null, year_built: null })).toBe("");
+  });
+});
+
+describe("scoreNote", () => {
+  const enriched = { enrichment: { unavailable: {} } } as never;
+  const raw = { enrichment: null };
+  it("asks to open an unscored, unenriched object", () => {
+    expect(scoreNote(raw, null)).toMatch(/Öffnen/);
+    expect(scoreNote(raw, { total: null, confidence: 0 })).toMatch(/Öffnen/);
+  });
+  it("explains a missing score on an enriched object", () => {
+    expect(scoreNote(enriched, { total: null, confidence: 0 })).toMatch(/keine Referenzdaten/);
+  });
+  it("marks a score built from fewer than two inputs as provisional", () => {
+    expect(scoreNote(enriched, { total: 100, confidence: 0.25 })).toBe("Vorläufig: erst 1 von 4 Datenquellen.");
+  });
+  it("stays silent for a well-covered score", () => {
+    expect(scoreNote(enriched, { total: 65, confidence: 1 })).toBeNull();
   });
 });

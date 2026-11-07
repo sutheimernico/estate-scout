@@ -21,7 +21,7 @@ import {
   EXAMPLE_RENT,
   objectTypeLabel,
 } from "./labels";
-import { type FormErrors, type ListingForm, effectiveScore, parseListingForm, parseRent, roomsAndYear } from "./listingView";
+import { type FormErrors, type ListingForm, effectiveScore, parseListingForm, parseRent, roomsAndYear, scoreNote } from "./listingView";
 import { ObjectIcon } from "./ObjectIcon";
 import { ScoreDrilldown } from "./ScoreDrilldown";
 import { CoveragePips, ScoreScale } from "./ScoreScale";
@@ -226,6 +226,7 @@ function Detail({ listing, report, rent, pending, onRentChange, onEvaluate, onDe
 function Tile({ listing, report, index, onOpen }: { listing: Listing; report?: ScoreReport; index: number; onOpen: () => void }) {
   const score = effectiveScore(listing, report);
   const extra = roomsAndYear(listing);
+  const note = scoreNote(listing, score);
   return (
     <li className="tile reveal" style={{ ["--i" as string]: index }}>
       <button
@@ -254,6 +255,7 @@ function Tile({ listing, report, index, onOpen }: { listing: Listing; report?: S
             <CoveragePips confidence={score?.confidence ?? 0} />
             <span>Datenlage</span>
           </span>
+          {note && <span className="tile-note">{note}</span>}
         </span>
       </button>
     </li>

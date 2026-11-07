@@ -101,6 +101,13 @@
   margin-top: auto;
   padding-top: 20px;
 }
+.tile-note {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.35;
+}
 .tile-coverage {
   display: flex;
   align-items: center;

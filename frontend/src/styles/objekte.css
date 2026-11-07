@@ -103,6 +103,7 @@
 }
 .tile-note {
   display: block;
+  min-height: 2.7em; /* two lines, so the score ruler sits on one line across a row of tiles */
   margin-top: 8px;
   color: var(--ink-2);
   font-size: 14px;

@@ -78,7 +78,7 @@ export const SPECS: CalcSpec[] = [
     title: "Leistbarkeit",
     blurb: "Was liegt im Budget?",
     assumption:
-      "Annahme: Die Rate darf 35 % des Haushaltsnetto betragen (bei 4.000 € netto also 1.400 € im Monat). Die Kaufnebenkosten sind eingerechnet, einschließlich 3,57 % Maklerprovision.",
+      "Annahme: Die Rate darf 35 % des Haushaltsnetto betragen (im Beispiel 1.400 € bei 4.000 € netto). Die Kaufnebenkosten sind eingerechnet, einschließlich 3,57 % Maklerprovision.",
     fields: [
       {
         key: "net_monthly_income", positive: true,

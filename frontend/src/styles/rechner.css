@@ -286,6 +286,9 @@
   font-weight: 700;
   font-size: 22px;
 }
+.chart .narrow .callout-value {
+  font-size: 18px;
+}
 .chart .hover line {
   stroke: var(--ink);
   stroke-width: 1;

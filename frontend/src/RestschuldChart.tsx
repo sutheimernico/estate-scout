@@ -49,7 +49,7 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
   }
 
   const hovered = hover != null ? points[hover] : null;
-  const calloutRight = showZb && x(zb!) + (narrow ? 170 : 190) < width - m.r;
+  const calloutRight = showZb && x(zb!) + (narrow ? 140 : 190) < width - m.r;
   // keep the callout text off the gridlines: they would run through its letters
   const calloutY = showZb
     ? clearOfGrid(y(zbDebt!) + (calloutRight ? -38 : 26), yTicks.map(y), 16, 28)
@@ -71,10 +71,11 @@ export function RestschuldChart({ series, principal, zinsbindungYears, restschul
         )}
       </div>
       <svg
+        className={narrow ? "narrow" : undefined}
         width={width}
         height={height}
         role="img"
-        aria-label={`Restschuld über ${maxYear} Jahre, von ${eur(points[0].remaining_debt)} auf ${eur(points[points.length - 1].remaining_debt)}${
+        aria-label={`Restschuld über ${num(maxYear)} Jahre, von ${eur(points[0].remaining_debt)} auf ${eur(points[points.length - 1].remaining_debt)}${
           showZb ? `; nach ${zb} Jahren Zinsbindung ${eurCents(zbDebt!)}` : ""
         }. Werte stehen im Tilgungsplan darunter.`}
         onPointerMove={onMove}

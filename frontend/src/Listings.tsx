@@ -218,8 +218,9 @@ function Detail({ listing, report, rent, pending, onRentChange, onEvaluate, onDe
         <ScoreDrilldown report={report} />
       ) : (
         <p className="detail-note">
-          Noch keine Bewertung. „Anreichern + bewerten“ holt die öffentlichen Referenzdaten und berechnet
-          den Score.
+          {land
+            ? "Für Grundstücke gibt es keinen Score: Rendite und Preisniveau passen nicht zu einem Grundstück. „Anreichern + bewerten“ holt trotzdem die öffentlichen Referenzdaten, sofern es für die Lage welche gibt."
+            : "Noch keine Bewertung. „Anreichern + bewerten“ holt die öffentlichen Referenzdaten und berechnet den Score."}
         </p>
       )}
 
@@ -276,7 +277,7 @@ function Tile({ listing, report, index, onOpen }: { listing: Listing; report?: S
             <CoveragePips confidence={score?.confidence ?? 0} />
             <span>Datenlage</span>
           </span>
-          {note && <span className="tile-note">{note}</span>}
+          <span className="tile-note">{note ?? "\u00a0"}</span>
         </span>
       </button>
     </li>
@@ -346,7 +347,8 @@ export function Listings() {
   async function onOpen(listing: Listing) {
     const id = listing.id;
     setOpenId(id);
-    if (reports[id]) return;
+    // an object that was never enriched has no score to fetch (the server would answer 409)
+    if (reports[id] || listing.enrichment === null) return;
     try {
       const report = await scoreListing(id, parseRent(rentOf(listing)));
       setReports((r) => ({ ...r, [id]: report }));

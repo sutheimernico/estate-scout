@@ -192,3 +192,27 @@ def test_price_block_separates_rural_from_urban_land_markets():
     rural = score_listing(_listing(), Enrichment(bodenrichtwert_eur_per_sqm=150.0))
     urban = score_listing(_listing(), Enrichment(bodenrichtwert_eur_per_sqm=800.0))
     assert _sub(urban, "price").value > _sub(rural, "price").value
+
+
+def test_a_plot_gets_no_yield_or_price_score():
+    # Regression: a plot (276 EUR/m² against a 190 EUR/m² Bodenrichtwert) used to read 100/100,
+    # because the living-space price thresholds treat a ratio near 1 as "perfectly cheap".
+    plot = Listing(
+        price=215_000, living_area_sqm=780, bundesland="NI", plz="49808", object_type="grundstueck"
+    )
+    enrichment = Enrichment(bodenrichtwert_eur_per_sqm=190.0, region=None, unavailable={})
+    report = score_listing(plot, enrichment, monthly_cold_rent=1000.0)
+    assert report.total is None
+    assert _sub(report, "price").reason == "not_applicable"
+    assert _sub(report, "yield").reason == "not_applicable"
+    assert (report.inputs_available, report.inputs_expected) == (0, 2)
+
+
+def test_a_plot_is_still_scored_on_its_region_signal():
+    plot = Listing(
+        price=215_000, living_area_sqm=780, bundesland="NI", plz="49808", object_type="grundstueck"
+    )
+    report = score_listing(plot, _full_enrichment())
+    assert report.weights_used == {"region": 1.0}
+    assert report.total == _sub(report, "region").value
+    assert (report.inputs_available, report.inputs_expected) == (2, 2)

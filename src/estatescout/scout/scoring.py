@@ -44,6 +44,9 @@ PRICE_VS_LAND_VALUE = "price_per_sqm_vs_bodenrichtwert"
 
 # Why a block could not be computed, when the reason does not come from the enrichment.
 REASON_RENT_MISSING = "rent_missing"
+# Plots have no rent and no living space: yield and the living-space price ratio do not apply.
+REASON_NOT_APPLICABLE = "not_applicable"
+LAND = "grundstueck"
 
 
 @lru_cache(maxsize=8)
@@ -101,6 +104,8 @@ def _linear(value: float, at_0: float, at_100: float) -> int:
 
 def _yield_block(listing: Listing, monthly_cold_rent: float | None, cfg: dict) -> SubScore:
     weight = float(cfg["weights"]["yield"])
+    if listing.object_type == LAND:
+        return SubScore("yield", None, weight, reason=REASON_NOT_APPLICABLE)
     if monthly_cold_rent is None or monthly_cold_rent <= 0:
         return SubScore("yield", None, weight, reason=REASON_RENT_MISSING)
     block = cfg["yield_score"]
@@ -125,6 +130,10 @@ def _yield_block(listing: Listing, monthly_cold_rent: float | None, cfg: dict) -
 
 def _price_block(listing: Listing, enrichment: Enrichment, cfg: dict) -> SubScore:
     weight = float(cfg["weights"]["price"])
+    if listing.object_type == LAND:
+        # EUR/m² of a plot against the land value is ~1 by construction; the living-space
+        # thresholds would read it as "perfectly cheap" (a plot scored 100/100 before this).
+        return SubScore("price", None, weight, reason=REASON_NOT_APPLICABLE)
     bodenrichtwert = enrichment.bodenrichtwert_eur_per_sqm
     if bodenrichtwert is None or bodenrichtwert <= 0:
         reason = enrichment.unavailable.get("bodenrichtwert")
@@ -175,18 +184,24 @@ def _region_block(enrichment: Enrichment, cfg: dict) -> SubScore:
     return SubScore("region", _clamp_score(sum(parts) / len(parts)), weight, detail=detail)
 
 
-def _count_inputs(listing_rent: float | None, enrichment: Enrichment) -> tuple[int, int]:
+def _count_inputs(
+    listing: Listing, listing_rent: float | None, enrichment: Enrichment
+) -> tuple[int, int]:
     """Available vs. expected raw signals — the basis of the confidence figure.
 
     Counted per signal, not per block, so half a region signal honestly reads as half.
     """
     signal = enrichment.region
     present = [
-        listing_rent is not None and listing_rent > 0,
-        enrichment.bodenrichtwert_eur_per_sqm is not None,
         signal is not None and signal.population_trend_pct is not None,
         signal is not None and signal.vacancy_rate_pct is not None,
     ]
+    if listing.object_type != LAND:
+        present = [
+            listing_rent is not None and listing_rent > 0,
+            enrichment.bodenrichtwert_eur_per_sqm is not None,
+            *present,
+        ]
     return sum(present), len(present)
 
 
@@ -222,7 +237,7 @@ def score_listing(
         else None
     )
 
-    inputs_available, inputs_expected = _count_inputs(monthly_cold_rent, enrichment)
+    inputs_available, inputs_expected = _count_inputs(listing, monthly_cold_rent, enrichment)
     return ScoreReport(
         total=total,
         subscores=subscores,

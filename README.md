@@ -9,16 +9,18 @@ figure in the answer that no calculator produced.**
 ![estate-scout Rechner: live annuity result with the Restschuld curve and the Zinsbindung dimensioned](docs/media/hero.png)
 
 <sub>The Rechner, recalculating while you type. Screenshots are taken from the running app; the
-chat and object views are in [docs/media](docs/media).</sub>
+chat and object views are in [docs/media](docs/media). The objects in `objekte.png` are sample
+entries typed in for the screenshot.</sub>
 
 Runs entirely on your machine via [Ollama](https://ollama.com) — no paid APIs, no listing scraping.
 Not tax, investment or financing advice.
 
-**One result, end to end.** "300.000 € at 3,6 % Sollzins, 2 % Tilgung, 10 years fixed" →
-**1.400,00 € per month**, **95.907 € interest** and a **Restschuld of 227.907 €** when the
-Zinsbindung ends (full repayment after 28,7 years). The assistant calls the `annuity` tool, the
+**One result, end to end.** A loan of EUR 300,000 at 3.6 % nominal interest, 2 % initial
+repayment and a 10-year fixed rate gives **EUR 1,400.00 per month**, **EUR 95,907.14 interest**
+and a **remaining debt of EUR 227,907.14** when the fixed rate ends (full repayment after 28 years
+and 8 months; the UI shows these in German number format). The assistant calls the `annuity` tool, the
 UI renders the exact result as a card, and if the model's prose quotes a figure that is not in the
-result (a live run once turned 181,209.86 into "181.210,86") the answer is flagged.
+result (a live run once turned 181209.86 into the string "181.210,86", written German-style) the answer is flagged.
 
 ```bash
 uv sync
@@ -172,7 +174,7 @@ called with the exact arguments and the exact result — the honest-harness clai
 A code-level guard (`assistant/number_check.py`) compares every number in the answer text with the
 tool results and the user's own figures; anything untraceable is shown as a warning above the
 answer (and in the CLI output). It reports, it never rewrites. It exists because a live run
-garbled a tool figure in prose (181,209.86 became "181.210,86").
+garbled a tool figure in prose (181209.86 became the string "181.210,86").
 
 ## Nightly re-score digest
 

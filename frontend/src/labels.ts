@@ -37,4 +37,4 @@ export function objectTypeLabel(type: string): string {
 
 // Marks the bundled example object (see src/estatescout/scout/model.py).
 export const EXAMPLE_FEATURE = "beispiel";
-export const EXAMPLE_RENT = "1000";
+export const EXAMPLE_RENT = "1.000";

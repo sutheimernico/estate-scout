@@ -12,7 +12,7 @@ import {
   scoreListing,
 } from "./api";
 import { FieldShell } from "./FieldShell";
-import { eur, num } from "./format";
+import { eur, formatInput, num } from "./format";
 import {
   BUNDESLAENDER,
   bundeslandName,
@@ -88,12 +88,28 @@ function CaptureForm({ onSaved, onError }: { onSaved: () => Promise<void>; onErr
       </fieldset>
       <FieldShell label="Kaufpreis" unit="€" error={errors.price}>
         {(id) => (
-          <input id={id} value={form.price} onChange={(e) => set("price")(e.target.value)} inputMode="decimal" placeholder="300.000" autoComplete="off" />
+          <input
+            id={id}
+            value={form.price}
+            onChange={(e) => set("price")(e.target.value)}
+            onBlur={(e) => set("price")(formatInput(e.target.value))}
+            inputMode="decimal"
+            placeholder="z. B. 300.000"
+            autoComplete="off"
+          />
         )}
       </FieldShell>
       <FieldShell label="Wohnfläche" unit="m²" error={errors.area}>
         {(id) => (
-          <input id={id} value={form.area} onChange={(e) => set("area")(e.target.value)} inputMode="decimal" placeholder="100" autoComplete="off" />
+          <input
+            id={id}
+            value={form.area}
+            onChange={(e) => set("area")(e.target.value)}
+            onBlur={(e) => set("area")(formatInput(e.target.value))}
+            inputMode="decimal"
+            placeholder="z. B. 100"
+            autoComplete="off"
+          />
         )}
       </FieldShell>
       <FieldShell label="Bundesland" error={errors.bundesland}>
@@ -108,7 +124,7 @@ function CaptureForm({ onSaved, onError }: { onSaved: () => Promise<void>; onErr
         )}
       </FieldShell>
       <FieldShell label="Ort" optional>
-        {(id) => <input id={id} value={form.ort} onChange={(e) => set("ort")(e.target.value)} placeholder="Lingen" autoComplete="off" />}
+        {(id) => <input id={id} value={form.ort} onChange={(e) => set("ort")(e.target.value)} placeholder="z. B. Lingen" autoComplete="off" />}
       </FieldShell>
       <div className="capture-pair">
         <FieldShell label="Zimmer" optional error={errors.rooms}>
@@ -176,8 +192,9 @@ function Detail({ listing, report, rent, pending, onRentChange, onEvaluate, onDe
               id={id}
               value={rent}
               onChange={(e) => onRentChange(e.target.value)}
+              onBlur={(e) => onRentChange(formatInput(e.target.value))}
               inputMode="decimal"
-              placeholder="1.000"
+              placeholder="z. B. 1.000"
               autoComplete="off"
             />
           )}

@@ -154,4 +154,16 @@ describe("ToolTrace in the chat", () => {
     expect(screen.getAllByText("annuity").length).toBeGreaterThan(0);
     expect(screen.getByText(/"monthly_payment":1400/)).toBeInTheDocument();
   });
+
+  it("does not scroll on mount, only once there is a transcript to follow", async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    stubFetch(askResponse);
+    render(<Chat />);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("Frage"), { target: { value: "Rate?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Fragen" }));
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+  });
 });

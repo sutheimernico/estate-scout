@@ -100,6 +100,8 @@ export function Chat() {
   const trace = traceOf(messages.map((m) => ({ id: m.id, response: m.response })));
 
   useEffect(() => {
+    // Nothing to follow on the empty intro: scrolling there would open the page half-way down.
+    if (messages.length === 0 && pending === null && problem === null) return;
     // scrollIntoView is not implemented in jsdom — the optional call keeps tests green
     endRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" });
   }, [messages, pending, problem]);

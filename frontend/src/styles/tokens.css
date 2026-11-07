@@ -1,4 +1,25 @@
 /* Zeichenblatt design tokens. See docs/design/redesign-2026-10.md. */
+
+/* Metric-matched fallbacks: until Barlow has loaded, Arial is scaled and re-spaced to Barlow's
+   widths and line box, so swapping the real font in does not reflow the page. Factors measured
+   from rendered text (Barlow 400 / Arial 400 = 0.945, Barlow Semi Condensed 700 / Arial 700 = 0.835). */
+@font-face {
+  font-family: "Barlow Fallback";
+  src: local("Arial");
+  size-adjust: 94.5%;
+  ascent-override: 105.8%;
+  descent-override: 21.2%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Barlow SC Fallback";
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  font-weight: 500 700;
+  size-adjust: 83.5%;
+  ascent-override: 119.8%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
 :root {
   color-scheme: light;
 
@@ -16,8 +37,8 @@
   --ochre: #8a5e08;
   --ochre-wash: #f0e3c4;
 
-  --font-text: "Barlow", system-ui, sans-serif;
-  --font-num: "Barlow Semi Condensed", "Barlow", system-ui, sans-serif;
+  --font-text: "Barlow", "Barlow Fallback", system-ui, sans-serif;
+  --font-num: "Barlow Semi Condensed", "Barlow SC Fallback", "Barlow", system-ui, sans-serif;
   --font-cmd: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --gutter: clamp(16px, 3.2vw, 40px);

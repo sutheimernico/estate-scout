@@ -3,7 +3,7 @@
 // Every number comes from the backend's scoring engine — nothing is computed here.
 
 import { type ScoreReport, type SubScore } from "./api";
-import { num } from "./format";
+import { germanDate, num } from "./format";
 
 const BLOCK_LABELS: Record<string, string> = {
   yield: "Rendite",
@@ -15,6 +15,7 @@ const REASON_LABELS: Record<string, string> = {
   provider_missing: "Datenquelle fehlt",
   no_data: "keine Daten für dieses Objekt",
   rent_missing: "keine Kaltmiete angegeben",
+  not_applicable: "bei Grundstücken nicht anwendbar",
 };
 
 const BLOCK_HINTS: Record<string, string> = {
@@ -77,7 +78,7 @@ export function ScoreDrilldown({ report }: { report: ScoreReport }) {
       )}
 
       <p className="score-foot">
-        Gewichte und Schwellen aus <code>config/scoring.yaml</code> (Stand {report.as_of}) — eigene
+        Gewichte und Schwellen aus <code>config/scoring.yaml</code> (Stand {germanDate(report.as_of)}) — eigene
         Heuristik, keine Bewertung und keine Anlageberatung.
       </p>
     </div>

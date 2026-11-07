@@ -41,3 +41,9 @@ export function duration(years: number, dative = false): string {
   if (y === 0) return `${m} ${mUnit}`;
   return m === 0 ? `${y} ${yUnit}` : `${y} ${yUnit}, ${m} ${mUnit}`;
 }
+
+// "2026-09-20" -> "20.09.2026"; anything else is returned as it came.
+export function germanDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : iso;
+}

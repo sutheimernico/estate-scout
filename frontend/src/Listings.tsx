@@ -100,7 +100,7 @@ function CaptureForm({ onSaved, onError }: { onSaved: () => Promise<void>; onErr
           />
         )}
       </FieldShell>
-      <FieldShell label="Wohnfläche" unit="m²" error={errors.area}>
+      <FieldShell label={form.objectType === "grundstueck" ? "Grundstücksfläche" : "Wohnfläche"} unit="m²" error={errors.area}>
         {(id) => (
           <input
             id={id}
@@ -156,6 +156,7 @@ interface DetailProps {
 function Detail({ listing, report, rent, pending, onRentChange, onEvaluate, onDelete }: DetailProps) {
   const [confirm, setConfirm] = useState(false);
   const extra = roomsAndYear(listing);
+  const land = listing.object_type === "grundstueck";
   return (
     <div className="detail">
       <div className="detail-id">
@@ -176,7 +177,7 @@ function Detail({ listing, report, rent, pending, onRentChange, onEvaluate, onDe
           <dd className="num">{eur(listing.price)}</dd>
         </div>
         <div>
-          <dt>Fläche</dt>
+          <dt>{land ? "Grundstücksfläche" : "Fläche"}</dt>
           <dd className="num">{num(listing.living_area_sqm)} m²</dd>
         </div>
         <div>
@@ -186,20 +187,22 @@ function Detail({ listing, report, rent, pending, onRentChange, onEvaluate, onDe
       </dl>
       {extra && <p className="detail-extra">{extra}</p>}
 
-      <div className="detail-rent">
-        <FieldShell label="Kaltmiete pro Monat" optional unit="€">
-          {(id) => (
-            <input
-              id={id}
-              value={rent}
-              onChange={(e) => onRentChange(e.target.value)}
-              onBlur={(e) => onRentChange(formatInput(e.target.value))}
-              inputMode="decimal"
-              placeholder="z. B. 1.000"
-              autoComplete="off"
-            />
-          )}
-        </FieldShell>
+      <div className={land ? "detail-rent no-rent" : "detail-rent"}>
+        {!land && (
+          <FieldShell label="Kaltmiete pro Monat" optional unit="€">
+            {(id) => (
+              <input
+                id={id}
+                value={rent}
+                onChange={(e) => onRentChange(e.target.value)}
+                onBlur={(e) => onRentChange(formatInput(e.target.value))}
+                inputMode="decimal"
+                placeholder="z. B. 1.000"
+                autoComplete="off"
+              />
+            )}
+          </FieldShell>
+        )}
         <button type="button" className="btn" onClick={onEvaluate} disabled={pending}>
           {pending ? "Bewertet …" : "Anreichern + bewerten"}
         </button>
@@ -311,6 +314,7 @@ export function Listings() {
   const rentOf = (l: Listing) => rents[l.id] ?? (isExample(l) ? EXAMPLE_RENT : "");
   const [pendingId, setPendingId] = useState<number | null>(null);
   const open = items.find((l) => l.id === openId);
+  const scored = items.filter((l) => effectiveScore(l, reports[l.id])?.total != null).length;
 
   async function onDelete(id: number) {
     try {
@@ -329,7 +333,7 @@ export function Listings() {
     try {
       // the example's reference data is fixed; the server refuses to re-enrich it
       if (!isExample(listing)) await enrichListing(id);
-      const report = await scoreListing(id, parseRent(rentOf(listing)));
+      const report = await scoreListing(id, listing.object_type === "grundstueck" ? undefined : parseRent(rentOf(listing)));
       setReports((r) => ({ ...r, [id]: report }));
       await refresh();
     } catch (err) {
@@ -366,7 +370,7 @@ export function Listings() {
           <p>
             {items.length === 0
               ? "Deine Objektliste ist leer."
-              : `${items.length} ${items.length === 1 ? "Objekt" : "Objekte"}, bewertet nach Rendite, Preisniveau und Lage.`}
+              : `${items.length} ${items.length === 1 ? "Objekt" : "Objekte"}, ${scored === items.length ? "alle bewertet" : `${scored} davon bewertet`}. Der Score berücksichtigt Rendite, Preisniveau und Lage.`}
           </p>
         </div>
       </header>

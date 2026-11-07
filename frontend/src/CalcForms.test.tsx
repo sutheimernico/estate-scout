@@ -154,6 +154,7 @@ describe("CalcForms", () => {
     render(<CalcForms />);
     fireEvent.change(screen.getByLabelText(/Anfängliche Tilgung/), { target: { value: "0" } });
     expect(screen.getByRole("alert")).toHaveTextContent(/größer 0/);
-    expect(fetchMock.mock.calls.every(([, init]) => JSON.parse((init as RequestInit).body as string).initial_repayment_percent !== 0)).toBe(true);
+    const calls = fetchMock.mock.calls as unknown as [string, RequestInit][];
+    expect(calls.every(([, init]) => (JSON.parse(init.body as string) as { initial_repayment_percent: number }).initial_repayment_percent !== 0)).toBe(true);
   });
 });

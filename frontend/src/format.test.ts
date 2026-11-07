@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bindUnits, duration, eur, eurCents, formatInput, num, pct } from "./format";
+import { bindUnits, duration, eur, germanDate, eurCents, formatInput, num, pct } from "./format";
 
 const nbsp = (s: string) => s.replace(/\s/g, " "); // Intl uses (narrow) no-break spaces
 
@@ -47,5 +47,12 @@ describe("duration", () => {
     expect(duration(10)).toBe("10 Jahre");
     expect(duration(1.09, true)).toBe("1 Jahr, 1 Monat");
     expect(duration(0.5)).toBe("6 Monate");
+  });
+});
+
+describe("germanDate", () => {
+  it("writes ISO dates the German way", () => {
+    expect(germanDate("2026-09-20")).toBe("20.09.2026");
+    expect(germanDate("unbekannt")).toBe("unbekannt");
   });
 });

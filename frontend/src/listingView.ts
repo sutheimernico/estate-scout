@@ -85,7 +85,10 @@ export function roomsAndYear(l: Pick<Listing, "rooms" | "year_built">): string {
 }
 
 // One honest line under a tile's score: why there is no score, or why it is only provisional.
-export function scoreNote(listing: Pick<Listing, "enrichment">, score: { total: number | null; confidence: number } | null): string | null {
+export function scoreNote(listing: Pick<Listing, "enrichment" | "object_type">, score: { total: number | null; confidence: number } | null): string | null {
+  if (score?.total == null && listing.object_type === "grundstueck") {
+    return "Für Grundstücke gibt es keinen Score: Rendite und Preisniveau passen nicht.";
+  }
   if (score === null || (score.total === null && listing.enrichment === null)) return "Öffnen, um das Objekt zu bewerten.";
   if (score.total === null) return "Für diese Lage liegen keine Referenzdaten vor.";
   const n = coveragePips(score.confidence);

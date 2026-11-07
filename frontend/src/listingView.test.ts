@@ -80,8 +80,8 @@ describe("roomsAndYear", () => {
 });
 
 describe("scoreNote", () => {
-  const enriched = { enrichment: { unavailable: {} } } as never;
-  const raw = { enrichment: null };
+  const enriched = { enrichment: { unavailable: {} }, object_type: "wohnung" } as never;
+  const raw = { enrichment: null, object_type: "wohnung" };
   it("asks to open an unscored, unenriched object", () => {
     expect(scoreNote(raw, null)).toMatch(/Öffnen/);
     expect(scoreNote(raw, { total: null, confidence: 0 })).toMatch(/Öffnen/);
@@ -91,6 +91,11 @@ describe("scoreNote", () => {
   });
   it("marks a score built from fewer than two inputs as provisional", () => {
     expect(scoreNote(enriched, { total: 100, confidence: 0.25 })).toBe("Vorläufig: erst 1 von 4 Datenquellen.");
+  });
+  it("says why a plot has no score", () => {
+    const plot = { enrichment: null, object_type: "grundstueck" };
+    expect(scoreNote(plot, null)).toMatch(/Grundstücke gibt es keinen Score/);
+    expect(scoreNote(plot, { total: null, confidence: 0 })).toMatch(/Grundstücke/);
   });
   it("stays silent for a well-covered score", () => {
     expect(scoreNote(enriched, { total: 65, confidence: 1 })).toBeNull();

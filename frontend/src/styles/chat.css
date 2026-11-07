@@ -487,19 +487,22 @@
   font-weight: 700;
   font-size: 22px;
 }
-.rechenspur ol {
+.rechenspur ol,
+.trace-inline ol {
   margin: 14px 0 0;
   padding: 0;
   list-style: none;
 }
-.rechenspur li {
+.rechenspur li,
+.trace-inline li {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr);
   gap: 8px;
   padding: 10px 0;
   border-top: 1px solid var(--rule);
 }
-.rechenspur li p {
+.rechenspur li p,
+.trace-inline li p {
   color: var(--ink-2);
   font-size: 14px;
   line-height: 1.35;
@@ -526,6 +529,23 @@
   }
   .rechenspur {
     display: none;
+  }
+}
+/* Below 1100 px the side column is gone, so each answer carries its own trace */
+.trace-inline {
+  display: none;
+}
+.trace-inline h4 {
+  font-family: var(--font-num);
+  font-weight: 700;
+  font-size: 17px;
+}
+@media (max-width: 1099px) {
+  .trace-inline {
+    display: block;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-strong);
   }
 }
 /* Nico's laptop is 960x540: keep statement, starters and the drawing in one glance */

@@ -51,7 +51,7 @@ describe("Chat", () => {
     submitQuestion("Was zahle ich monatlich?");
     expect(await screen.findByText("Deine Monatsrate liegt bei 1.400 €.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Annuitätendarlehen" })).toBeInTheDocument();
-    expect(screen.getByText(/Zahl stammt aus Werkzeug/)).toHaveTextContent("annuity");
+    expect(screen.getByText(/Zahl aus dem Rechner „Annuitätendarlehen“/)).not.toHaveTextContent("annuity");
   });
 
   it("warns when the answer quotes a number no tool produced", async () => {

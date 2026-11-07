@@ -3,7 +3,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ask, type AskResponse, toKnownCalc } from "./api";
 import { CalcResult } from "./CalcResult";
 import { CopyCommand } from "./CopyCommand";
-import { formatElapsed, type Problem, problemFrom, RECORDED_CATCH, sourceLabel, STARTERS, traceOf } from "./chatView";
+import { formatElapsed, type Problem, problemFrom, RECORDED_CATCH, sourceLabel, STARTERS, toolTitle, type TraceEntry, traceOf } from "./chatView";
 import { bindUnits } from "./format";
 import { HouseDrawing } from "./HouseDrawing";
 import { ToolTrace } from "./ToolTrace";
@@ -88,6 +88,22 @@ function Intro({ onPick }: { onPick: (q: string) => void }) {
         <RecordedCatch />
       </div>
     </section>
+  );
+}
+
+function TraceList({ entries }: { entries: TraceEntry[] }) {
+  return (
+    <ol>
+      {entries.map((t) => (
+        <li key={t.n}>
+          <span className="trace-n num">{t.n}</span>
+          <div>
+            <strong>{t.title}</strong>
+            <p>{t.summary || "ohne Eingaben"}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -194,11 +210,17 @@ export function Chat() {
                     <div className="stamped sheet" key={`${m.id}-${i}`}>
                       <CalcResult calc={known} args={t.args} compact />
                       <p className="stamp">
-                        Zahl stammt aus Werkzeug <code>{t.name}</code>
+                        Zahl aus dem Rechner „{toolTitle(t.name)}“, gerechnet von Python
                       </p>
                     </div>
                   ) : null;
                 })}
+                {trace.some((t) => t.messageId === m.id) && (
+                  <section className="trace-inline" aria-label="Rechenspur">
+                    <h4>Rechenspur</h4>
+                    <TraceList entries={trace.filter((t) => t.messageId === m.id)} />
+                  </section>
+                )}
                 <ToolTrace calls={m.response.tool_calls} />
                 {m.response.sources.length > 0 && (
                   <p className="sources">
@@ -237,17 +259,7 @@ export function Chat() {
       {trace.length > 0 && (
         <aside className="rechenspur" aria-label="Rechenspur">
           <h3>Rechenspur</h3>
-          <ol>
-            {trace.map((t) => (
-              <li key={t.n}>
-                <span className="trace-n num">{t.n}</span>
-                <div>
-                  <strong>{t.title}</strong>
-                  <p>{t.summary || "ohne Eingaben"}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <TraceList entries={trace} />
           <p className="trace-note">Jeder Schritt wurde von Python gerechnet, nicht vom Modell.</p>
         </aside>
       )}
